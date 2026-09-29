@@ -139,7 +139,7 @@ export const CategoriesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080b] text-[#f8fafc] selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#060810] text-[#f8fafc] selection:bg-red-600 selection:text-white">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28">
@@ -166,7 +166,7 @@ export const CategoriesPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search category"
-              className="w-full bg-[#121520] border border-white/10 focus:border-amber-400/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none transition-colors"
+              className="w-full bg-[#121520] border border-white/10 focus:border-red-600/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none transition-colors"
             />
           </div>
         </div>
@@ -191,7 +191,7 @@ export const CategoriesPage: React.FC = () => {
                   <button
                     key={cat}
                     onClick={() => handleSelectCategory(cat)}
-                    className="p-3.5 rounded-xl bg-[#121520]/90 hover:bg-[#1c2234] border border-white/[0.06] hover:border-amber-400/50 text-left transition-all duration-200 cursor-pointer group shadow-sm hover:scale-[1.02]"
+                    className="p-3.5 rounded-xl bg-[#121520]/90 hover:bg-[#1c2234] border border-white/[0.06] hover:border-red-600/60 text-left transition-all duration-200 cursor-pointer group shadow-sm hover:scale-[1.02]"
                   >
                     <span className="text-sm font-medium text-white/90 group-hover:text-white truncate block">
                       {cat}

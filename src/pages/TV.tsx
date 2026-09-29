@@ -42,88 +42,88 @@ const TVPage = () => {
     return trending;
   };
 
+  const TABS = [
+    { key: 'trending' as const, label: 'Trending', icon: Flame },
+    { key: 'popular' as const, label: 'Popular', icon: TrendingUp },
+    { key: 'topRated' as const, label: 'Top Rated', icon: Award },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#07080b] text-[#f8fafc] overflow-x-hidden selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#060810] text-[#f8fafc] overflow-x-hidden selection:bg-red-600 selection:text-white">
       <Navbar />
 
-      <div className="pt-24 sm:pt-28 pb-28 md:pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-white/10">
+      <div className="pt-24 sm:pt-28 pb-32 md:pb-20 safe-bottom-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Page Header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-bold tracking-wider uppercase mb-3">
-              <Tv className="w-3.5 h-3.5" />
-              Television Series
+            <div className="flex items-center gap-1.5 mb-2">
+              <Tv className="w-3.5 h-3.5 text-red-500" />
+              <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-500/80 font-display">
+                Television Series
+              </span>
             </div>
-            <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight">
-              Binge Worthy <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-200 bg-clip-text text-transparent font-extrabold">Shows</span>
+            <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight leading-none">
+              Binge Worthy <span className="text-red-500">Shows</span>
             </h1>
           </div>
 
-          {/* Tab Selector Pills */}
-          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md overflow-x-auto scrollbar-none max-w-full touch-pan-x">
-            <button
-              onClick={() => setActiveTab('trending')}
-              className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 touch-feedback ${
-                activeTab === 'trending'
-                  ? 'bg-amber-400 text-black shadow-md shadow-amber-400/30'
-                  : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5" />
-              Trending Shows
-            </button>
-            <button
-              onClick={() => setActiveTab('popular')}
-              className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 touch-feedback ${
-                activeTab === 'popular'
-                  ? 'bg-amber-400 text-black shadow-md shadow-amber-400/30'
-                  : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              Popular
-            </button>
-            <button
-              onClick={() => setActiveTab('topRated')}
-              className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 touch-feedback ${
-                activeTab === 'topRated'
-                  ? 'bg-amber-400 text-black shadow-md shadow-amber-400/30'
-                  : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5" />
-              Top Rated
-            </button>
+          {/* Tab pills */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] flex-shrink-0">
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={[
+                  'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-black font-display uppercase tracking-wide transition-all duration-200 whitespace-nowrap',
+                  activeTab === key
+                    ? 'bg-red-600 text-white shadow-[0_2px_12px_rgba(220,38,38,0.4)]'
+                    : 'text-white/50 hover:text-white',
+                ].join(' ')}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ── Web Channels & Networks Showcase ── */}
+        {/* ── Streaming Networks ── */}
         <WebChannelsSection />
 
-        {/* ── Anticipated & Most Watched Series Shelves ── */}
+        {/* ── Shelves ── */}
         <TraktShowsShelves />
 
         {/* ── TV Grid ── */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
-            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="aspect-[2/3] rounded-2xl bg-white/5 animate-pulse" />
-                <div className="h-4 w-3/4 rounded bg-white/5 animate-pulse" />
-                <div className="h-3 w-1/2 rounded bg-white/5 animate-pulse" />
-              </div>
-            ))}
+        <div className="mt-10">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-0.5 h-5 bg-red-500 rounded-full" />
+            <h2 className="font-display font-black text-xl tracking-tight bg-gradient-to-r from-white to-red-300 bg-clip-text text-transparent">
+              {activeTab === 'trending' ? 'Trending This Week' : activeTab === 'popular' ? 'Most Popular' : 'All-Time Top Rated'}
+            </h2>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 animate-in fade-in duration-300">
-            {getActiveList().map(show => (
-              <MovieCard key={show.id} movie={show} type="tv" />
-            ))}
-          </div>
-        )}
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+              {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse" />
+                  <div className="h-3.5 w-3/4 rounded bg-white/[0.04] animate-pulse" />
+                  <div className="h-3 w-1/2 rounded bg-white/[0.04] animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+              {getActiveList().map(show => (
+                <MovieCard key={show.id} movie={show} type="tv" />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
 export default TVPage;
+

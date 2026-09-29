@@ -148,8 +148,8 @@ export const TimeMachinePage = () => {
   const sliderPercent = yearToPercent(year);
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0f] text-[#f1efe9] overflow-x-hidden selection:bg-[#e0a336] selection:text-black">
-      <div className="fixed top-10 left-1/2 -translate-x-1/2 w-[420px] h-[320px] bg-[#e0a336]/[0.05] rounded-full blur-[140px] pointer-events-none -z-10" />
+    <div className="relative min-h-screen bg-[#060810] text-white overflow-x-hidden selection:bg-[#dc2626] selection:text-white">
+      <div className="fixed top-10 left-1/2 -translate-x-1/2 w-[480px] h-[360px] bg-[#dc2626]/[0.06] rounded-full blur-[150px] pointer-events-none -z-10" />
 
       <Navbar />
 
@@ -162,7 +162,7 @@ export const TimeMachinePage = () => {
               onClick={() => handleYearChange(year - 1)}
               disabled={year <= MIN_YEAR}
               aria-label="Previous year"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#f1efe9]/50 hover:text-[#e0a336] hover:bg-white/5 active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.08] active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none border border-white/[0.08]"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -174,14 +174,15 @@ export const TimeMachinePage = () => {
                   <line
                     key={i}
                     x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-                    stroke={i % 3 === 0 ? '#e0a336' : 'rgba(255,255,255,0.15)'}
-                    strokeWidth={i % 3 === 0 ? 2 : 1}
+                    stroke={i % 3 === 0 ? '#dc2626' : 'rgba(255,255,255,0.15)'}
+                    strokeWidth={i % 3 === 0 ? 2.5 : 1}
                     strokeLinecap="round"
+                    style={i % 3 === 0 ? { filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.7))' } : undefined}
                   />
                 ))}
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-display font-black text-5xl sm:text-6xl text-[#f1efe9] tabular-nums">
+                <span className="font-display font-black text-5xl sm:text-6xl text-white tracking-tight tabular-nums">
                   {year}
                 </span>
               </div>
@@ -191,17 +192,17 @@ export const TimeMachinePage = () => {
               onClick={() => handleYearChange(year + 1)}
               disabled={year >= MAX_YEAR}
               aria-label="Next year"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#f1efe9]/50 hover:text-[#e0a336] hover:bg-white/5 active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.08] active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none border border-white/[0.08]"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
           <div className="mt-5 max-w-md">
-            <p className="font-display font-semibold text-lg text-[#f1efe9]">
+            <p className="font-display font-black text-xl text-white tracking-tight uppercase">
               {currentFact.headline}
             </p>
-            <p className="mt-1.5 text-sm text-[#8b8d95] leading-relaxed">
+            <p className="mt-1.5 text-sm text-white/60 leading-relaxed font-medium">
               {currentFact.culturalNote}
             </p>
           </div>
@@ -209,10 +210,10 @@ export const TimeMachinePage = () => {
 
         {/* ── Unified timeline: slider + milestones + decades ── */}
         <div className="max-w-2xl mx-auto mb-10 sm:mb-14 px-2">
-          <div className="relative h-2">
+          <div className="relative h-2.5">
             <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-white/10" />
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-[#e0a336]"
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-700 to-red-500 shadow-[0_0_12px_rgba(220,38,38,0.5)]"
               style={{ width: `${sliderPercent}%` }}
             />
             <input
@@ -225,38 +226,39 @@ export const TimeMachinePage = () => {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-pan-x"
             />
             <div
-              className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-[#f1efe9] shadow-md pointer-events-none transition-[left]"
+              className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border-2 border-[#dc2626] pointer-events-none transition-[left]"
               style={{ left: `${sliderPercent}%`, transform: 'translate(-50%, -50%)' }}
             />
           </div>
 
           {/* milestone dots */}
-          <div className="relative h-3 mt-2.5">
+          <div className="relative h-3 mt-3">
             {MILESTONES.map((y) => (
               <button
                 key={y}
                 onClick={() => handleYearChange(y)}
                 aria-label={`Jump to ${y}`}
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full transition-colors touch-manipulation"
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-all touch-manipulation"
                 style={{
                   left: `${yearToPercent(y)}%`,
-                  backgroundColor: year === y ? '#e0a336' : 'rgba(255,255,255,0.25)',
+                  backgroundColor: year === y ? '#ef4444' : 'rgba(255,255,255,0.22)',
+                  boxShadow: year === y ? '0 0 8px #ef4444' : 'none',
                 }}
               />
             ))}
           </div>
 
           {/* decade labels, positioned proportionally to match the track */}
-          <div className="relative h-5 mt-1">
+          <div className="relative h-5 mt-1.5">
             {DECADES.map((d) => (
               <button
                 key={d.label}
                 onClick={() => handleYearChange(d.startYear)}
-                className="absolute -translate-x-1/2 text-xs font-mono transition-colors touch-manipulation"
+                className="absolute -translate-x-1/2 text-xs font-mono transition-colors touch-manipulation tracking-wider"
                 style={{
                   left: `${yearToPercent(d.startYear)}%`,
-                  color: currentDecadeLabel === d.label ? '#e0a336' : 'rgba(241,239,233,0.4)',
-                  fontWeight: currentDecadeLabel === d.label ? 700 : 400,
+                  color: currentDecadeLabel === d.label ? '#ef4444' : 'rgba(255,255,255,0.4)',
+                  fontWeight: currentDecadeLabel === d.label ? 800 : 500,
                 }}
               >
                 {d.label}
@@ -276,12 +278,13 @@ export const TimeMachinePage = () => {
                   soundEffects.playHoverTick();
                   setSelectedGenre(genre.id);
                 }}
-                className={`relative shrink-0 pb-2.5 text-sm font-medium whitespace-nowrap transition-colors touch-manipulation ${active ? 'text-[#f1efe9]' : 'text-[#8b8d95] hover:text-[#f1efe9]/80'
-                  }`}
+                className={`relative shrink-0 pb-2.5 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-colors touch-manipulation ${
+                  active ? 'text-white' : 'text-white/50 hover:text-white/80'
+                }`}
               >
                 {genre.name}
                 {active && (
-                  <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-[#e0a336] rounded-full" />
+                  <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-[#dc2626] rounded-full shadow-[0_0_8px_#dc2626]" />
                 )}
               </button>
             );
@@ -291,20 +294,20 @@ export const TimeMachinePage = () => {
         {/* ── Movies grid ── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2 text-[#8b8d95]">
-              <Clapperboard className="w-4 h-4" />
-              <h2 className="text-sm">Releases from {year}</h2>
+            <div className="flex items-center gap-2 text-white/70">
+              <Clapperboard className="w-4 h-4 text-[#dc2626]" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white">Releases from {year}</h2>
             </div>
-            <span className="text-xs font-mono text-[#8b8d95]/70">{movies.length} titles</span>
+            <span className="text-xs font-mono text-white/40">{movies.length} titles</span>
           </div>
 
           {loading ? (
             <div className="h-64 flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-[#e0a336]/20 border-t-[#e0a336] animate-spin" />
-              <span className="text-xs text-[#8b8d95]">Traveling back in time</span>
+              <div className="w-8 h-8 rounded-full border-2 border-[#dc2626]/20 border-t-[#dc2626] animate-spin" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white/40">Traveling through cinema history</span>
             </div>
           ) : movies.length === 0 ? (
-            <div className="text-center py-20 text-[#8b8d95] text-sm">
+            <div className="text-center py-20 text-white/40 text-sm font-medium">
               No releases found for {year} in this genre.
             </div>
           ) : (

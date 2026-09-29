@@ -1,36 +1,69 @@
-// components/RatingsDisplay.tsx
+// components/RatingsDisplay.tsx — Redesigned with ScreenCritic design system
 import React from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, ExternalLink } from 'lucide-react';
 import { useOmdb, type OmdbMovieData } from '@/services/omdb';
 
-// ── Official Brand Image Logos (Exact icons provided by user) ──
+// ── Rating content-advisory pill ──
+const RatedPill = ({ rated }: { rated: string }) => {
+  const colors: Record<string, string> = {
+    'G':       'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
+    'PG':      'bg-sky-500/15 border-sky-500/35 text-sky-400',
+    'PG-13':   'bg-amber-500/15 border-amber-500/35 text-red-500',
+    'R':       'bg-orange-500/15 border-orange-500/35 text-orange-400',
+    'NC-17':   'bg-red-500/15 border-red-500/35 text-red-400',
+    'TV-G':    'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
+    'TV-PG':   'bg-sky-500/15 border-sky-500/35 text-sky-400',
+    'TV-14':   'bg-amber-500/15 border-amber-500/35 text-red-500',
+    'TV-MA':   'bg-red-500/15 border-red-500/35 text-red-400',
+  };
+  const cls = colors[rated] || 'bg-white/8 border-white/15 text-white/80';
+  return (
+    <span
+      className={`text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full border ${cls}`}
+      title={`Content rating: ${rated}`}
+    >
+      {rated}
+    </span>
+  );
+};
 
-export const ImdbLogo = ({ className = "h-3.5 w-auto" }: { className?: string }) => (
-  <img
-    src="/assets/logos/imdb.png"
-    alt="IMDb"
-    className={`object-contain rounded-sm ${className}`}
-    loading="lazy"
-  />
-);
-
-export const RottenTomatoesLogo = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
-  <img
-    src="/assets/logos/rotten-tomatoes.png"
-    alt="Rotten Tomatoes"
-    className={`object-contain ${className}`}
-    loading="lazy"
-  />
-);
-
-export const MetacriticLogo = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
-  <img
-    src="/assets/logos/metacritic.png"
-    alt="Metacritic"
-    className={`object-contain rounded-full ${className}`}
-    loading="lazy"
-  />
-);
+// ── Inline compact badge ──
+const InlineBadge = ({
+  icon,
+  score,
+  color,
+  bg,
+  border,
+  href,
+  title,
+}: {
+  icon: React.ReactNode;
+  score: string;
+  color: string;
+  bg: string;
+  border: string;
+  href?: string;
+  title?: string;
+}) => {
+  const inner = (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border shadow-sm shrink-0 transition-all hover:brightness-110`}
+      style={{ color, backgroundColor: bg, borderColor: border }}
+      title={title}
+    >
+      {icon}
+      {score}
+    </span>
+  );
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {inner}
+      </a>
+    );
+  }
+  return inner;
+};
 
 export interface RatingsDisplayProps {
   data?: OmdbMovieData | null;
@@ -38,6 +71,8 @@ export interface RatingsDisplayProps {
   title?: string;
   year?: number | string;
   type?: 'movie' | 'series';
+  releaseDate?: string;
+  isReleased?: boolean;
   tmdbRating?: number;
   variant?: 'badges' | 'awards';
   className?: string;
@@ -48,10 +83,20 @@ export const RatingsDisplay: React.FC<RatingsDisplayProps> = ({
   imdbId,
   title,
   year,
+  releaseDate,
+  isReleased: isReleasedProp,
   type = 'movie',
   variant = 'badges',
   className = '',
 }) => {
+  const isReleased = React.useMemo(() => {
+    if (isReleasedProp !== undefined) return isReleasedProp;
+    if (releaseDate) {
+      return new Date(releaseDate) <= new Date();
+    }
+    return true;
+  }, [isReleasedProp, releaseDate]);
+
   const { data: fetchedData, isLoading } = useOmdb(
     !providedData && (imdbId || title)
       ? { imdbId: imdbId || undefined, title, year, type }
@@ -64,8 +109,23 @@ export const RatingsDisplay: React.FC<RatingsDisplayProps> = ({
     if (variant === 'badges') {
       return (
         <div className={`flex items-center gap-1.5 ${className}`}>
-          <div className="h-5 w-12 bg-white/10 rounded-full animate-pulse" />
-          <div className="h-5 w-12 bg-white/10 rounded-full animate-pulse" />
+          <div className="h-6 w-14 bg-white/8 rounded-full animate-pulse" />
+          <div className="h-6 w-14 bg-white/8 rounded-full animate-pulse" />
+          <div className="h-6 w-14 bg-white/8 rounded-full animate-pulse" />
+        </div>
+      );
+    }
+    return null;
+  }
+
+  if (!isReleased) {
+    if (variant === 'badges') {
+      return (
+        <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+          {data?.rated && <RatedPill rated={data.rated} />}
+          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">
+            Upcoming Premiere
+          </span>
         </div>
       );
     }
@@ -76,83 +136,84 @@ export const RatingsDisplay: React.FC<RatingsDisplayProps> = ({
 
   const imdbScore = data.imdbRating;
   const rtScore = data.rottenTomatoesScore;
+  const rtNum = data.rottenTomatoesNum;
   const metascore = data.metascore;
   const rated = data.rated;
   const awards = data.awards && data.awards !== 'N/A' ? data.awards : null;
 
-  // ── 1. Minimal Inline Badges (Top Metadata Row) ──
+  // ── 1. Badge row ──
   if (variant === 'badges') {
+    const isRotten = rtNum != null && rtNum < 60;
+    const metaColor =
+      metascore != null
+        ? metascore >= 61
+          ? '#54b32b'
+          : metascore >= 40
+          ? '#ffad00'
+          : '#ff4500'
+        : '#fff';
+
     return (
-      <div className={`flex flex-wrap items-center gap-1.5 sm:gap-2 ${className}`}>
-        {/* Content Advisory Rating (PG-13, R, TV-MA, etc.) */}
-        {rated && (
-          <span
-            className="text-[10px] sm:text-[11px] font-extrabold tracking-wide px-2 py-0.5 rounded-full border border-white/20 bg-black/60 text-white/90 shadow-sm"
-            title={`Rated ${rated}`}
-          >
-            {rated}
-          </span>
-        )}
+      <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+        {rated && <RatedPill rated={rated} />}
 
-        {/* IMDb Rating with User's Official Logo */}
         {imdbScore != null && (
-          <a
+          <InlineBadge
+            icon={
+              <span className="font-black text-[9px] bg-[#f5c518] text-black px-1 rounded-sm leading-none py-0.5">
+                IMDb
+              </span>
+            }
+            score={imdbScore.toFixed(1)}
+            color="#f5c518"
+            bg="rgba(245,197,24,0.10)"
+            border="rgba(245,197,24,0.28)"
             href={data.imdbId ? `https://www.imdb.com/title/${data.imdbId}` : undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-[#f5c518]/10 border border-[#f5c518]/30 text-[#f5c518] hover:bg-[#f5c518]/20 transition-colors shadow-sm shrink-0"
-            title={`IMDb Rating: ${imdbScore}/10 ${data.imdbVotes ? `(${data.imdbVotes} votes)` : ''}`}
-          >
-            <ImdbLogo className="h-3 sm:h-3.5 w-auto shrink-0" />
-            <span>{imdbScore.toFixed(1)}</span>
-          </a>
+            title={`IMDb: ${imdbScore}/10${data.imdbVotes ? ` (${data.imdbVotes} votes)` : ''}`}
+          />
         )}
 
-        {/* Rotten Tomatoes with User's Official Tomato Logo */}
         {rtScore && (
-          <div
-            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-[#fa320a]/10 border border-[#fa320a]/30 text-red-400 shadow-sm shrink-0"
+          <InlineBadge
+            icon={<span className="text-xs leading-none">{isRotten ? '🍅' : '🍿'}</span>}
+            score={rtScore}
+            color={isRotten ? '#fa7060' : '#6ecc55'}
+            bg={isRotten ? 'rgba(250,50,10,0.10)' : 'rgba(84,179,43,0.10)'}
+            border={isRotten ? 'rgba(250,50,10,0.28)' : 'rgba(84,179,43,0.28)'}
             title={`Rotten Tomatoes: ${rtScore}`}
-          >
-            <RottenTomatoesLogo className="w-3.5 h-3.5 shrink-0" />
-            <span>{rtScore}</span>
-          </div>
+          />
         )}
 
-        {/* Metacritic with User's Official Logo */}
         {metascore != null && (
-          <div
-            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-black/60 border border-white/15 text-white/90 shadow-sm shrink-0"
-            title={`Metacritic Metascore: ${metascore}/100`}
-          >
-            <MetacriticLogo className="w-3.5 h-3.5 shrink-0" />
-            <span
-              className={
-                metascore >= 61
-                  ? 'text-emerald-400'
-                  : metascore >= 40
-                  ? 'text-amber-400'
-                  : 'text-red-400'
-              }
-            >
-              {metascore}
-            </span>
-          </div>
+          <InlineBadge
+            icon={
+              <span
+                className="font-black text-[9px] px-1 rounded-sm leading-none py-0.5 text-white"
+                style={{ backgroundColor: metaColor }}
+              >
+                M
+              </span>
+            }
+            score={`${metascore}`}
+            color={metaColor}
+            bg={`${metaColor}1a`}
+            border={`${metaColor}40`}
+            title={`Metacritic: ${metascore}/100`}
+          />
         )}
       </div>
     );
   }
 
-  // ── 2. Simple, Elegant Awards (No budget, no clutter) ──
+  // ── 2. Awards strip ──
   if (variant === 'awards') {
     if (!awards) return null;
-
     return (
       <div
-        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-400/[0.07] border border-amber-400/20 text-amber-300 text-xs font-medium max-w-full min-w-0 ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#f8536f]/[0.06] border border-[#f8536f]/20 text-[#f8536f]/90 text-xs font-medium max-w-full min-w-0 ${className}`}
         title={awards}
       >
-        <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+        <Trophy className="w-3.5 h-3.5 text-[#f8536f] shrink-0" />
         <span className="truncate">{awards}</span>
       </div>
     );
@@ -160,3 +221,24 @@ export const RatingsDisplay: React.FC<RatingsDisplayProps> = ({
 
   return null;
 };
+
+// Named exports for logos (used in other components)
+export const ImdbLogo = ({ className = 'h-3.5 w-auto' }: { className?: string }) => (
+  <span
+    className={`inline-flex items-center justify-center font-black text-black bg-[#f5c518] rounded-sm px-1 py-0.5 text-[9px] leading-none ${className}`}
+  >
+    IMDb
+  </span>
+);
+
+export const RottenTomatoesLogo = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <span className={`leading-none ${className}`}>🍅</span>
+);
+
+export const MetacriticLogo = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <span
+    className={`inline-flex items-center justify-center font-black text-white bg-[#54b32b] rounded-sm text-[9px] leading-none ${className}`}
+  >
+    M
+  </span>
+);

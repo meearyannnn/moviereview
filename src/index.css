@@ -1,55 +1,90 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+
+  /* Dark cinema theme: cool near-black surfaces, crimson accent */
   :root {
-    /* ── Midnight Obsidian Cinema Palette ── */
-    --background: 224 71% 4%;
-    --foreground: 210 20% 98%;
-    --card: 224 50% 7%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 50% 6%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 38 92% 50%;
-    --primary-foreground: 224 71% 4%;
-    --secondary: 224 30% 12%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 224 25% 14%;
-    --muted-foreground: 215 15% 65%;
-    --accent: 38 92% 50%;
-    --accent-foreground: 224 71% 4%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 224 30% 18%;
-    --input: 224 30% 14%;
-    --ring: 38 92% 50%;
+    --background: 228 45% 4%;
+    /* #060810 */
+    --foreground: 0 0% 100%;
+    --card: 227 37% 7%;
+    /* #0c0f1a */
+    --card-foreground: 0 0% 100%;
+    --popover: 227 37% 7%;
+    --popover-foreground: 0 0% 100%;
+    --muted: 228 20% 12%;
+    --muted-foreground: 0 0% 68%;
+    --border: 228 15% 15%;
+    --input: 228 15% 15%;
+    --ring: 0 84% 50%;
+    --destructive: 0 85% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --sidebar-border: 228 15% 14%;
+    --sidebar-ring: 0 84% 50%;
     --radius: 0.75rem;
 
-    /* ── Modern Cinema Tokens ── */
-    --cinema-bg: #07080b;
-    --cinema-surface: #0e1118;
-    --cinema-card: #131722;
-    --cinema-card-hover: #191e2c;
-    --cinema-border: rgba(255, 255, 255, 0.08);
-    --cinema-border-hover: rgba(245, 158, 11, 0.35);
-    --cinema-gold: #f59e0b;
-    --cinema-gold-light: #fbbf24;
-    --cinema-gold-glow: rgba(245, 158, 11, 0.25);
-    --cinema-violet: #8b5cf6;
-    --cinema-text-main: #f8fafc;
-    --cinema-text-muted: #94a3b8;
-    --cinema-text-dim: #64748b;
+    /* ── MovieGuy design tokens ── */
+    --sc-bg: #060810;
+    --sc-surface: #0b0d13;
+    --sc-card: #111520;
+    --sc-card-hover: #171c2b;
+    --sc-border: rgba(255, 255, 255, 0.08);
+    --sc-border-glow: rgba(220, 38, 38, 0.50);
 
-    /* ── Typography Stack ── */
-    --font-display: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-accent: 'Instrument Serif', 'Cormorant Garamond', Georgia, serif;
-    --font-cinema: 'Cinzel', serif;
-    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --sc-accent: #dc2626;
+    --sc-accent-2: #ef4444;
+    --sc-accent-glow: rgba(220, 38, 38, 0.30);
+    --sc-red-dark: #991b1b;
+    --sc-red-bold: #b91c1c;
+
+    /* Verdict tiers (shared by Meter + Reviews) */
+    --tier-hard-pass: #ef4444;
+    --tier-decent-watch: #38bdf8;
+    --tier-must-watch: #10b981;
+    --tier-absolute-cinema: #fbbf24;
+
+    /* Typography */
+    --font-display: 'Oswald', system-ui, sans-serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-accent: 'Oswald', system-ui, sans-serif;
+
+    /* Rating source brand colors */
+    --imdb-yellow: #f5c518;
+    --rt-red: #ef4444;
+    --meta-green: #22c55e;
+    --meta-orange: #f59e0b;
+    --meta-red: #dc2626;
+    --tmdb-teal: #01b4e4;
+
+    /* Text */
+    --sc-text: #ffffff;
+    --sc-text-muted: rgba(255, 255, 255, 0.70);
+    --sc-text-dim: rgba(255, 255, 255, 0.45);
   }
-}
 
-@layer base {
+  /* Light theme: warm paper, for daytime reading */
+  .light {
+    --background: 40 30% 97%;
+    --foreground: 240 15% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 15% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 15% 8%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 240 5% 40%;
+    --border: 40 15% 86%;
+    --input: 40 15% 86%;
+    --ring: 0 84% 50%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --sidebar-border: 40 15% 86%;
+    --sidebar-ring: 0 84% 50%;
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
@@ -64,19 +99,43 @@
   }
 
   body {
-    background-color: var(--cinema-bg);
-    color: var(--cinema-text-main);
-    font-family: var(--font-body);
+    @apply bg-background text-foreground font-sans antialiased;
+    font-weight: 500;
+    font-feature-settings: "kern", "liga";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
-    line-height: 1.6;
+    line-height: 1.5;
     padding-top: env(safe-area-inset-top);
   }
 
-  /* Prevent unintended iOS Safari viewport auto-zooming on inputs */
+  /* Headings: display face, bold but not shouting. Add `uppercase` where wanted. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-bold tracking-tight text-white;
+    letter-spacing: 0.01em;
+  }
+
+  /* Long-form review text */
+  .review-prose {
+    @apply font-sans text-base font-normal text-white/85 leading-relaxed;
+    max-width: 65ch;
+  }
+
+  /* Ratings and runtimes: aligned digits */
+  .rating-figure {
+    @apply font-mono text-red-500 font-bold;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* iOS input zoom prevention */
   @media screen and (max-width: 640px) {
+
     input[type="text"],
     input[type="search"],
     input[type="email"],
@@ -88,87 +147,94 @@
     }
   }
 
-  h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
-    color: var(--cinema-text-main);
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
   }
 
-  /* Sleek modern scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
   ::-webkit-scrollbar-track {
-    background: #07080b;
+    background: var(--sc-bg);
   }
+
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(245, 158, 11, 0.5);
+    background: rgba(220, 38, 38, 0.55);
   }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
   }
 }
 
 @layer components {
-  /* Glassmorphic Surfaces */
+
+  /* ── Glass surfaces ── */
   .glass-header {
-    background: rgba(8, 10, 14, 0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(6, 8, 16, 0.80);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   }
 
   .glass-card {
-    background: linear-gradient(135deg, rgba(20, 24, 34, 0.75) 0%, rgba(13, 16, 23, 0.65) 100%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--sc-surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: border-color 0.25s ease, background-color 0.25s ease;
   }
 
   .glass-card:hover {
-    border-color: rgba(245, 158, 11, 0.3);
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px rgba(245, 158, 11, 0.12);
+    background: var(--sc-card);
+    border-color: rgba(255, 255, 255, 0.18);
   }
 
   .glass-pill {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
-    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.8);
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
 
   .glass-pill:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.18);
     color: #fff;
   }
 
-  /* Glowing Accent Button */
+  /* ── Primary button ── */
   .btn-cinema-gold {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%);
-    color: #07080b;
-    font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    background: var(--sc-accent);
+    color: #ffffff;
+    font-family: var(--font-body);
+    font-weight: 700;
     border-radius: 9999px;
     padding: 0.75rem 1.75rem;
-    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.28);
+    transition: background-color 0.2s ease, transform 0.12s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -176,27 +242,25 @@
   }
 
   .btn-cinema-gold:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    filter: brightness(1.05);
+    background: var(--sc-accent-2);
   }
 
   .btn-cinema-gold:active {
-    transform: translateY(0) scale(0.99);
+    transform: scale(0.98);
   }
 
-  /* Ghost Secondary Button */
+  /* ── Ghost button ── */
   .btn-cinema-ghost {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #f8fafc;
-    font-family: var(--font-display);
-    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-family: var(--font-body);
+    font-weight: 600;
     border-radius: 9999px;
     padding: 0.75rem 1.6rem;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -204,79 +268,104 @@
   }
 
   .btn-cinema-ghost:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
   }
 
-  /* Eyebrow Label */
+  /* ── Eyebrow label ── */
   .eyebrow {
-    font-family: var(--font-display);
+    font-family: var(--font-body);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--cinema-gold);
+    color: var(--sc-accent);
   }
 
-  /* Section Title */
+  /* ── Section title ── */
   .title-display {
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+    font-size: clamp(1.4rem, 2.8vw, 2.1rem);
     font-weight: 700;
-    letter-spacing: -0.02em;
-    color: #fff;
+    letter-spacing: 0.01em;
+    color: #ffffff;
   }
 
   .title-display em {
-    font-family: var(--font-accent);
-    font-style: italic;
-    font-weight: 400;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-left: 0.15em;
+    font-family: var(--font-display);
+    font-style: normal;
+    font-weight: 700;
+    color: var(--sc-accent-2);
+    padding-left: 0.12em;
   }
 
+  /* ── Divider ── */
   .cinema-divider {
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.3) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+    background: linear-gradient(90deg, rgba(220, 38, 38, 0.5) 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
   }
 
-  /* Ambient Colored Lighting Orbs */
+  /* ── Rating ring ── */
+  .rating-ring {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rating-ring svg {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* ── Source rating badge ── */
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* ── Ambient glow orb ── */
   .ambient-glow {
     position: fixed;
     pointer-events: none;
     z-index: 0;
     border-radius: 50%;
     filter: blur(120px);
-    opacity: 0.35;
+    opacity: 0.22;
   }
 }
 
 @layer utilities {
-  .text-gold {
-    color: var(--cinema-gold);
+  .text-accent {
+    color: var(--sc-accent);
   }
 
-  .bg-cinema-dark {
-    background-color: var(--cinema-bg);
+  .bg-sc-dark {
+    background-color: var(--sc-bg);
   }
 
-  .bg-cinema-surface {
-    background-color: var(--cinema-surface);
+  .bg-sc-surface {
+    background-color: var(--sc-surface);
   }
 
-  .border-cinema {
-    border-color: var(--cinema-border);
+  .border-sc {
+    border-color: var(--sc-border);
   }
 
-  /* Modern Shimmer Animation */
   @keyframes shimmer-fast {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
   }
 
   .animate-shimmer-fast {
@@ -284,8 +373,17 @@
   }
 
   @keyframes pulse-glow {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.05); }
+
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
   }
 
   .animate-pulse-glow {
@@ -293,28 +391,50 @@
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
   }
 
   .animate-float {
     animation: float 5s ease-in-out infinite;
   }
 
-  /* Retro CRT Scanlines Effect */
-  .crt-scanlines::after {
-    content: " ";
-    display: block;
-    position: fixed;
-    top: 0; left: 0; bottom: 0; right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-    z-index: 40;
-    background-size: 100% 4px, 6px 100%;
-    pointer-events: none;
-    opacity: 0.8;
+  @keyframes ring-fill {
+    from {
+      stroke-dashoffset: var(--dash-total, 251.2);
+    }
+
+    to {
+      stroke-dashoffset: var(--dash-offset, 0);
+    }
   }
 
-  /* Safe Area Utilities for Android & iOS */
+  .animate-ring {
+    animation: ring-fill 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes bar-grow {
+    from {
+      width: 0;
+    }
+
+    to {
+      width: var(--bar-width, 0%);
+    }
+  }
+
+  .animate-bar {
+    animation: bar-grow 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Safe areas */
   .safe-top-padding {
     padding-top: max(16px, env(safe-area-inset-top));
   }
@@ -327,11 +447,23 @@
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
   }
 
-  /* Mobile Tactile Active State */
+  /* Touch feedback */
   .touch-feedback {
     transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
   .touch-feedback:active {
     transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

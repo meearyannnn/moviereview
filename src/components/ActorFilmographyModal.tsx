@@ -1,7 +1,7 @@
 // components/ActorFilmographyModal.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Calendar, MapPin, Film, Star, ExternalLink, Sparkles } from 'lucide-react';
+import { X, Calendar, MapPin, Film, Star } from 'lucide-react';
 import { tmdb } from '@/services/tmdb';
 import { tvmaze } from '@/services/tvmaze';
 
@@ -32,6 +32,19 @@ interface ActorFilmographyModalProps {
   onClose: () => void;
 }
 
+type Filter = 'all' | 'movie' | 'tv';
+
+const initials = (name: string) =>
+  name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+const formatDate = (iso?: string | null) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
   actorId,
   actorName,
@@ -42,24 +55,27 @@ export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
   const [profile, setProfile] = useState<ActorProfile | null>(null);
   const [credits, setCredits] = useState<ActorCredit[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'movie' | 'tv'>('all');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [bioOpen, setBioOpen] = useState(false);
 
+  // Load actor
   useEffect(() => {
     if (!isOpen || (!actorId && !actorName)) return;
 
     let isMounted = true;
     setLoading(true);
+    setProfile(null);
+    setCredits([]);
+    setFilter('all');
+    setBioOpen(false);
 
     const loadActor = async () => {
       try {
         let currentActorId = actorId;
 
-        // If no TMDB actorId was provided, search TMDB or TVmaze by name
         if (!currentActorId && actorName) {
           const searchRes = await tmdb.search(actorName, 'person');
-          if (searchRes.results?.[0]) {
-            currentActorId = searchRes.results[0].id;
-          }
+          if (searchRes.results?.[0]) currentActorId = searchRes.results[0].id;
         }
 
         if (currentActorId) {
@@ -68,33 +84,38 @@ export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
             tmdb.getPersonCombinedCredits(currentActorId).catch(() => null),
           ]);
 
-          if (isMounted && details) {
-            setProfile(details);
-          }
+          if (isMounted && details) setProfile(details);
 
           if (isMounted && creditsRes?.cast) {
-            // Sort by popularity / vote count and remove duplicates
-            const cleanCredits: ActorCredit[] = creditsRes.cast
+            const seen = new Set<string>();
+            const clean: ActorCredit[] = creditsRes.cast
               .filter((c: any) => c.poster_path && (c.title || c.name))
               .map((c: any) => ({
                 id: c.id,
                 title: c.title || c.name,
-                character: c.character || 'Self',
+                character: c.character || '',
                 poster_path: c.poster_path,
                 release_date: c.release_date || c.first_air_date,
                 vote_average: c.vote_average,
                 media_type: c.media_type === 'tv' ? 'tv' : 'movie',
               }))
+              // Remove duplicates (same title can appear for several episodes/roles)
+              .filter((c: ActorCredit) => {
+                const key = `${c.media_type}_${c.id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              })
+              // Newest first, undated last
               .sort((a: ActorCredit, b: ActorCredit) => {
-                const dateA = a.release_date ? new Date(a.release_date).getTime() : 0;
-                const dateB = b.release_date ? new Date(b.release_date).getTime() : 0;
-                return dateB - dateA;
+                const da = a.release_date ? new Date(a.release_date).getTime() : 0;
+                const db = b.release_date ? new Date(b.release_date).getTime() : 0;
+                return db - da;
               });
 
-            setCredits(cleanCredits);
+            setCredits(clean);
           }
         } else if (actorName) {
-          // Fallback to TVmaze person search
           const tvmazeData = await tvmaze.getFilmographyByName(actorName);
           if (isMounted && tvmazeData?.person) {
             setProfile({
@@ -115,156 +136,218 @@ export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
     };
 
     loadActor();
-
     return () => {
       isMounted = false;
     };
   }, [actorId, actorName, isOpen]);
 
+  // Escape to close + lock page scroll while open
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen, onClose]);
+
+  const counts = useMemo(
+    () => ({
+      all: credits.length,
+      movie: credits.filter((c) => c.media_type === 'movie').length,
+      tv: credits.filter((c) => c.media_type === 'tv').length,
+    }),
+    [credits]
+  );
+
   if (!isOpen) return null;
 
   const filteredCredits = credits.filter((c) => filter === 'all' || c.media_type === filter);
+  const displayName = profile?.name || actorName || 'Actor';
+  const photo = profile?.profile_path
+    ? profile.profile_path.startsWith('http')
+      ? profile.profile_path
+      : `https://image.tmdb.org/t/p/w300${profile.profile_path}`
+    : null;
+  const born = formatDate(profile?.birthday);
+  const bio = profile?.biography?.trim();
+  const bioLong = !!bio && bio.length > 220;
 
   const handleSelectWork = (credit: ActorCredit) => {
     onClose();
     navigate(`/${credit.media_type}/${credit.id}`);
   };
 
+  const tabs: { key: Filter; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'movie', label: 'Movies' },
+    { key: 'tv', label: 'TV shows' },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/85 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[90vh] bg-[#0c0f17] border border-white/15 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-        {/* Close Button */}
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${displayName} filmography`}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/85 backdrop-blur-xl animate-in fade-in duration-200 sm:items-center sm:p-6"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-white/15 bg-[#0c0f17] shadow-2xl animate-in slide-in-from-bottom-8 duration-300 sm:max-h-[88dvh] sm:rounded-3xl sm:zoom-in-95"
+      >
+        {/* Grab handle (mobile) */}
+        <div className="flex justify-center pt-2.5 sm:hidden" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full bg-white/20" />
+        </div>
+
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center bg-black/60 hover:bg-black/90 text-white border border-white/20 transition-all hover:scale-110"
-          aria-label="Close modal"
+          autoFocus
+          aria-label="Close"
+          className="absolute right-3 top-3 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white transition-colors hover:bg-black/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80 sm:right-4 sm:top-4"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
 
         {loading ? (
-          <div className="h-96 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin" />
+          <div className="flex h-80 items-center justify-center">
+            <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/10 border-t-red-500" />
           </div>
         ) : (
-          <div className="overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6">
-            {/* Header: Actor Profile */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-amber-400/30 shadow-xl bg-neutral-900 shrink-0">
-                <img
-                  src={
-                    profile?.profile_path
-                      ? profile.profile_path.startsWith('http')
-                        ? profile.profile_path
-                        : `https://image.tmdb.org/t/p/w300${profile.profile_path}`
-                      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-                  }
-                  alt={profile?.name || actorName || 'Actor'}
-                  className="w-full h-full object-cover"
-                />
+          <div className="overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+            {/* Profile */}
+            <div className="flex gap-4 px-4 pb-4 pt-4 sm:gap-6 sm:px-8 sm:pb-5 sm:pt-8">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/[0.06] shadow-xl sm:h-28 sm:w-28">
+                {photo ? (
+                  <img src={photo} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xl font-bold text-white/50">{initials(displayName)}</span>
+                )}
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-400">
-                    Filmography
-                  </span>
-                  {profile?.known_for_department && (
-                    <span className="text-[10px] text-white/50 font-medium">
-                      • {profile.known_for_department}
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-                  {profile?.name || actorName}
+              <div className="min-w-0 flex-1 pr-10">
+                <h2 className="font-display text-xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+                  {displayName}
                 </h2>
-
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-xs text-white/60">
-                  {profile?.birthday && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-amber-400" />
-                      Born {profile.birthday}
+                {profile?.known_for_department && (
+                  <p className="mt-0.5 text-sm text-red-400">{profile.known_for_department}</p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/60">
+                  {born && (
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-white/35" aria-hidden="true" />
+                      Born {born}
                     </span>
                   )}
                   {profile?.place_of_birth && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-amber-400" />
-                      {profile.place_of_birth}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-white/35" aria-hidden="true" />
+                      <span className="truncate">{profile.place_of_birth}</span>
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Film className="w-3 h-3 text-amber-400" />
-                    {credits.length} Titles
+                  <span className="flex items-center gap-1.5">
+                    <Film className="h-3.5 w-3.5 text-white/35" aria-hidden="true" />
+                    {counts.all} titles
                   </span>
                 </div>
-
-                {profile?.biography && (
-                  <p className="mt-3 text-xs sm:text-sm text-white/70 font-light leading-relaxed line-clamp-3">
-                    {profile.biography}
-                  </p>
-                )}
               </div>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between gap-2 border-t border-white/10 pt-4">
-              <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
-                {(['all', 'movie', 'tv'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setFilter(t)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all uppercase ${
-                      filter === t
-                        ? 'bg-amber-400 text-black shadow-sm'
-                        : 'text-white/60 hover:text-white'
+            {/* Biography */}
+            {bio && (
+              <div className="px-4 pb-5 sm:px-8">
+                <p
+                  className={`max-w-2xl text-sm leading-relaxed text-white/70 ${bioLong && !bioOpen ? 'line-clamp-3' : ''
                     }`}
+                >
+                  {bio}
+                </p>
+                {bioLong && (
+                  <button
+                    onClick={() => setBioOpen((o) => !o)}
+                    aria-expanded={bioOpen}
+                    className="mt-1.5 text-sm font-semibold text-red-400 hover:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
                   >
-                    {t === 'all' ? 'All' : t === 'movie' ? 'Movies' : 'TV Shows'}
+                    {bioOpen ? 'Show less' : 'Read more'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Tabs (stay visible while scrolling the grid) */}
+            <div className="sticky top-0 z-10 border-y border-white/[0.08] bg-[#0c0f17]/95 px-4 py-3 backdrop-blur sm:px-8">
+              <div role="tablist" aria-label="Filter credits" className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-black/40 p-1">
+                {tabs.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    role="tab"
+                    aria-selected={filter === key}
+                    onClick={() => setFilter(key)}
+                    className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 ${filter === key ? 'bg-red-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+                      }`}
+                  >
+                    {label}
+                    <span className={`text-xs ${filter === key ? 'text-white/80' : 'text-white/35'}`}>
+                      {counts[key]}
+                    </span>
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-white/40">
-                {filteredCredits.length} credits
-              </span>
             </div>
 
-            {/* Filmography Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-h-[50vh] overflow-y-auto pr-1">
-              {filteredCredits.map((credit) => (
-                <div
-                  key={`${credit.media_type}_${credit.id}`}
-                  onClick={() => handleSelectWork(credit)}
-                  className="group cursor-pointer rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-amber-400/50 p-2.5 transition-all duration-200 flex flex-col justify-between"
-                >
-                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-neutral-900 mb-2">
-                    <img
-                      src={`https://image.tmdb.org/t/p/w300${credit.poster_path}`}
-                      alt={credit.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                    <span className="absolute top-1.5 left-1.5 text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-amber-400 border border-white/10">
-                      {credit.media_type === 'tv' ? 'TV' : 'MOVIE'}
-                    </span>
-                    {credit.vote_average != null && credit.vote_average > 0 && (
-                      <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-amber-300 border border-white/10">
-                        <Star className="w-2.5 h-2.5 fill-amber-300" />
-                        {credit.vote_average.toFixed(1)}
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    <h4 className="font-display font-bold text-xs text-white group-hover:text-amber-400 transition-colors line-clamp-1">
-                      {credit.title}
-                    </h4>
-                    <p className="text-[10px] text-white/40 line-clamp-1 mt-0.5">
-                      {credit.character ? `as ${credit.character}` : credit.release_date?.slice(0, 4) || ''}
-                    </p>
-                  </div>
+            {/* Credits */}
+            <div className="px-4 py-5 sm:px-8 sm:py-6">
+              {filteredCredits.length === 0 ? (
+                <p className="py-10 text-center text-sm text-white/50">
+                  {credits.length === 0
+                    ? 'No credits with posters were found for this person.'
+                    : 'No credits in this category.'}
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 sm:gap-x-4 md:grid-cols-5">
+                  {filteredCredits.map((credit) => {
+                    const year = credit.release_date?.slice(0, 4);
+                    return (
+                      <button
+                        key={`${credit.media_type}_${credit.id}`}
+                        onClick={() => handleSelectWork(credit)}
+                        className="group min-w-0 text-left focus-visible:outline-none"
+                      >
+                        <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-neutral-900 transition-colors group-hover:border-red-500/60 group-focus-visible:ring-2 group-focus-visible:ring-white/70">
+                          <img
+                            src={`https://image.tmdb.org/t/p/w300${credit.poster_path}`}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {filter === 'all' && credit.media_type === 'tv' && (
+                            <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">
+                              TV
+                            </span>
+                          )}
+                          {credit.vote_average != null && credit.vote_average > 0 && (
+                            <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">
+                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" aria-hidden="true" />
+                              {credit.vote_average.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="mt-2 line-clamp-1 text-xs font-semibold text-white transition-colors group-hover:text-red-400">
+                          {credit.title}
+                        </h4>
+                        {credit.character && (
+                          <p className="line-clamp-1 text-[11px] text-white/50">as {credit.character}</p>
+                        )}
+                        {year && <p className="text-[11px] text-white/35">{year}</p>}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}

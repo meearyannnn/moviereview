@@ -19,7 +19,8 @@ import ExplorePage from '@/pages/ExplorePage';
 import LanguagesPage from '@/pages/LanguagesPage';
 import CategoriesPage from '@/pages/CategoriesPage';
 import CountriesPage from '@/pages/CountriesPage';
-import { CineAiCopilot } from '@/components/CineAiCopilot';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 // Optimized QueryClient configuration for better performance
 const queryClient = new QueryClient({
@@ -52,31 +53,33 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/movies" element={<Movies />} />
-          <Route path="/tv" element={<TV />} />
-          <Route path="/genres" element={<Genres />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/movie/:id" element={<MovieDetail />} />
-          <Route path="/tv/:id" element={<TVDetail />} />
-          <Route path="/recommendations" element={<RecommendationsPage />} />
-          <Route path="/time-machine" element={<TimeMachinePage />} />
-          <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/languages" element={<LanguagesPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/countries" element={<CountriesPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <CineAiCopilot />
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/movies" element={<Movies />} />
+            <Route path="/tv" element={<TV />} />
+            <Route path="/genres" element={<Genres />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
+            <Route path="/tv/:id" element={<TVDetail />} />
+            <Route path="/recommendations" element={<RecommendationsPage />} />
+            <Route path="/time-machine" element={<TimeMachinePage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/languages" element={<LanguagesPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/countries" element={<CountriesPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
     
     {/* React Query DevTools - Only shows in development */}
     {import.meta.env.DEV && (

@@ -1,17 +1,18 @@
-// components/WebChannelsSection.tsx
+﻿// components/WebChannelsSection.tsx
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Tv, Film, Play, Star, Calendar, Radio, ChevronDown, Layers } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { MovieCard } from '@/components/MovieCard';
 import { WEB_CHANNELS, webChannelsService, type WebChannel } from '@/services/webChannels';
 import { tmdb, type Movie } from '@/services/tmdb';
 
 const GENRE_FILTERS = [
-  { id: 'all', label: 'All Genres' },
-  { id: 'drama', label: 'Drama' },
-  { id: 'comedy', label: 'Comedy' },
-  { id: 'action', label: 'Action & Adventure' },
-  { id: 'scifi', label: 'Sci-Fi & Fantasy' },
-  { id: 'crime', label: 'Crime & Thriller' },
+  { id: 'all',       label: 'All' },
+  { id: 'drama',     label: 'Drama' },
+  { id: 'comedy',    label: 'Comedy' },
+  { id: 'action',    label: 'Action' },
+  { id: 'scifi',     label: 'Sci-Fi' },
+  { id: 'crime',     label: 'Crime' },
   { id: 'animation', label: 'Animation' },
 ] as const;
 
@@ -26,12 +27,11 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
   const [activeGenre, setActiveGenre] = useState<string>('all');
   const [visibleCount, setVisibleCount] = useState<number>(18);
 
-  const [popularShows, setPopularShows] = useState<Movie[]>([]);
-  const [seasonShows, setSeasonShows] = useState<Movie[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [popularShows, setPopularShows]   = useState<Movie[]>([]);
+  const [seasonShows, setSeasonShows]     = useState<Movie[]>([]);
+  const [movies, setMovies]               = useState<Movie[]>([]);
+  const [loading, setLoading]             = useState(true);
 
-  // Load content whenever selectedChannel changes
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -44,32 +44,20 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
       webChannelsService.getTrendingMovies(selectedChannel, 36),
     ])
       .then(([pop, season, mov]) => {
-        if (isMounted) {
-          setPopularShows(pop);
-          setSeasonShows(season);
-          setMovies(mov);
-        }
+        if (isMounted) { setPopularShows(pop); setSeasonShows(season); setMovies(mov); }
       })
-      .catch((err) => {
-        console.warn('Error loading channel content:', err);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      .catch(console.warn)
+      .finally(() => { if (isMounted) setLoading(false); });
 
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [selectedChannel]);
 
-  // Reset pagination when switching tabs
   const handleTabChange = (tab: 'popular' | 'thisSeason' | 'movies') => {
-    setActiveTab(tab);
-    setVisibleCount(18);
+    setActiveTab(tab); setVisibleCount(18);
   };
 
   const rawList = useMemo(() => {
-    if (activeTab === 'popular') return popularShows;
+    if (activeTab === 'popular')    return popularShows;
     if (activeTab === 'thisSeason') return seasonShows;
     return movies;
   }, [activeTab, popularShows, seasonShows, movies]);
@@ -78,11 +66,11 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
     if (activeGenre === 'all') return rawList;
     return rawList.filter((item) => {
       const ids = item.genre_ids || [];
-      if (activeGenre === 'drama') return ids.includes(18);
-      if (activeGenre === 'comedy') return ids.includes(35);
-      if (activeGenre === 'action') return ids.includes(10759) || ids.includes(28) || ids.includes(12);
-      if (activeGenre === 'scifi') return ids.includes(10765) || ids.includes(878) || ids.includes(14);
-      if (activeGenre === 'crime') return ids.includes(80) || ids.includes(9648) || ids.includes(53);
+      if (activeGenre === 'drama')     return ids.includes(18);
+      if (activeGenre === 'comedy')    return ids.includes(35);
+      if (activeGenre === 'action')    return ids.includes(10759) || ids.includes(28) || ids.includes(12);
+      if (activeGenre === 'scifi')     return ids.includes(10765) || ids.includes(878) || ids.includes(14);
+      if (activeGenre === 'crime')     return ids.includes(80) || ids.includes(9648) || ids.includes(53);
       if (activeGenre === 'animation') return ids.includes(16);
       return true;
     });
@@ -90,267 +78,170 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
 
   const visibleItems = filteredList.slice(0, visibleCount);
 
-  const currentTitle =
-    activeTab === 'popular'
-      ? `Popular ${selectedChannel.name} Shows`
-      : activeTab === 'thisSeason'
-      ? `This Season's Shows on ${selectedChannel.name}`
-      : `Trending Movies on ${selectedChannel.name}`;
+  const tabLabel = activeTab === 'popular' ? 'Popular' : activeTab === 'thisSeason' ? 'New This Season' : 'Movies';
 
   return (
-    <section className="my-12 w-full max-w-full min-w-0">
-      {/* ── Section Title ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-black">
-              Web Channels
-            </span>
-            <span className="text-xs text-amber-400 font-semibold flex items-center gap-1">
-              <Radio className="w-3.5 h-3.5" />
-              Streaming Networks
-            </span>
-          </div>
-          <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-            Browse by Streaming Network
-          </h2>
-        </div>
+    <section className="my-14 w-full max-w-full min-w-0">
+
+      {/* ── Section eyebrow ── */}
+      <div className="mb-6">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-1.5">
+          Streaming Networks
+        </p>
+        <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
+          Browse by <span className="text-red-500">Network</span>
+        </h2>
       </div>
 
-      {/* ── 1. Web Channels Grid / Selector ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3 mb-8">
-        {WEB_CHANNELS.map((channel) => {
-          const isSelected = selectedChannel.id === channel.id;
+      {/* ── Network selector pills ── */}
+      <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1 mb-1 touch-pan-x">
+        {WEB_CHANNELS.map((ch) => {
+          const active = selectedChannel.id === ch.id;
           return (
             <button
-              key={channel.id}
-              onClick={() => setSelectedChannel(channel)}
-              className={`group relative p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center text-center touch-feedback ${
-                isSelected
-                  ? `bg-gradient-to-b ${channel.bgGradient} border-white/40 shadow-xl scale-[1.03]`
-                  : 'bg-[#0e1118]/80 hover:bg-white/[0.06] border-white/10 hover:border-white/20'
-              }`}
-              style={
-                isSelected
-                  ? { boxShadow: `0 0 24px ${channel.color}35`, borderColor: `${channel.color}90` }
-                  : undefined
-              }
+              key={ch.id}
+              onClick={() => setSelectedChannel(ch)}
+              className={[
+                'group flex-none flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 border whitespace-nowrap',
+                active
+                  ? 'border-red-500/60 text-white shadow-[0_0_18px_rgba(220,38,38,0.3)]'
+                  : 'bg-transparent border-white/[0.08] text-white/50 hover:text-white hover:border-white/20',
+              ].join(' ')}
+              style={active ? { backgroundColor: `${ch.color}18`, boxShadow: `0 0 18px ${ch.color}28` } : undefined}
             >
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl p-1 mb-2 shrink-0 flex items-center justify-center bg-black/60 border border-white/10 group-hover:scale-110 group-hover:border-white/30 transition-all duration-300 shadow-md">
-                <img
-                  src={channel.logoUrl}
-                  alt={channel.name}
-                  className="w-full h-full object-contain rounded-lg"
-                  loading="lazy"
-                />
+              <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 bg-black/50 p-0.5">
+                <img src={ch.logoUrl} alt={ch.name} className="w-full h-full object-contain" loading="lazy" />
               </div>
-              <span className="font-display font-extrabold text-xs sm:text-sm text-white tracking-tight truncate w-full">
-                {channel.name}
-              </span>
-              <span className="text-[9px] text-white/40 truncate w-full mt-0.5 hidden sm:block">
-                Streaming
-              </span>
+              <span className="text-xs font-black font-display tracking-wide">{ch.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ── 2. Content Showcase for Selected Channel ── */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-[#0a0d14] border border-white/10 shadow-2xl">
-        {/* Showcase Header & Category Tabs */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className="w-6 h-6 rounded-lg p-0.5 bg-black/60 border border-white/10 flex items-center justify-center shrink-0">
-                <img
-                  src={selectedChannel.logoUrl}
-                  alt={selectedChannel.name}
-                  className="w-full h-full object-contain rounded-md"
-                />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-white/60">
-                {selectedChannel.tagline}
-              </span>
+      {/* ── Main showcase ── */}
+      <div className="mt-6 relative rounded-3xl overflow-hidden border border-white/[0.06]"
+           style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 100%)' }}>
+
+        {/* Ambient colour glow from selected channel */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07] blur-3xl"
+          style={{ background: `radial-gradient(ellipse at top left, ${selectedChannel.color}, transparent 70%)` }}
+        />
+
+        {/* Panel header */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 sm:px-7 pt-5 pb-4">
+
+          {/* Left: channel logo + title */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-white/[0.08]"
+              style={{ backgroundColor: `${selectedChannel.color}18` }}
+            >
+              <img src={selectedChannel.logoUrl} alt={selectedChannel.name} className="w-7 h-7 object-contain" />
             </div>
-            <h3 className="font-display font-black text-xl sm:text-2xl text-white">
-              {currentTitle}
-            </h3>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 font-display">
+                {selectedChannel.tagline || selectedChannel.name}
+              </p>
+              <h3 className="font-display font-black text-lg sm:text-xl text-white leading-tight">
+                <span style={{ color: selectedChannel.color }}>{selectedChannel.name}</span>{' '}
+                — {tabLabel}
+              </h3>
+            </div>
           </div>
 
-          {/* Category Tabs with Counts */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10 self-start lg:self-auto">
-            <button
-              onClick={() => handleTabChange('popular')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'popular'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Tv className="w-3.5 h-3.5" />
-              Popular Shows
-              {popularShows.length > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === 'popular' ? 'bg-black/20 text-black' : 'bg-white/10 text-white/70'}`}>
-                  {popularShows.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => handleTabChange('thisSeason')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'thisSeason'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              This Season
-              {seasonShows.length > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === 'thisSeason' ? 'bg-black/20 text-black' : 'bg-white/10 text-white/70'}`}>
-                  {seasonShows.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => handleTabChange('movies')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'movies'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Film className="w-3.5 h-3.5" />
-              Movies
-              {movies.length > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === 'movies' ? 'bg-black/20 text-black' : 'bg-white/10 text-white/70'}`}>
-                  {movies.length}
-                </span>
-              )}
-            </button>
+          {/* Right: tab switcher */}
+          <div className="flex items-center gap-0.5 p-1 rounded-xl border border-white/[0.06] bg-black/30 flex-shrink-0 backdrop-blur-sm">
+            {([
+              { key: 'popular',    label: 'Popular'  },
+              { key: 'thisSeason', label: 'New'      },
+              { key: 'movies',     label: 'Movies'   },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => handleTabChange(key)}
+                className={[
+                  'px-4 py-1.5 rounded-lg text-[11px] font-black font-display uppercase tracking-wider transition-all duration-200',
+                  activeTab === key
+                    ? 'bg-red-600 text-white shadow-[0_2px_10px_rgba(220,38,38,0.45)]'
+                    : 'text-white/40 hover:text-white',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ── Genre Quick Filter Pills ── */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide touch-pan-x">
-          <span className="text-[11px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1 mr-1 shrink-0">
-            <Layers className="w-3 h-3 text-amber-400" />
-            Filter:
-          </span>
-          {GENRE_FILTERS.map((genre) => (
+        {/* Genre pills */}
+        <div className="relative z-10 flex gap-1.5 px-5 sm:px-7 pb-4 overflow-x-auto scrollbar-hide touch-pan-x">
+          {GENRE_FILTERS.map((g) => (
             <button
-              key={genre.id}
-              onClick={() => {
-                setActiveGenre(genre.id);
-                setVisibleCount(18);
-              }}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                activeGenre === genre.id
-                  ? 'bg-white/20 text-white border border-white/30 shadow-sm'
-                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/[0.06]'
-              }`}
+              key={g.id}
+              onClick={() => { setActiveGenre(g.id); setVisibleCount(18); }}
+              className={[
+                'flex-none px-3.5 py-1 rounded-full text-[11px] font-bold font-sans whitespace-nowrap border transition-all duration-200',
+                activeGenre === g.id
+                  ? 'bg-white/12 text-white border-white/30'
+                  : 'bg-transparent text-white/35 border-white/[0.06] hover:text-white/60 hover:border-white/15',
+              ].join(' ')}
             >
-              {genre.label}
+              {g.label}
             </button>
           ))}
         </div>
 
-        {/* Showcase Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="aspect-[2/3] rounded-2xl bg-white/[0.04] border border-white/10 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : filteredList.length === 0 ? (
-          <div className="py-12 text-center text-white/50 text-sm">
-            No {activeGenre !== 'all' ? `${activeGenre} ` : ''}titles available under this category for {selectedChannel.name}.
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {visibleItems.map((item) => {
-                const isTv = activeTab !== 'movies';
-                const route = isTv ? `/tv/${item.id}` : `/movie/${item.id}`;
-                const title = item.name || item.title;
-                const year = (item.first_air_date || item.release_date || '').slice(0, 4);
+        {/* Divider */}
+        <div className="h-px bg-white/[0.05] mx-5 sm:mx-7" />
 
-                return (
-                  <div
-                    key={`${item.id}_${item.media_type || activeTab}`}
-                    onClick={() => navigate(route)}
-                    className="group cursor-pointer flex flex-col justify-between"
-                  >
-                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 group-hover:border-amber-400/50 transition-all duration-300 shadow-xl">
-                      <img
-                        src={tmdb.getImageUrl(item.poster_path, 'w500')}
-                        alt={title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3">
-                        <span className="btn-cinema-gold text-xs py-2 w-full flex items-center justify-center gap-1.5 font-bold">
-                          <Play className="w-3 h-3 fill-black" />
-                          Stream
-                        </span>
-                      </div>
-
-                      {/* Network & Rating Badges */}
-                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                        <span
-                          className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border flex items-center gap-1.5 shadow-sm"
-                          style={{ color: selectedChannel.color, borderColor: `${selectedChannel.color}50` }}
-                        >
-                          <img src={selectedChannel.logoUrl} alt="" className="w-3 h-3 rounded-sm object-contain" />
-                          {selectedChannel.name}
-                        </span>
-                        {item.vote_average > 0 && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-amber-400 border border-white/10">
-                            <Star className="w-2.5 h-2.5 fill-amber-400" />
-                            {item.vote_average.toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-2">
-                      <h4 className="font-display font-bold text-xs sm:text-sm text-white group-hover:text-amber-400 transition-colors line-clamp-1">
-                        {title}
-                      </h4>
-                      {year && (
-                        <span className="text-[11px] text-white/40 font-medium flex items-center gap-1 mt-0.5">
-                          <Calendar className="w-3 h-3 text-white/30" />
-                          {year}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Grid */}
+        <div className="relative z-10 p-5 sm:p-7">
+          {loading ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse" style={{ animationDelay: `${i * 50}ms` }} />
+              ))}
             </div>
-
-            {/* Load More Button */}
-            {visibleCount < filteredList.length && (
-              <div className="mt-8 flex flex-col items-center justify-center gap-2 pt-4 border-t border-white/5">
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 12)}
-                  className="px-6 py-3 rounded-2xl bg-white/[0.06] hover:bg-amber-400 text-white hover:text-black font-extrabold text-xs tracking-wider uppercase border border-white/10 hover:border-amber-400 transition-all duration-300 shadow-xl flex items-center gap-2 group"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:text-black transition-colors" />
-                  Load More Titles (+12)
-                  <ChevronDown className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform" />
-                </button>
-                <span className="text-[11px] text-white/40 font-medium">
-                  Showing {visibleItems.length} of {filteredList.length} titles on {selectedChannel.name}
-                </span>
+          ) : filteredList.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-white/30 text-sm font-sans">No titles for this filter on {selectedChannel.name}.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
+                {visibleItems.map((item) => {
+                  const isTv = activeTab !== 'movies';
+                  return (
+                    <MovieCard
+                      key={`${item.id}_${activeTab}`}
+                      movie={item}
+                      type={isTv ? 'tv' : 'movie'}
+                    />
+                  );
+                })}
               </div>
-            )}
-          </>
-        )}
+
+              {/* Load More */}
+              {visibleCount < filteredList.length && (
+                <div className="mt-10 flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => setVisibleCount((p) => p + 12)}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/[0.1] bg-white/[0.03] hover:bg-red-600/80 hover:border-red-500/60 text-white/60 hover:text-white text-xs font-black font-display uppercase tracking-widest transition-all duration-300"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                    Load More
+                  </button>
+                  <span className="text-[10px] text-white/25 font-sans">
+                    {visibleItems.length} / {filteredList.length} titles
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );
 };
+
+

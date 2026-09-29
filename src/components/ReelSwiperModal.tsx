@@ -162,8 +162,8 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
         {/* Top Header */}
         <div className="flex items-center justify-between px-2 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center">
-              <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
+            <div className="w-9 h-9 rounded-2xl bg-red-600/20 border border-red-500/30 flex items-center justify-center">
+              <Flame className="w-5 h-5 text-red-500 animate-pulse" />
             </div>
             <div>
               <h2 className="text-lg font-display font-bold text-white tracking-wide">Reel Swiper</h2>
@@ -183,23 +183,23 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
           </button>
         </div>
 
-        {/* ── Card Deck Area ── */}
+        {/* -- Card Deck Area -- */}
         <div className="relative flex-1 my-2 flex items-center justify-center select-none overflow-hidden touch-none">
           {loading ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin" />
+              <div className="w-12 h-12 rounded-full border-2 border-red-500/20 border-t-red-500 animate-spin" />
               <span className="text-xs text-white/40 font-mono">Shuffling Reel Deck...</span>
             </div>
           ) : !currentMovie ? (
             <div className="text-center p-8 bg-[#0e1017] border border-white/10 rounded-3xl">
-              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3 animate-pulse" />
+              <Sparkles className="w-10 h-10 text-red-500 mx-auto mb-3 animate-pulse" />
               <h3 className="text-xl font-display font-bold text-white mb-2">Reel Deck Cleared!</h3>
               <p className="text-xs text-white/60 mb-6">
                 You've reviewed this batch. Ready to deal another stack of cinema gems?
               </p>
               <button
                 onClick={loadDeck}
-                className="px-6 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-amber-400/20"
+                className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-amber-300 text-black font-bold text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-red-600/25"
               >
                 <RotateCcw className="w-4 h-4" />
                 Shuffle New Batch
@@ -226,7 +226,7 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
-                className={`absolute inset-x-2 inset-y-0 rounded-3xl bg-[#0e1118] border border-white/15 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing transition-transform ${
+                className={`absolute inset-x-2 inset-y-0 rounded-3xl bg-[#111520] border border-white/15 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing transition-transform ${
                   !isDragging && !actionFeedback ? 'duration-300 ease-out' : 'duration-75'
                 }`}
                 style={{
@@ -249,7 +249,7 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                 />
 
                 {/* Deep Cinema Vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#07080b] via-[#07080b]/50 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060810] via-[#060810]/50 to-transparent pointer-events-none" />
 
                 {/* Feedback Badges (Like / Pass / Stream) */}
                 {dragOffset.x > 50 && (
@@ -263,16 +263,16 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                   </div>
                 )}
                 {dragOffset.y < -50 && Math.abs(dragOffset.x) < 50 && (
-                  <div className="absolute top-8 left-1/2 -translate-x-1/2 border-4 border-amber-400 bg-amber-500/20 backdrop-blur-md text-amber-300 font-display font-black text-xl px-4 py-1 rounded-2xl shadow-lg animate-in zoom-in-75">
-                    STREAM NOW
+                  <div className="absolute top-8 left-1/2 -translate-x-1/2 border-4 border-red-600 bg-amber-500/20 backdrop-blur-md text-red-400 font-display font-black text-xl px-4 py-1 rounded-2xl shadow-lg animate-in zoom-in-75">
+                    EXPLORE
                   </div>
                 )}
 
                 {/* Card Content Overlay */}
                 <div className="absolute bottom-0 inset-x-0 p-6 pointer-events-none">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="flex items-center gap-1 bg-amber-400/20 border border-amber-400/30 text-amber-300 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    <span className="flex items-center gap-1 bg-red-600/20 border border-red-500/30 text-red-400 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
+                      <Star className="w-3 h-3 fill-red-500 text-red-500" />
                       {currentMovie.vote_average?.toFixed(1)}
                     </span>
                     {(currentMovie.release_date || currentMovie.first_air_date) && (
@@ -296,26 +296,26 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
           )}
         </div>
 
-        {/* ── Bottom Controls ── */}
+        {/* -- Bottom Controls -- */}
         <div className="px-4 py-3 flex items-center justify-center gap-6">
           {/* Pass Button */}
           <button
             onClick={handlePass}
             disabled={!currentMovie}
             className="w-14 h-14 rounded-full bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/50 flex items-center justify-center text-white/60 hover:text-rose-400 transition-all active:scale-90 shadow-xl group"
-            title="Pass (← Arrow)"
+            title="Pass (? Arrow)"
           >
             <ThumbsDown className="w-6 h-6 group-hover:scale-110 transition-transform" />
           </button>
 
-          {/* Instant Stream Button */}
+          {/* Instant Explore Button */}
           <button
             onClick={handleStream}
             disabled={!currentMovie}
             className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black flex items-center justify-center font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-amber-400/25 group"
-            title="Stream Now (↑ Arrow / Space)"
+            title="Explore & Review (? Arrow / Space)"
           >
-            <Play className="w-7 h-7 fill-black ml-0.5 group-hover:scale-110 transition-transform" />
+            <Star className="w-7 h-7 fill-black group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Save to Watchlist Button */}
@@ -323,7 +323,7 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
             onClick={handleSave}
             disabled={!currentMovie}
             className="w-14 h-14 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/50 flex items-center justify-center text-white/60 hover:text-emerald-400 transition-all active:scale-90 shadow-xl group"
-            title="Save to Watchlist (→ Arrow)"
+            title="Save to Watchlist (? Arrow)"
           >
             <Heart className="w-6 h-6 group-hover:scale-110 transition-transform" />
           </button>
@@ -331,11 +331,11 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
 
         {/* Keyboard shortcut legend */}
         <div className="pb-1 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-3">
-          <span>← Pass</span>
-          <span>•</span>
-          <span>↑ Stream Now</span>
-          <span>•</span>
-          <span>→ Save to Watchlist</span>
+          <span>? Pass</span>
+          <span>�</span>
+          <span>? Explore & Review</span>
+          <span>�</span>
+          <span>? Save to Watchlist</span>
         </div>
 
       </div>

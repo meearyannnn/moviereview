@@ -200,6 +200,44 @@ export const getOmdbDetails = async ({
   return null;
 };
 
+// Per-episode IMDb ratings for a season
+export interface OmdbSeasonEpisode {
+  title: string;
+  episode: number;
+  imdbRating: number | null;
+  imdbId: string;
+  released: string;
+}
+
+export const getOmdbSeasonEpisodes = async (
+  imdbId: string,
+  seasonNumber: number
+): Promise<OmdbSeasonEpisode[] | null> => {
+  if (!imdbId?.startsWith('tt')) return null;
+  const cacheKey = `omdb_season_${imdbId}_${seasonNumber}`;
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached);
+  } catch { /* ignore */ }
+  try {
+    const res = await fetch(
+      `${OMDB_BASE_URL}?i=${encodeURIComponent(imdbId)}&Season=${seasonNumber}&apikey=${OMDB_API_KEY}`
+    );
+    if (!res.ok) return null;
+    const raw = await res.json();
+    if (raw.Response !== 'True' || !Array.isArray(raw.Episodes)) return null;
+    const eps: OmdbSeasonEpisode[] = raw.Episodes.map((e: any) => ({
+      title: e.Title || '',
+      episode: parseInt(e.Episode, 10),
+      imdbRating: e.imdbRating && e.imdbRating !== 'N/A' ? parseFloat(e.imdbRating) : null,
+      imdbId: e.imdbID || '',
+      released: e.Released || '',
+    }));
+    try { sessionStorage.setItem(cacheKey, JSON.stringify(eps)); } catch { /* ignore */ }
+    return eps;
+  } catch { return null; }
+};
+
 // React hook for convenience
 import { useEffect, useState } from 'react';
 

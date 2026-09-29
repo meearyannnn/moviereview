@@ -1,4 +1,4 @@
-import { X, Command, Search, Dices, Volume2, HelpCircle, Bot, Flame, Terminal } from 'lucide-react';
+import { X, Command, Search, Volume2, HelpCircle, Flame, Terminal } from 'lucide-react';
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
@@ -6,9 +6,7 @@ interface KeyboardShortcutsModalProps {
 }
 
 const SHORTCUTS = [
-  { key: 'C', desc: 'Toggle CineAI Co-Pilot', icon: Bot },
   { key: 'S', desc: 'Open Reel Swiper', icon: Flame },
-  { key: 'R', desc: 'Spin Cinema Roulette', icon: Dices },
   { key: '/', desc: 'Quick Search Bar', icon: Search },
   { key: 'M', desc: 'Toggle Tactile Sound FX', icon: Volume2 },
   { key: 'vault', desc: 'Type "vault" for Secret CRT', icon: Terminal },
@@ -25,7 +23,7 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden bg-[#0e1118] border border-white/15 shadow-2xl p-6 sm:p-8"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden bg-[#111520] border border-white/15 shadow-2xl p-6 sm:p-8"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -35,7 +33,7 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2 mb-2 text-amber-400">
+        <div className="flex items-center gap-2 mb-2 text-red-500">
           <Command className="w-5 h-5" />
           <h3 className="font-display font-bold text-lg text-white">
             Cinema Console Shortcuts
@@ -57,7 +55,7 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
                   <Icon className="w-4 h-4 text-white/50" />
                   <span className="text-sm font-medium text-white/80">{item.desc}</span>
                 </div>
-                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-amber-400 shadow-sm">
+                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-red-500 shadow-sm">
                   {item.key}
                 </kbd>
               </div>

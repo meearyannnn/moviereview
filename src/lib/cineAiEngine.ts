@@ -193,10 +193,30 @@ export const calculateMovieVibe = (
   return { pacing, vibeScores: { tension, mindBend, emotion, humor } };
 };
 
+export interface MultiSourceRatings {
+  imdbRating?: number | null;
+  rottenTomatoes?: number | string | null;
+  metascore?: number | null;
+  tmdbRating?: number | null;
+  tmdbVoteCount?: number | null;
+  awards?: string | null;
+}
+
+export interface ConsensusSourceItem {
+  id: 'imdb' | 'rt' | 'meta' | 'tmdb';
+  name: string;
+  score: number; // 0-100 normalized
+  formatted: string; // e.g. "8.4", "92%", "85", "8.1"
+  weight: number;
+}
+
 export interface IntelligentScoreResult {
   overallScore: number;
   grade: string;
   verdict: string;
+  confidence: 'Very High' | 'High' | 'Solid' | 'Moderate';
+  activeSources: ConsensusSourceItem[];
+  consensusDescription: string;
   breakdown: {
     storyCraft: number;
     immersion: number;
@@ -208,77 +228,179 @@ export interface IntelligentScoreResult {
 export const calculateIntelligentScore = (
   movie: Movie,
   runtime?: number,
-  imdbRating?: number | null
+  imdbOrMultiRatings?: number | null | MultiSourceRatings,
+  additionalRatings?: MultiSourceRatings
 ): IntelligentScoreResult => {
   const voteAvg = movie.vote_average != null && !isNaN(movie.vote_average) ? movie.vote_average : 6.0;
   const voteCount = movie.vote_count != null && !isNaN(movie.vote_count) ? movie.vote_count : 100;
   const overview = (movie.overview || '').toLowerCase();
   const genres = movie.genre_ids || (movie as any).genres?.map((g: any) => g.id) || [];
 
-  // 1. Dynamic Confidence Weighting:
-  // When IMDb rating is provided via OMDb, blend IMDb (65%) and TMDB (35%) for maximum realism.
-  // Otherwise, trust the movie's vote_average directly with smoothing for tiny sample sizes.
-  let rating = voteAvg;
-  if (imdbRating != null && !isNaN(imdbRating) && imdbRating > 0) {
-    rating = Number((imdbRating * 0.65 + voteAvg * 0.35).toFixed(2));
-  } else if (voteCount < 25 && voteCount > 0) {
-    rating = (voteCount / (voteCount + 15)) * voteAvg + (15 / (voteCount + 15)) * 6.0;
+  // Parse multi-source input (supports both legacy imdbRating number and MultiSourceRatings object)
+  let multi: MultiSourceRatings = {};
+  if (typeof imdbOrMultiRatings === 'number') {
+    multi = { imdbRating: imdbOrMultiRatings, ...additionalRatings };
+  } else if (imdbOrMultiRatings && typeof imdbOrMultiRatings === 'object') {
+    multi = { ...imdbOrMultiRatings, ...additionalRatings };
+  } else if (additionalRatings) {
+    multi = { ...additionalRatings };
   }
 
-  // 2. Map 0-10 rating to 0-100 Cinematic Scale:
-  // - 8.3 to 10.0 -> 85 to 98 (Perfection)
-  // - 7.1 to 8.2  -> 70 to 84 (Go for it)
-  // - 5.5 to 7.0  -> 50 to 69 (Timepass)
-  // - Below 5.5   -> 10 to 49 (Skip)
-  let overall = 50;
-  if (rating >= 8.3) {
-    overall = Math.round(85 + (rating - 8.3) * 7.6);
-  } else if (rating >= 7.1) {
-    overall = Math.round(70 + (rating - 7.1) * 11.6);
-  } else if (rating >= 5.5) {
-    overall = Math.round(50 + (rating - 5.5) * 11.8);
-  } else {
-    overall = Math.round(Math.max(10, rating * 9.0));
+  // 1. Extract and normalize individual ratings
+  const activeSources: ConsensusSourceItem[] = [];
+
+  // A. IMDb (0-10 scale -> 0-100)
+  const imdbVal = multi.imdbRating != null && !isNaN(Number(multi.imdbRating)) && Number(multi.imdbRating) > 0
+    ? Number(multi.imdbRating)
+    : null;
+  if (imdbVal != null) {
+    activeSources.push({
+      id: 'imdb',
+      name: 'IMDb',
+      score: Math.min(100, Math.max(10, imdbVal * 10)),
+      formatted: imdbVal.toFixed(1),
+      weight: 35, // Strong global audience consensus
+    });
   }
 
-  // Narrative craft & critical nuance adjustments (+/- 2 pts)
-  if (rating >= 7.0 && /masterpiece|acclaimed|groundbreaking|iconic|unforgettable|palme d'or|oscar/.test(overview)) {
+  // B. Rotten Tomatoes (0-100% scale)
+  let rtVal: number | null = null;
+  if (multi.rottenTomatoes != null) {
+    const parsed = typeof multi.rottenTomatoes === 'string'
+      ? parseInt(multi.rottenTomatoes.replace('%', ''), 10)
+      : multi.rottenTomatoes;
+    if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+      rtVal = parsed;
+    }
+  }
+  if (rtVal != null) {
+    // Calibrate binary Tomatometer percentage to a curved 0-100 cinematic score
+    let calibratedRt = rtVal;
+    if (rtVal >= 90) calibratedRt = 85 + (rtVal - 90) * 1.3;
+    else if (rtVal >= 75) calibratedRt = 73 + (rtVal - 75) * 0.8;
+    else if (rtVal >= 55) calibratedRt = 55 + (rtVal - 55) * 0.9;
+    else calibratedRt = Math.max(12, rtVal * 0.95);
+
+    activeSources.push({
+      id: 'rt',
+      name: 'Rotten Tomatoes',
+      score: Math.min(100, Math.max(10, Math.round(calibratedRt))),
+      formatted: `${rtVal}%`,
+      weight: 30, // Broad critical consensus
+    });
+  }
+
+  // C. Metacritic (0-100 scale)
+  const metaVal = multi.metascore != null && !isNaN(Number(multi.metascore)) && Number(multi.metascore) > 0
+    ? Number(multi.metascore)
+    : null;
+  if (metaVal != null) {
+    activeSources.push({
+      id: 'meta',
+      name: 'Metacritic',
+      score: Math.min(100, Math.max(10, metaVal)),
+      formatted: `${metaVal}`,
+      weight: 20, // Strict professional critic depth
+    });
+  }
+
+  // D. TMDB (0-10 scale -> smoothed 0-100)
+  const tmdbScoreRaw = multi.tmdbRating ?? voteAvg;
+  const tmdbVotes = multi.tmdbVoteCount ?? voteCount;
+  // Apply Bayesian smoothing against low vote counts
+  const smoothedTmdbScore = tmdbVotes > 0
+    ? ((tmdbVotes * (tmdbScoreRaw * 10)) + (40 * 63)) / (tmdbVotes + 40)
+    : 63;
+
+  activeSources.push({
+    id: 'tmdb',
+    name: 'TMDB',
+    score: Math.min(100, Math.max(10, Math.round(smoothedTmdbScore))),
+    formatted: tmdbScoreRaw.toFixed(1),
+    weight: 15, // Community cinephile vote
+  });
+
+  // 2. Dynamic Bayesian Consensus Weighting
+  const totalAvailableWeight = activeSources.reduce((acc, s) => acc + s.weight, 0);
+  let weightedSum = 0;
+  for (const src of activeSources) {
+    const normalizedWeight = src.weight / totalAvailableWeight;
+    weightedSum += src.score * normalizedWeight;
+  }
+
+  let overall = Math.round(weightedSum);
+
+  // 3. Consensus Nuance & Critical Agreement Checks
+  let consensusDescription = 'Multi-Critic Consensus';
+  const hasRT = rtVal != null;
+  const hasMeta = metaVal != null;
+  const hasImdb = imdbVal != null;
+
+  // Check for Unanimous Acclaim
+  if (hasRT && rtVal >= 88 && (imdbVal == null || imdbVal >= 7.8) && (metaVal == null || metaVal >= 75)) {
+    overall = Math.min(99, overall + 2);
+    consensusDescription = 'Universal Critical & Audience Acclaim';
+  }
+  // Check for Unanimous Disapproval
+  else if (hasRT && rtVal <= 35 && (imdbVal == null || imdbVal <= 5.2) && (metaVal == null || metaVal <= 42)) {
+    overall = Math.max(8, overall - 3);
+    consensusDescription = 'Broad Critical Pan';
+  }
+  // Check for Polarized Audience vs Critic Split (e.g. Cult hit or Popcorn divider)
+  else if (hasRT && hasImdb && Math.abs((imdbVal * 10) - rtVal) >= 25) {
+    consensusDescription = 'Polarized Audience & Critic Split';
+  }
+
+  // 4. Prestigious Awards & Accolades Calibration
+  const awards = (multi.awards || '').toLowerCase();
+  if (/won \d+ oscar|academy award winner|emmy winner|golden globe winner|palme d'or/.test(awards)) {
     overall = Math.min(99, overall + 2);
   }
-  if (rating <= 5.5 && /worst|disaster|flop|terrible|boring/.test(overview)) {
+
+  // 5. Synopsis Craft & Tone Nuances
+  if (overall >= 70 && /masterpiece|acclaimed|groundbreaking|iconic|unforgettable|cinematic triumph/.test(overview)) {
+    overall = Math.min(99, overall + 1);
+  }
+  if (overall <= 52 && /worst|disaster|flop|terrible|boring/.test(overview)) {
     overall = Math.max(8, overall - 2);
   }
 
   overall = Math.min(99, Math.max(8, overall));
 
-  // Realistic Cinematic Grades & Verdicts
+  // Determine Confidence Tier based on source depth
+  let confidence: 'Very High' | 'High' | 'Solid' | 'Moderate' = 'Moderate';
+  if (activeSources.length >= 4) confidence = 'Very High';
+  else if (activeSources.length === 3) confidence = 'High';
+  else if (activeSources.length === 2) confidence = 'Solid';
+
+  // 6. Realistic Cinematic Grades & Verdicts
   let grade = 'B';
-  let verdict = 'Timepass • Casual Watch';
+  let verdict = 'Decent Watch • Casual Stream';
 
   if (overall >= 85) {
     grade = 'A+';
-    verdict = 'Cinema Masterpiece • Perfection';
+    verdict = 'Absolute Cinema • Masterpiece';
   } else if (overall >= 78) {
     grade = 'A';
-    verdict = 'Exceptional Craft • Go for it';
+    verdict = 'Must Watch • Critical Acclaim';
   } else if (overall >= 70) {
     grade = 'B+';
-    verdict = 'Solid & Engaging • Go for it';
+    verdict = 'Must Watch • Highly Recommended';
   } else if (overall >= 60) {
     grade = 'B';
-    verdict = 'Enjoyable Watch • Timepass';
+    verdict = 'Decent Watch • Engaging Stream';
   } else if (overall >= 50) {
     grade = 'C+';
-    verdict = 'Average Popcorn • Timepass';
+    verdict = 'Decent Watch • Casual Viewing';
   } else if (overall >= 38) {
     grade = 'C';
-    verdict = 'Weak Execution • Skip';
+    verdict = 'Hard Pass • Mediocre Execution';
   } else {
     grade = 'F';
-    verdict = 'Critical Failure • Hard Skip';
+    verdict = 'Hard Pass • Critical Pan';
   }
 
-  // Dynamic Sub-Breakdown Ratings
+  // Sub-Breakdown Ratings
   const storyCraft = Math.min(99, Math.max(10, Math.round(overall * 0.96 + (genres.includes(18) || genres.includes(9648) ? 3 : 0))));
   const immersion = Math.min(99, Math.max(10, Math.round(overall * 0.94 + (genres.includes(878) || genres.includes(28) ? 4 : 0))));
   const resonance = Math.min(99, Math.max(10, Math.round(overall * 0.95)));
@@ -288,6 +410,9 @@ export const calculateIntelligentScore = (
     overallScore: overall,
     grade,
     verdict,
+    confidence,
+    activeSources,
+    consensusDescription,
     breakdown: {
       storyCraft,
       immersion,
@@ -304,16 +429,17 @@ export interface VibeChartItem {
 }
 
 export interface MeterTierItem {
-  label: 'Skip' | 'Timepass' | 'Go for it' | 'Perfection';
+  label: 'Hard Pass' | 'Decent Watch' | 'Must Watch' | 'Absolute Cinema';
   percent: number;
   color: string;
 }
 
 const GENRE_COLOR_MAP: Record<string, string> = {
-  Drama: '#9a3412',       // Warm Rust/Brown (as seen in Vibe Chart)
+  Drama: '#9a3412',       // Warm Rust/Brown
   Thriller: '#1d4ed8',    // Deep Blue
   Action: '#dc2626',      // Crimson Red
-  'Sci-Fi': '#8b5cf6',     // Purple
+  'Sci-Fi': '#8b5cf6',    // Purple
+  'Science Fiction': '#8b5cf6', // Purple
   Comedy: '#eab308',      // Yellow
   Horror: '#991b1b',      // Dark Crimson
   Romance: '#f43f5e',     // Rose
@@ -340,78 +466,99 @@ export const calculateVibeChartData = (movie: Movie): VibeChartItem[] => {
     if (typeof g === 'number' && genreIdToName[g]) {
       detectedNames.push(genreIdToName[g]);
     } else if (typeof g === 'string') {
-      detectedNames.push(g);
+      const normalized = g === 'Science Fiction' ? 'Sci-Fi' : g;
+      detectedNames.push(normalized);
     }
   }
 
   if (detectedNames.length === 0) {
     if (/kill|assassin|danger|threat|survival|chase/.test(overview)) detectedNames.push('Thriller', 'Action');
     else if (/love|heart|romance|family/.test(overview)) detectedNames.push('Drama', 'Romance');
-    else if (/twist|dimension|simulation|mystery/.test(overview)) detectedNames.push('Sci-Fi', 'Mystery');
+    else if (/twist|dimension|simulation|mystery|alien|space/.test(overview)) detectedNames.push('Sci-Fi', 'Mystery');
     else detectedNames.push('Drama', 'Thriller');
   }
 
-  const topNames = Array.from(new Set(detectedNames)).slice(0, 3);
+  const unique = Array.from(new Set(detectedNames));
+  const topNames = unique.slice(0, 3);
   if (topNames.length === 1) {
     if (topNames[0] === 'Drama') topNames.push('Thriller', 'Action');
-    else if (topNames[0] === 'Action') topNames.push('Thriller', 'Adventure');
-    else if (topNames[0] === 'Comedy') topNames.push('Drama', 'Romance');
-    else if (topNames[0] === 'Sci-Fi') topNames.push('Mystery', 'Action');
+    else if (topNames[0] === 'Action') topNames.push('Adventure', 'Thriller');
+    else if (topNames[0] === 'Comedy') topNames.push('Romance', 'Drama');
+    else if (topNames[0] === 'Sci-Fi') topNames.push('Adventure', 'Mystery');
     else topNames.push('Drama', 'Thriller');
   } else if (topNames.length === 2) {
     topNames.push(topNames.includes('Action') ? 'Thriller' : 'Action');
   }
 
-  const rawPercents = [50, 45, 5];
+  // Calculate dynamic, authentic proportions based on genre hierarchy and synopsis frequency
+  let percents: number[] = [];
+  if (topNames.length === 1) {
+    percents = [100];
+  } else if (topNames.length === 2) {
+    // Dynamic 60/40 or 65/35 split
+    const secondGenreKeywords = topNames[1].toLowerCase();
+    const hasSecondKeywords = overview.includes(secondGenreKeywords);
+    percents = hasSecondKeywords ? [58, 42] : [65, 35];
+  } else {
+    // 3 Genres: Check overview keyword density for secondary & tertiary genres
+    const g2Word = topNames[1].toLowerCase();
+    const g3Word = topNames[2].toLowerCase();
+    const count2 = (overview.match(new RegExp(g2Word, 'g')) || []).length;
+    const count3 = (overview.match(new RegExp(g3Word, 'g')) || []).length;
+
+    if (count2 > count3) {
+      percents = [52, 33, 15];
+    } else if (count3 > count2) {
+      percents = [50, 26, 24];
+    } else {
+      percents = [54, 30, 16];
+    }
+  }
 
   return topNames.map((name, idx) => ({
     name,
-    percent: rawPercents[idx] || 10,
+    percent: percents[idx] || 10,
     color: GENRE_COLOR_MAP[name] || '#3b82f6',
   }));
 };
 
 export const calculateMeterData = (overallScore: number): MeterTierItem[] => {
-  let perfection = 0;
-  let goForIt = 0;
-  let timepass = 0;
-  let skip = 0;
+  let absoluteCinema = 0;
+  let mustWatch = 0;
+  let decentWatch = 0;
+  let hardPass = 0;
 
   if (overallScore >= 85) {
-    // ── Tier 1: Perfection (Score 85+) ──
-    // Rare all-time masterpieces (e.g. The Godfather, Interstellar, Shawshank, Spirited Away)
-    perfection = Math.min(80, 58 + Math.round((overallScore - 85) * 1.5));
-    goForIt = Math.round((100 - perfection) * 0.65);
-    timepass = Math.max(2, Math.round((100 - perfection - goForIt) * 0.7));
-    skip = Math.max(0, 100 - (perfection + goForIt + timepass));
+    // ── Tier 1: Absolute Cinema (Score 85+) ──
+    absoluteCinema = Math.min(82, 60 + Math.round((overallScore - 85) * 1.5));
+    mustWatch = Math.round((100 - absoluteCinema) * 0.70);
+    decentWatch = Math.max(2, Math.round((100 - absoluteCinema - mustWatch) * 0.75));
+    hardPass = Math.max(0, 100 - (absoluteCinema + mustWatch + decentWatch));
   } else if (overallScore >= 70) {
-    // ── Tier 2: Go for it (Score 70 - 84) ──
-    // Solid, acclaimed, highly recommended watches (e.g. Dune, Iron Man, Knives Out)
-    goForIt = Math.min(72, 54 + Math.round((overallScore - 70) * 1.1));
-    perfection = Math.round((overallScore - 68) * 1.0);
-    timepass = Math.max(3, Math.round((100 - goForIt - perfection) * 0.75));
-    skip = Math.max(0, 100 - (goForIt + perfection + timepass));
+    // ── Tier 2: Must Watch (Score 70 - 84) ──
+    mustWatch = Math.min(74, 55 + Math.round((overallScore - 70) * 1.2));
+    absoluteCinema = Math.round((overallScore - 68) * 1.0);
+    decentWatch = Math.max(3, Math.round((100 - mustWatch - absoluteCinema) * 0.75));
+    hardPass = Math.max(0, 100 - (mustWatch + absoluteCinema + decentWatch));
   } else if (overallScore >= 50) {
-    // ── Tier 3: Timepass (Score 50 - 69) ──
-    // Casual popcorn films, average/mixed ratings (e.g. Fast X, Red Notice, Jurassic World)
-    timepass = Math.min(68, 52 + Math.round((69 - overallScore) * 0.6));
-    goForIt = Math.max(6, Math.round((overallScore - 48) * 0.9));
-    skip = Math.max(8, Math.round((100 - timepass - goForIt) * 0.85));
-    perfection = Math.max(0, 100 - (timepass + goForIt + skip));
+    // ── Tier 3: Decent Watch (Score 50 - 69) ──
+    decentWatch = Math.min(68, 52 + Math.round((69 - overallScore) * 0.6));
+    mustWatch = Math.max(6, Math.round((overallScore - 48) * 0.9));
+    hardPass = Math.max(8, Math.round((100 - decentWatch - mustWatch) * 0.85));
+    absoluteCinema = Math.max(0, 100 - (decentWatch + mustWatch + hardPass));
   } else {
-    // ── Tier 4: Skip (Score < 50) ──
-    // Low-rated films, critical flops, poor execution (e.g. Madame Web, Morbius, Catwoman)
-    skip = Math.min(85, 56 + Math.round((50 - overallScore) * 0.8));
-    timepass = Math.round((100 - skip) * 0.7);
-    goForIt = Math.max(1, 100 - (skip + timepass));
-    perfection = 0;
+    // ── Tier 4: Hard Pass (Score < 50) ──
+    hardPass = Math.min(85, 56 + Math.round((50 - overallScore) * 0.8));
+    decentWatch = Math.round((100 - hardPass) * 0.7);
+    mustWatch = Math.max(1, 100 - (hardPass + decentWatch));
+    absoluteCinema = 0;
   }
 
   return [
-    { label: 'Skip', percent: skip, color: '#f43f5e' },
-    { label: 'Timepass', percent: timepass, color: '#eab308' },
-    { label: 'Go for it', percent: goForIt, color: '#10b981' },
-    { label: 'Perfection', percent: perfection, color: '#a855f7' },
+    { label: 'Absolute Cinema', percent: absoluteCinema, color: '#ffffff' },
+    { label: 'Must Watch',      percent: mustWatch,      color: '#dc2626' },
+    { label: 'Decent Watch',   percent: decentWatch,    color: '#94a3b8' },
+    { label: 'Hard Pass',       percent: hardPass,       color: '#ef4444' },
   ];
 };
 
@@ -462,10 +609,10 @@ export const queryCineAi = async (prompt: string): Promise<CineAiResponse> => {
           });
 
         return {
-          message: `I identified the exact film you're thinking of: **${details.title}**! Here it is ready to stream, plus similar titles with that same energy:`,
+          message: `I identified the exact film you're thinking of: **${details.title}**! Here it is ready to explore, plus similar titles with that same energy:`,
           recommendations: [targetMovie, ...similarMovies],
           suggestions: [
-            `Stream ${details.title}`,
+            `Explore ${details.title}`,
             `More movies like ${details.title}`,
             'Suggest a thriller under 90 mins',
           ],

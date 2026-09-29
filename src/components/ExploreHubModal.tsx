@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { X, ChevronLeft, Film, Play, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
+import {
+  X,
+  ChevronLeft,
+  Play,
+  Star,
+  Sparkles,
+  Compass,
+  Shuffle,
+} from 'lucide-react';
 import { soundEffects } from '@/lib/soundEffects';
 import { useWatchProgress } from '@/hooks/useWatchProgress';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { tmdb } from '@/services/tmdb';
+import { tmdb, Movie } from '@/services/tmdb';
 
 interface ExploreHubModalProps {
   isOpen: boolean;
@@ -12,7 +20,28 @@ interface ExploreHubModalProps {
   anchorRef?: React.RefObject<HTMLElement>;
 }
 
-type SubViewType = 'none' | 'activity' | 'country' | 'language' | 'franchise' | 'category';
+type SubViewType = 'none' | 'activity' | 'language' | 'personalization';
+
+interface SmartRecommendation {
+  id: number;
+  title: string;
+  poster_path: string;
+  vote_average: number;
+  release_date?: string;
+  matchScore: number;
+  reason: string;
+}
+
+const POPULAR_GENRES = [
+  { id: 878, name: 'Sci-Fi' },
+  { id: 53, name: 'Thriller' },
+  { id: 28, name: 'Action' },
+  { id: 18, name: 'Drama' },
+  { id: 27, name: 'Horror' },
+  { id: 9648, name: 'Mystery' },
+  { id: 16, name: 'Animation' },
+  { id: 35, name: 'Comedy' },
+];
 
 export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
   isOpen,
@@ -26,11 +55,22 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
   const { progressList } = useWatchProgress();
   const { watchlist } = useWatchlist();
 
+  // Smart Personalization State
+  const [selectedGenreId, setSelectedGenreId] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('movieguy_smart_taste_genre');
+      return saved ? parseInt(saved, 10) : 878;
+    } catch {
+      return 878;
+    }
+  });
+  const [smartPicks, setSmartPicks] = useState<SmartRecommendation[]>([]);
+  const [isLoadingPicks, setIsLoadingPicks] = useState(false);
+
   const isExplorePage = location.pathname === '/explore';
   const currentFilter = searchParams.get('filter') || '';
   const currentAnime = searchParams.get('anime') || '';
   const currentSort = searchParams.get('sort') || '';
-  const currentType = searchParams.get('type') || '';
   const currentGenre = searchParams.get('genre') || '';
 
   // Active status per tile
@@ -40,10 +80,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
   const isAnimeActive = currentAnime === 'only';
   const isMonthlyRankingActive = currentSort === 'popularity.desc';
   const isTop100Active = currentSort === 'vote_average.desc';
-  const isCategoryActive = currentType !== '';
   const isGenreActive = currentGenre !== '';
 
-  const handleToggleFilter = (key: 'filter' | 'anime' | 'sort' | 'type', val: string, defaultOffVal?: string) => {
+  const handleToggleFilter = (key: 'filter' | 'anime' | 'sort', val: string, defaultOffVal?: string) => {
     soundEffects.playHoverTick();
     const newParams = new URLSearchParams(location.search);
     const existing = newParams.get(key);
@@ -102,6 +141,86 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
     }
   }, [isOpen]);
 
+  // Load Smart Recommendations based on user data
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    const fetchSmartPicks = async () => {
+      setIsLoadingPicks(true);
+      try {
+        let rawMovies: Movie[] = [];
+        let reasonLabel = '';
+
+        if (watchlist.length > 0) {
+          // Seed from most recent user watchlist item
+          const seedMovie = watchlist[0];
+          try {
+            const res = await tmdb.getRecommendations(seedMovie.id);
+            if (res.results && res.results.length > 0) {
+              rawMovies = res.results;
+              reasonLabel = `Because you saved "${seedMovie.title}"`;
+            }
+          } catch {
+            // fallback
+          }
+        }
+
+        // If no recommendations yet, discover by selected genre
+        if (rawMovies.length === 0) {
+          const res = await tmdb.getByGenre(selectedGenreId);
+          rawMovies = res.results || [];
+          const genreObj = POPULAR_GENRES.find((g) => g.id === selectedGenreId);
+          reasonLabel = `Curated for your ${genreObj?.name || 'Cinema'} taste`;
+        }
+
+        if (isMounted) {
+          const transformed: SmartRecommendation[] = rawMovies
+            .filter((m) => m.poster_path)
+            .slice(0, 6)
+            .map((m, idx) => ({
+              id: m.id,
+              title: m.title || m.name || 'Untitled',
+              poster_path: m.poster_path,
+              vote_average: m.vote_average || 7.5,
+              release_date: m.release_date || m.first_air_date,
+              matchScore: Math.max(88, 99 - idx * 2),
+              reason: reasonLabel,
+            }));
+          setSmartPicks(transformed);
+        }
+      } catch (err) {
+        console.error('Failed to load smart recommendations:', err);
+      } finally {
+        if (isMounted) setIsLoadingPicks(false);
+      }
+    };
+
+    fetchSmartPicks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, watchlist, selectedGenreId]);
+
+  const handleSelectGenreTaste = (genreId: number) => {
+    soundEffects.playHoverTick();
+    setSelectedGenreId(genreId);
+    try {
+      localStorage.setItem('movieguy_smart_taste_genre', genreId.toString());
+    } catch {
+      // storage error
+    }
+  };
+
+  const handleSmartSurprise = () => {
+    if (smartPicks.length === 0) return;
+    soundEffects.playHoverTick();
+    const randomPick = smartPicks[Math.floor(Math.random() * smartPicks.length)];
+    onClose();
+    navigate(`/movie/${randomPick.id}`);
+  };
+
   if (!isOpen) return null;
 
   const handleTileClick = (action: () => void) => {
@@ -111,38 +230,41 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center sm:justify-end pt-16 sm:pt-14 sm:pr-6 md:pr-12 pointer-events-none">
-      {/* Dim backdrop for mobile */}
+      {/* Mobile Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto sm:hidden"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs pointer-events-auto sm:hidden"
         onClick={onClose}
       />
 
-      {/* ── Main Hub Popover Container ── */}
+      {/* -- Main Hub Popover Container -- */}
       <div
         ref={modalRef}
-        className="relative pointer-events-auto w-[92vw] sm:w-[350px] max-w-[360px] bg-[#0c0e15]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/90 animate-in fade-in zoom-in-95 duration-150 select-none overflow-hidden"
+        className="relative pointer-events-auto w-[94vw] sm:w-[360px] max-w-[370px] bg-[#080a10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/95 animate-in fade-in zoom-in-95 duration-150 select-none overflow-hidden"
       >
-        {/* Subtle Ambient Top Border Glow */}
-        <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />
+        {/* Subtle Ambient Red Glow */}
+        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-red-600/70 to-transparent" />
 
-        {/* Header (with back button if in subview) */}
-        <div className="flex items-center justify-between px-1 pb-2 mb-1 border-b border-white/[0.06]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-1 pb-2.5 mb-1.5 border-b border-white/[0.08]">
           {subView !== 'none' ? (
             <button
               onClick={() => {
                 soundEffects.playHoverTick();
                 setSubView('none');
               }}
-              className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors font-medium"
+              className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors font-medium cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Back</span>
+              <ChevronLeft className="w-4 h-4 text-red-500" />
+              <span>Back to Hub</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[11px] font-mono uppercase tracking-widest text-white/50 font-bold">
+              <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+              <span className="text-[11px] font-mono uppercase tracking-widest text-white/70 font-bold">
                 Cinema Hub
+              </span>
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                PRO
               </span>
             </div>
           )}
@@ -152,14 +274,161 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
               soundEffects.playHoverTick();
               onClose();
             }}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs cursor-pointer"
             aria-label="Close"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* ── SUBVIEW: Following Activity ── */}
+        {/* ========================================================================= */}
+        {/* -- SUBVIEW: User Personalization (Smart Feature) -- */}
+        {/* ========================================================================= */}
+        {subView === 'personalization' && (
+          <div className="py-1 space-y-3 max-h-[460px] overflow-y-auto scrollbar-hide">
+            {/* Header info */}
+            <div className="p-3 rounded-xl bg-gradient-to-br from-red-950/40 via-[#10131d] to-[#0c0e15] border border-red-500/30">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                  <Sparkles className="w-3.5 h-3.5 text-red-500" />
+                  Your Smart Cinema DNA
+                </span>
+                <span className="text-[10px] font-mono text-red-400 font-bold px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">
+                  {watchlist.length > 0 ? 'LIVE SYNC' : 'TASTE ENGINE'}
+                </span>
+              </div>
+              <p className="text-[11px] text-white/60 leading-relaxed">
+                {watchlist.length > 0
+                  ? `Analyzing ${watchlist.length} film${watchlist.length > 1 ? 's' : ''} in your watchlist to deliver live algorithm-driven recommendations.`
+                  : 'Select your preferred cinema vibe below to train your personal recommendation feed.'}
+              </p>
+
+              {/* Genre taste selector chips */}
+              <div className="mt-2.5 pt-2 border-t border-white/[0.08]">
+                <p className="text-[10px] font-medium text-white/50 mb-1.5">Tune your taste vibe:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {POPULAR_GENRES.map((g) => {
+                    const active = selectedGenreId === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        onClick={() => handleSelectGenreTaste(g.id)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-medium transition-all cursor-pointer ${
+                          active
+                            ? 'bg-red-600 text-white font-bold shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                            : 'bg-white/5 hover:bg-white/10 text-white/70 border border-white/5'
+                        }`}
+                      >
+                        {g.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleSmartSurprise}
+                disabled={smartPicks.length === 0}
+                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 hover:border-red-500/40 text-xs font-semibold text-white transition-all cursor-pointer"
+              >
+                <Shuffle className="w-3.5 h-3.5 text-red-500" />
+                <span>Smart Surprise</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  soundEffects.playHoverTick();
+                  onClose();
+                  navigate(`/explore?genre=${selectedGenreId}&sort=vote_average.desc`);
+                }}
+                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-semibold text-white transition-all shadow-[0_0_12px_rgba(220,38,38,0.3)] cursor-pointer"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Explore Taste Feed</span>
+              </button>
+            </div>
+
+            {/* Smart Recommended Titles */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+                  Recommended For You
+                </span>
+                <span className="text-[10px] text-white/40">
+                  {smartPicks.length} high-match titles
+                </span>
+              </div>
+
+              {isLoadingPicks ? (
+                <div className="py-8 text-center text-xs text-white/40 flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 rounded-full border border-red-500 border-t-transparent animate-spin" />
+                  <span>Computing taste synergy...</span>
+                </div>
+              ) : smartPicks.length === 0 ? (
+                <div className="text-center py-6 text-white/40 text-xs">
+                  Save a movie to your watchlist to unlock tailored smart recommendations!
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {smartPicks.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        soundEffects.playHoverTick();
+                        onClose();
+                        navigate(`/movie/${item.id}`);
+                      }}
+                      className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-red-500/40 transition-all cursor-pointer group"
+                    >
+                      <div className="relative w-12 aspect-[2/3] rounded-lg overflow-hidden bg-neutral-900 flex-shrink-0">
+                        <img
+                          src={tmdb.getImageUrl(item.poster_path, 'w185')}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-4 h-4 fill-red-500 text-red-500" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
+                            {item.title}
+                          </p>
+                          <span className="text-[10px] font-mono font-bold text-red-400 bg-red-500/10 px-1 py-0.5 rounded border border-red-500/20 flex-shrink-0">
+                            {item.matchScore}%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+                            <Star className="w-2.5 h-2.5 fill-amber-400" />
+                            <span>{item.vote_average.toFixed(1)}</span>
+                          </div>
+                          {item.release_date && (
+                            <span className="text-[10px] text-white/40">
+                              {new Date(item.release_date).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[9.5px] text-white/50 truncate mt-0.5 italic">
+                          {item.reason}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* -- SUBVIEW: Following Activity -- */}
+        {/* ========================================================================= */}
         {subView === 'activity' && (
           <div className="py-2 space-y-3 max-h-[420px] overflow-y-auto scrollbar-hide">
             <h3 className="text-xs font-bold text-white/90 uppercase tracking-wider px-1">
@@ -168,7 +437,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
 
             {progressList.length === 0 && watchlist.length === 0 ? (
               <div className="text-center py-8 text-white/40 text-xs">
-                No watching activity yet. Start streaming to track progress!
+                No watching activity yet. Start saving movies to track your activity!
               </div>
             ) : (
               <div className="space-y-2">
@@ -188,11 +457,11 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <Play className="w-4 h-4 fill-red-500 text-red-500" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white group-hover:text-amber-400 truncate">
+                      <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
                         {item.title}
                       </p>
                       <p className="text-[10px] text-white/50 capitalize mt-0.5">
@@ -202,7 +471,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                   </div>
                 ))}
 
-                {watchlist.slice(0, 3).map((item) => (
+                {watchlist.slice(0, 4).map((item) => (
                   <div
                     key={`wl-${item.id}`}
                     onClick={() => {
@@ -219,10 +488,10 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white group-hover:text-amber-400 truncate">
+                      <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
                         {item.title}
                       </p>
-                      <p className="text-[10px] text-amber-400 font-medium mt-0.5">
+                      <p className="text-[10px] text-red-500 font-bold mt-0.5">
                         In Watchlist
                       </p>
                     </div>
@@ -233,41 +502,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
           </div>
         )}
 
-        {/* ── SUBVIEW: Country Selection ── */}
-        {subView === 'country' && (
-          <div className="py-2 space-y-2">
-            <h3 className="text-xs font-bold text-white/90 uppercase tracking-wider px-1 mb-2">
-              Browse by Country
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { name: 'Hollywood (US)', code: 'US', flag: '🇺🇸', query: 'Hollywood' },
-                { name: 'Bollywood (India)', code: 'IN', flag: '🇮🇳', query: 'Bollywood' },
-                { name: 'South Korea', code: 'KR', flag: '🇰🇷', query: 'Korean' },
-                { name: 'Japan', code: 'JP', flag: '🇯🇵', query: 'Japanese' },
-                { name: 'United Kingdom', code: 'GB', flag: '🇬🇧', query: 'British' },
-                { name: 'France', code: 'FR', flag: '🇫🇷', query: 'French' },
-              ].map((c) => (
-                <button
-                  key={c.code}
-                  onClick={() => {
-                    soundEffects.playHoverTick();
-                    onClose();
-                    navigate(`/search?q=${encodeURIComponent(c.query)}`);
-                  }}
-                  className="flex items-center gap-2 p-2.5 rounded-xl bg-[#131722]/80 hover:bg-[#1e2436] border border-white/[0.06] hover:border-amber-400/40 text-left transition-all group"
-                >
-                  <span className="text-base">{c.flag}</span>
-                  <span className="text-xs text-white/80 group-hover:text-white font-medium truncate">
-                    {c.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── SUBVIEW: Language Selection ── */}
+        {/* ========================================================================= */}
+        {/* -- SUBVIEW: Language Selection -- */}
+        {/* ========================================================================= */}
         {subView === 'language' && (
           <div className="py-2 space-y-2">
             <h3 className="text-xs font-bold text-white/90 uppercase tracking-wider px-1 mb-2">
@@ -289,9 +526,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                     onClose();
                     navigate(`/search?q=${encodeURIComponent(lang.query)}`);
                   }}
-                  className="p-2.5 rounded-xl bg-[#131722]/80 hover:bg-[#1e2436] border border-white/[0.06] hover:border-amber-400/40 text-center transition-all group"
+                  className="p-2.5 rounded-xl bg-[#111520]/80 hover:bg-[#1e2436] border border-white/[0.06] hover:border-red-500/40 text-center transition-all group cursor-pointer"
                 >
-                  <span className="text-xs text-white/80 group-hover:text-amber-400 font-medium">
+                  <span className="text-xs text-white/80 group-hover:text-red-500 font-bold">
                     {lang.name}
                   </span>
                 </button>
@@ -300,75 +537,71 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
           </div>
         )}
 
-        {/* ── SUBVIEW: Franchise Selection ── */}
-        {subView === 'franchise' && (
-          <div className="py-2 space-y-2">
-            <h3 className="text-xs font-bold text-white/90 uppercase tracking-wider px-1 mb-2">
-              Major Cinema Franchises
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { name: 'Marvel Cinematic Universe', query: 'Avengers Marvel' },
-                { name: 'Star Wars Saga', query: 'Star Wars' },
-                { name: 'DC Universe', query: 'Batman DC' },
-                { name: 'Harry Potter & Wizarding', query: 'Harry Potter' },
-                { name: 'Lord of the Rings', query: 'Lord of the Rings' },
-                { name: 'Fast & Furious', query: 'Fast and Furious' },
-              ].map((f) => (
-                <button
-                  key={f.name}
-                  onClick={() => {
-                    soundEffects.playHoverTick();
-                    onClose();
-                    navigate(`/search?q=${encodeURIComponent(f.query)}`);
-                  }}
-                  className="p-2.5 rounded-xl bg-[#131722]/80 hover:bg-[#1e2436] border border-white/[0.06] hover:border-amber-400/40 text-left transition-all group"
-                >
-                  <span className="text-xs text-white/80 group-hover:text-amber-400 font-semibold line-clamp-1">
-                    {f.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── MAIN VIEW: Grid Matching Screenshot ── */}
+        {/* ========================================================================= */}
+        {/* -- MAIN VIEW: Ultra-Aesthetic Red & White Cinema Grid -- */}
+        {/* ========================================================================= */}
         {subView === 'none' && (
           <div className="space-y-2 pt-1">
-            {/* Top Row: Following Activity (Full-width card) */}
+            {/* -- 1. HERO FEATURE: Smart Personalization (For You) -- */}
             <button
-              onClick={() => handleTileClick(() => setSubView('activity'))}
-              className="w-full relative group overflow-hidden bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-purple-500/40 rounded-xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer shadow-sm"
+              onClick={() => handleTileClick(() => setSubView('personalization'))}
+              className="w-full relative group overflow-hidden rounded-xl p-3 flex items-center justify-between transition-all duration-300 cursor-pointer border border-red-500/40 bg-gradient-to-r from-red-950/50 via-[#131622] to-[#0a0d14] hover:border-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.25)] text-left"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/[0.06] via-amber-500/[0.04] to-cyan-500/[0.06] opacity-0 group-hover:opacity-100 transition-opacity" />
-              <PulseActivityIcon className="w-5 h-5 text-white/80 group-hover:text-amber-400 group-hover:scale-110 transition-all" />
-              <span className="text-[13px] font-semibold text-white/90 group-hover:text-white tracking-tight">
-                Following Activity
-              </span>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-red-600/20 border border-red-500/30 flex items-center justify-center flex-shrink-0 group-hover:scale-105 group-hover:bg-red-600 transition-all">
+                  <Sparkles className="w-5 h-5 text-red-500 group-hover:text-white transition-colors" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-tight">
+                      Personalized For You
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-600 text-white shadow-[0_0_6px_rgba(220,38,38,0.6)]">
+                      SMART
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-white/60 truncate mt-0.5">
+                    {watchlist.length > 0
+                      ? `Tuned to your ${watchlist.length} saved film${watchlist.length > 1 ? 's' : ''}`
+                      : 'Live algorithm-matched cinema feed'}
+                  </p>
+                </div>
+              </div>
+              <ChevronLeft className="w-4 h-4 text-white/40 rotate-180 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
             </button>
 
-            {/* Second Row: 2 columns (Monthly Ranking & Top 100) */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* -- 2. 3x3 Discovery Grid (Category, Franchise, Country removed) -- */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* Row 1: Following Activity | Monthly Ranking | Top 100 */}
+              <button
+                onClick={() => handleTileClick(() => setSubView('activity'))}
+                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90"
+              >
+                <PulseActivityIcon className="w-5 h-5 text-white/80 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
+                  Following
+                </span>
+              </button>
+
               <button
                 onClick={() =>
                   handleToggleFilter('sort', 'popularity.desc', 'release_date.desc')
                 }
-                className={`group rounded-xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isMonthlyRankingActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <MonthlyRankingIcon
                   className={`w-5 h-5 transition-all ${
                     isMonthlyRankingActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[12.5px] font-semibold text-white/90 group-hover:text-white tracking-tight">
-                  Monthly Ranking
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
+                  Monthly Top
                 </span>
               </button>
 
@@ -376,51 +609,25 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 onClick={() =>
                   handleToggleFilter('sort', 'vote_average.desc', 'release_date.desc')
                 }
-                className={`group rounded-xl p-3.5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isTop100Active
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <CrownIcon
                   className={`w-5 h-5 transition-all ${
                     isTop100Active
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[12.5px] font-semibold text-white/90 group-hover:text-white tracking-tight">
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
                   Top 100
                 </span>
               </button>
-            </div>
 
-            {/* Row 3: Category, Genre, Country (3 columns) */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  onClose();
-                  navigate('/categories');
-                }}
-                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                  location.pathname === '/categories'
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
-                }`}
-              >
-                <ShapesCategoryIcon
-                  className={`w-5 h-5 transition-all ${
-                    location.pathname === '/categories'
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
-                  }`}
-                />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
-                  Category
-                </span>
-              </button>
-
+              {/* Row 2: Genre | Award Winners | Language */}
               <button
                 onClick={() => {
                   soundEffects.playHoverTick();
@@ -429,178 +636,121 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }}
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isGenreActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <DramaMasksIcon
                   className={`w-5 h-5 transition-all ${
                     isGenreActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
                   Genre
                 </span>
               </button>
 
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  onClose();
-                  navigate('/countries');
-                }}
-                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                  location.pathname === '/countries'
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
-                }`}
-              >
-                <CountryGlobeIcon
-                  className={`w-5 h-5 transition-all ${
-                    location.pathname === '/countries'
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
-                  }`}
-                />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
-                  Country
-                </span>
-              </button>
-            </div>
-
-            {/* Row 4: Language, Family Friendly, Award Winners (3 columns) */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  onClose();
-                  navigate('/languages');
-                }}
-                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                  location.pathname === '/languages'
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
-                }`}
-              >
-                <LanguageTranslateIcon
-                  className={`w-5 h-5 transition-all ${
-                    location.pathname === '/languages'
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
-                  }`}
-                />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
-                  Language
-                </span>
-              </button>
-
-              {/* Family Friendly - Exactly matching user screenshot with gold border & gold icon */}
-              <button
-                onClick={() =>
-                  handleToggleFilter('filter', 'family_friendly')
-                }
-                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                  isFamilyFriendlyActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
-                }`}
-              >
-                <FamilyFriendlyIcon
-                  className={`w-5 h-5 transition-all ${
-                    isFamilyFriendlyActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
-                  }`}
-                />
-                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
-                  Family Friendly
-                </span>
-              </button>
-
-              {/* Award Winners */}
               <button
                 onClick={() =>
                   handleToggleFilter('filter', 'award_winner')
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isAwardWinnerActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <StatuetteAwardIcon
                   className={`w-5 h-5 transition-all ${
                     isAwardWinnerActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
-                  Award Winners
+                <span className="text-[11px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
+                  Awards
                 </span>
               </button>
-            </div>
 
-            {/* Row 5: MovieGuy Select, Anime, Franchise (3 columns) */}
-            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => {
+                  soundEffects.playHoverTick();
+                  setSubView('language');
+                }}
+                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90"
+              >
+                <LanguageTranslateIcon className="w-5 h-5 text-white/80 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
+                  Language
+                </span>
+              </button>
+
+              {/* Row 3: MovieGuy Select | Anime | Family Friendly */}
               <button
                 onClick={() =>
                   handleToggleFilter('filter', 'select')
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isSelectActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <CertifiedSelectIcon
                   className={`w-5 h-5 transition-all ${
                     isSelectActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[11px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
-                  MovieGuy Select
+                <span className="text-[10.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
+                  MG Select
                 </span>
               </button>
 
-              {/* Anime */}
               <button
                 onClick={() =>
                   handleToggleFilter('anime', 'only')
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isAnimeActive
-                    ? 'bg-[#151926] border border-amber-400 text-white shadow-lg shadow-amber-400/10'
-                    : 'bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90'
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
                 }`}
               >
                 <AnimeFaceIcon
                   className={`w-5 h-5 transition-all ${
                     isAnimeActive
-                      ? 'text-amber-400 scale-105'
-                      : 'text-white/80 group-hover:text-amber-400 group-hover:scale-110'
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
                   }`}
                 />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
+                <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
                   Anime
                 </span>
               </button>
 
-              {/* Franchise */}
               <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setSubView('franchise');
-                }}
-                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#131722]/90 hover:bg-[#1c2234] border border-white/[0.08] hover:border-amber-400/40 text-white/90"
+                onClick={() =>
+                  handleToggleFilter('filter', 'family_friendly')
+                }
+                className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                  isFamilyFriendlyActive
+                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
+                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                }`}
               >
-                <FranchiseCameraIcon className="w-5 h-5 text-white/80 group-hover:text-amber-400 group-hover:scale-110 transition-all" />
-                <span className="text-[12px] font-medium text-white/90 group-hover:text-white tracking-tight">
-                  Franchise
+                <FamilyFriendlyIcon
+                  className={`w-5 h-5 transition-all ${
+                    isFamilyFriendlyActive
+                      ? 'text-red-500 scale-105'
+                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                  }`}
+                />
+                <span className="text-[10.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
+                  Family
                 </span>
               </button>
             </div>
@@ -611,7 +761,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
   );
 };
 
-/* ── Custom SVG Icons Matching Reference Screenshot ── */
+/* -- Custom Red & White SVG Icons Matching Cinema Aesthetics -- */
 
 const PulseActivityIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -637,28 +787,12 @@ const CrownIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   </svg>
 );
 
-const ShapesCategoryIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polygon points="12 3 17 11 7 11" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <circle cx="17.5" cy="17.5" r="3.5" />
-  </svg>
-);
-
 const DramaMasksIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M4 6c0-2.2 3.6-4 8-4s8 1.8 8 4v7c0 4.4-3.6 7-8 7s-8-2.6-8-7V6z" />
     <circle cx="9" cy="9" r="1" fill="currentColor" />
     <circle cx="15" cy="9" r="1" fill="currentColor" />
     <path d="M9 14c1 1.5 5 1.5 6 0" />
-  </svg>
-);
-
-const CountryGlobeIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="10" />
-    <line x1="2" y1="12" x2="22" y2="12" />
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
   </svg>
 );
 
@@ -708,14 +842,5 @@ const AnimeFaceIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
     <circle cx="9.5" cy="13" r="1" fill="currentColor" />
     <circle cx="14.5" cy="13" r="1" fill="currentColor" />
     <path d="M11 16c.5.5 1.5.5 2 0" />
-  </svg>
-);
-
-const FranchiseCameraIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="2" y="7" width="14" height="12" rx="2" />
-    <circle cx="6" cy="4" r="2" />
-    <circle cx="12" cy="4" r="2" />
-    <polygon points="16 11 22 7 22 17 16 13" fill="none" />
   </svg>
 );

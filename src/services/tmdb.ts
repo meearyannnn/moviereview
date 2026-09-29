@@ -33,6 +33,9 @@ export interface Season {
   name: string;
   episode_count: number;
   poster_path: string;
+  air_date?: string;
+  vote_average?: number;
+  overview?: string;
 }
 
 export interface Episode {
@@ -110,6 +113,12 @@ export const tmdb = {
 
   getRecommendations: (id: number, type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/${id}/recommendations`),
+
+  getImages: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/images?include_image_language=en,null`),
+
+  getWatchProviders: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/watch/providers`),
 
   getImageUrl: (path: string, size: 'w500' | 'w300' | 'w185' | 'original' = 'w500') =>
     path ? `${TMDB_IMAGE_BASE}/${size}${path}` : '/placeholder.svg',

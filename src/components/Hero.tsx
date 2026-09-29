@@ -1,11 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, type TouchEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Info, Star, Plus, Check, Youtube, X, Flame } from 'lucide-react';
+import { Play, Info, Star, Plus, Check, X, Flame, PenLine } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
-import { fanart } from '@/services/fanart';
+import { TitleLogo } from './TitleLogo';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { soundEffects } from '@/lib/soundEffects';
-import { CinematicParticles } from './CinematicParticles';
 
 interface VideoTrailer {
   id: string;
@@ -15,122 +14,104 @@ interface VideoTrailer {
   site: string;
 }
 
+const SLIDE_MS = 7000;
+
+// Thin progress line that fills over one slide's duration
+const AutoFill = () => {
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFull(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return (
+    <div
+      className="h-full rounded-full bg-white"
+      style={{ width: full ? '100%' : '0%', transition: full ? `width ${SLIDE_MS}ms linear` : 'none' }}
+    />
+  );
+};
+
 export const Hero = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [logos, setLogos] = useState<Record<number, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
-  const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
 
   const navigate = useNavigate();
-  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
   useEffect(() => {
-    const loadMovies = async () => {
+    let cancelled = false;
+    (async () => {
       try {
         const data = await tmdb.getTrending('movie', 'week');
-        const list = data.results?.slice(0, 5) || [];
-        setMovies(list);
-
-        // Fetch official high-res clear logos from Fanart.tv
-        list.forEach(async (m: Movie) => {
-          try {
-            const logo = await fanart.getMovieLogo(m.id);
-            if (logo) {
-              setLogos((prev) => ({ ...prev, [m.id]: logo }));
-            }
-          } catch {
-            // Fallback gracefully
-          }
-        });
+        if (!cancelled) setMovies(data.results?.slice(0, 5) || []);
       } catch (e) {
         console.error('Failed to load hero movies:', e);
       }
-    };
-    loadMovies();
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const goToSlide = useCallback((index: number) => {
-    if (index === currentIndex || isTransitioning) return;
+    if (index === currentIndex) return;
     soundEffects.playSwoosh();
-    setIsTransitioning(true);
     setIsAutoPlay(false);
-    setTimeout(() => {
-      setCurrentIndex(index);
-      setIsTransitioning(false);
-    }, 400);
-  }, [currentIndex, isTransitioning]);
+    setCurrentIndex(index);
+  }, [currentIndex]);
 
-  const goToNextSlide = useCallback(() => {
-    if (isTransitioning || movies.length === 0) return;
+  const step = useCallback((dir: 1 | -1) => {
+    if (movies.length === 0) return;
     soundEffects.playSwoosh();
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex(prev => (prev + 1) % movies.length);
-      setIsTransitioning(false);
-    }, 400);
-  }, [isTransitioning, movies.length]);
+    setCurrentIndex((i) => (i + dir + movies.length) % movies.length);
+  }, [movies.length]);
 
-  const goToPrevSlide = useCallback(() => {
-    if (isTransitioning || movies.length === 0) return;
-    soundEffects.playSwoosh();
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex(prev => (prev - 1 + movies.length) % movies.length);
-      setIsTransitioning(false);
-    }, 400);
-  }, [isTransitioning, movies.length]);
-
-  // Touch swipe support for iOS & Android
-  const touchStartXRef = useRef<number | null>(null);
-  const touchStartYRef = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
-    touchStartYRef.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
-    const diffX = touchStartXRef.current - e.changedTouches[0].clientX;
-    const diffY = touchStartYRef.current - e.changedTouches[0].clientY;
-
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
-      if (diffX > 0) {
-        goToNextSlide();
-      } else {
-        goToPrevSlide();
-      }
-    }
-    touchStartXRef.current = null;
-    touchStartYRef.current = null;
-  };
-
+  // Autoplay: one timer per slide so it stays in sync with the progress line
   useEffect(() => {
     if (!isAutoPlay || movies.length === 0) return;
-    autoPlayRef.current = setInterval(() => {
-      goToNextSlide();
-    }, 7000);
-    return () => {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-    };
-  }, [isAutoPlay, movies.length, goToNextSlide]);
+    const t = setTimeout(() => step(1), SLIDE_MS);
+    return () => clearTimeout(t);
+  }, [isAutoPlay, currentIndex, movies.length, step]);
+
+  // Touch swipe
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    const s = touchStart.current;
+    touchStart.current = null;
+    if (!s) return;
+    const dx = s.x - e.changedTouches[0].clientX;
+    const dy = s.y - e.changedTouches[0].clientY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45) {
+      setIsAutoPlay(false);
+      step(dx > 0 ? 1 : -1);
+    }
+  };
+
+  // Trailer
+  const closeTrailer = useCallback(() => setTrailerKey(null), []);
+
+  useEffect(() => {
+    if (!trailerKey) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeTrailer();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [trailerKey, closeTrailer]);
 
   const handleWatchTrailer = async (movieId: number) => {
     soundEffects.playHoverTick();
     setLoadingTrailer(true);
     try {
       const data = await tmdb.getVideos(movieId, 'movie');
-      const officialTrailer = data.results?.find(
+      const trailer = data.results?.find(
         (v: VideoTrailer) => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube'
       );
-      if (officialTrailer) {
-        setTrailerKey(officialTrailer.key);
-        setShowTrailerModal(true);
+      if (trailer) {
+        setIsAutoPlay(false);
+        setTrailerKey(trailer.key);
         soundEffects.playChime();
       } else {
         navigate(`/movie/${movieId}`);
@@ -144,8 +125,8 @@ export const Hero = () => {
 
   if (movies.length === 0) {
     return (
-      <div className="relative w-full h-[75vh] md:h-[88vh] bg-[#07080b] flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin" />
+      <div className="flex h-[75vh] w-full items-center justify-center bg-[#060810] md:h-[88vh]">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
       </div>
     );
   }
@@ -155,111 +136,80 @@ export const Hero = () => {
   const rating = featured.vote_average ? featured.vote_average.toFixed(1) : null;
   const inWatchlist = isInWatchlist(featured.id);
 
+  const roundBtn =
+    'flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-white backdrop-blur-md transition-colors hover:bg-white/[0.16] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70';
+
   return (
     <>
-      <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        className="relative w-full min-h-[640px] sm:min-h-[720px] md:min-h-[780px] lg:h-[94vh] lg:min-h-[800px] overflow-hidden bg-[#07080b] select-none flex flex-col justify-end pt-20 sm:pt-24 pb-8 md:pb-12"
+      <section
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        aria-roledescription="carousel"
+        className="relative flex h-[85vh] max-h-[920px] min-h-[600px] w-full select-none flex-col justify-end overflow-hidden bg-[#060810]"
       >
-        {/* ── Living Cinematic Atmosphere: Floating Golden Embers ── */}
-        <CinematicParticles />
-
-        {/* ── Background Backdrop with Smooth Crossfade ── */}
+        {/* Backdrops — stacked, crossfaded by opacity */}
         <div className="absolute inset-0">
-          <img
-            key={featured.id}
-            src={tmdb.getImageUrl(featured.backdrop_path, 'original')}
-            alt={featured.title}
-            className={`w-full h-full object-cover object-center transform scale-105 transition-all duration-1000 ${
-              isTransitioning ? 'opacity-30 scale-100' : 'opacity-85 scale-105'
-            }`}
-          />
-
-          {/* Cinematic Vignettes & Gradient Blends */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07080b] via-[#07080b]/50 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07080b] via-[#07080b]/80 to-transparent max-w-4xl" />
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#07080b]/90 to-transparent" />
-
-          {/* Dynamic Adaptive Ambient Glow (Ambilight) */}
-          <div className="absolute top-1/4 left-10 w-[500px] h-[500px] bg-amber-500/15 rounded-full blur-[140px] pointer-events-none transition-all duration-1000" />
-          <div className="absolute bottom-1/3 left-1/3 w-[450px] h-[450px] bg-purple-500/15 rounded-full blur-[140px] pointer-events-none transition-all duration-1000" />
+          {movies.map((m, i) => (
+            <img
+              key={m.id}
+              src={tmdb.getImageUrl(m.backdrop_path, 'original')}
+              alt=""
+              aria-hidden={i !== currentIndex}
+              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 motion-reduce:transition-none ${i === currentIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060810] via-[#060810]/45 to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-full max-w-3xl bg-gradient-to-r from-[#060810]/90 via-[#060810]/50 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#060810]/80 to-transparent" />
         </div>
 
-        {/* ── Hero Foreground Content ── */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end">
-          <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-6 duration-700 mb-6 md:mb-4">
-            {/* Top Badges */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-3 sm:mb-4">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-black text-xs font-bold tracking-wider uppercase shadow-lg shadow-amber-400/20">
-                <Flame className="w-3.5 h-3.5 fill-black" />
-                #1 Trending
-              </div>
-
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/15 text-xs font-semibold text-white">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                4K Ultra HD
-              </div>
-
+        {/* Content */}
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 md:pb-14 lg:px-8">
+          <div key={featured.id} className="max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-700">
+            {/* Meta */}
+            <div className="mb-4 flex items-center gap-4 text-xs font-semibold text-white/70">
+              <span className="flex items-center gap-1.5">
+                <Flame className="h-3.5 w-3.5 text-red-500" />
+                #{currentIndex + 1} trending this week
+              </span>
               {rating && (
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs font-bold text-amber-400">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  <span>{rating}</span>
-                </div>
-              )}
-
-              {year && (
-                <span className="text-xs font-medium text-white/60 tracking-wider">
-                  {year}
+                <span className="flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-white">{rating}</span>
                 </span>
               )}
+              {year && <span>{year}</span>}
             </div>
 
-            {/* Title / Official Transparent Clear Logo */}
-            {logos[featured.id] ? (
-              <div className="mb-3 sm:mb-4">
-                <img
-                  src={logos[featured.id]}
-                  alt={featured.title}
-                  className="max-h-16 sm:max-h-24 md:max-h-28 max-w-[280px] sm:max-w-md object-contain object-left drop-shadow-[0_8px_24px_rgba(0,0,0,0.9)] animate-in fade-in zoom-in-95 duration-500"
-                />
-              </div>
-            ) : (
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl md:text-6xl text-white tracking-tight leading-[1.08] mb-3 sm:mb-4 text-balance drop-shadow-2xl">
-                {featured.title}
-              </h1>
-            )}
+            <TitleLogo id={featured.id} type="movie" title={featured.title} size="hero" />
 
-            {/* Overview */}
-            <p className="text-xs sm:text-base text-white/70 line-clamp-2 sm:line-clamp-3 mb-5 sm:mb-6 leading-relaxed font-light max-w-xl text-pretty drop-shadow-sm">
+            <p className="mb-7 mt-4 line-clamp-3 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
               {featured.overview}
             </p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
-              {/* Watch Now CTA */}
+            {/* Actions */}
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <button
                 onClick={() => {
                   soundEffects.playHoverTick();
-                  navigate(`/movie/${featured.id}`);
+                  navigate(`/movie/${featured.id}#reviews`);
                 }}
-                className="btn-cinema-gold group flex-1 sm:flex-initial justify-center min-h-[46px] touch-feedback"
+                className="flex h-11 items-center gap-2 rounded-full bg-red-600 px-6 text-sm font-bold text-white shadow-lg shadow-red-600/25 transition-colors hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
               >
-                <Play className="w-4 h-4 fill-black text-black group-hover:scale-110 transition-transform" />
-                <span>Watch Now</span>
+                <PenLine className="h-4 w-4" />
+                Rate &amp; Review
               </button>
 
-              {/* Watch Trailer */}
               <button
                 onClick={() => handleWatchTrailer(featured.id)}
                 disabled={loadingTrailer}
-                className="btn-cinema-ghost group flex-1 sm:flex-initial justify-center min-h-[46px] touch-feedback"
+                className="flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-5 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/[0.16] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
               >
-                <Youtube className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />
-                <span>{loadingTrailer ? 'Loading...' : 'Trailer'}</span>
+                <Play className="h-4 w-4 fill-white" />
+                {loadingTrailer ? 'Loading' : 'Trailer'}
               </button>
 
-              {/* Watchlist Bookmark */}
               <button
                 onClick={() => {
                   soundEffects.playChime();
@@ -273,87 +223,71 @@ export const Hero = () => {
                     media_type: 'movie',
                   });
                 }}
-                className={`p-3 sm:p-3.5 min-w-[46px] min-h-[46px] rounded-full border touch-feedback flex items-center justify-center transition-all ${
-                  inWatchlist
-                    ? 'bg-amber-400/20 border-amber-400 text-amber-400 shadow-md shadow-amber-400/20'
-                    : 'bg-white/[0.06] border-white/15 text-white hover:bg-white/[0.12] hover:border-white/30'
-                }`}
-                title={inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
-                aria-label="Toggle Watchlist"
+                className={`${roundBtn} ${inWatchlist ? '!border-red-500/70 !bg-red-600/25 text-red-300' : ''}`}
+                aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+                aria-pressed={inWatchlist}
               >
-                {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {inWatchlist ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               </button>
 
-              {/* More Details */}
               <button
                 onClick={() => {
                   soundEffects.playHoverTick();
                   navigate(`/movie/${featured.id}`);
                 }}
-                className="p-3 sm:p-3.5 min-w-[46px] min-h-[46px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 hover:border-white/30 text-white/80 hover:text-white transition-all touch-feedback flex items-center justify-center"
-                title="Movie Details"
-                aria-label="View Details"
+                className={roundBtn}
+                aria-label="View details"
               >
-                <Info className="w-4 h-4" />
+                <Info className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* ── Floating Slide Thumbnails Dock (Bottom-Right / Bottom) ── */}
-          <div className="w-full md:w-auto md:absolute md:right-8 md:bottom-8 lg:right-12 lg:bottom-10 z-20">
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-black/70 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black/80 overflow-x-auto scrollbar-hide max-w-full">
-              {movies.map((movie, idx) => {
-                const active = idx === currentIndex;
-                return (
-                  <button
-                    key={movie.id}
-                    onClick={() => goToSlide(idx)}
-                    className={`group relative flex-shrink-0 h-14 w-24 sm:h-16 sm:w-28 md:h-18 md:w-32 rounded-xl overflow-hidden border-2 transition-all duration-300 text-left ${
-                      active
-                        ? 'border-amber-400 shadow-lg shadow-amber-400/30 ring-2 ring-amber-400/30'
-                        : 'border-white/15 opacity-60 hover:opacity-100 hover:border-white/40'
-                    }`}
-                  >
-                    <img
-                      src={tmdb.getImageUrl(movie.backdrop_path || movie.poster_path, 'w500')}
-                      alt={movie.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex items-end p-1.5 sm:p-2">
-                      <span className="text-[10px] sm:text-[11px] font-bold text-white truncate drop-shadow-md leading-tight">
-                        {movie.title}
-                      </span>
-                    </div>
-
-                    {active && isAutoPlay && (
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-400 animate-in fade-in" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Slide progress */}
+          <div className="mt-9 flex max-w-xs gap-2 sm:max-w-sm">
+            {movies.map((m, i) => (
+              <button
+                key={m.id}
+                onClick={() => goToSlide(i)}
+                aria-label={`Show ${m.title}`}
+                aria-current={i === currentIndex}
+                className="group flex h-5 flex-1 items-center"
+              >
+                <span className="block h-[3px] w-full overflow-hidden rounded-full bg-white/20 transition-all group-hover:h-1">
+                  {i < currentIndex && <span className="block h-full w-full rounded-full bg-white/70" />}
+                  {i === currentIndex &&
+                    (isAutoPlay ? <AutoFill key={currentIndex} /> : <span className="block h-full w-full rounded-full bg-white" />)}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Trailer Video Modal ── */}
-      {showTrailerModal && trailerKey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
+      {/* Trailer modal */}
+      {trailerKey && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Trailer"
+          onClick={closeTrailer}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
+          >
             <button
-              onClick={() => {
-                setShowTrailerModal(false);
-                setTrailerKey(null);
-              }}
-              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center bg-black/60 hover:bg-black/90 text-white border border-white/20 transition-all hover:scale-110"
+              onClick={closeTrailer}
+              className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90"
               aria-label="Close trailer"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
             <iframe
               src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
-              title="Movie Trailer"
-              className="w-full h-full"
+              title="Movie trailer"
+              className="h-full w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />

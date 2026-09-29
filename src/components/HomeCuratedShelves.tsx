@@ -6,17 +6,18 @@ import {
   type CuratedShelfItem,
 } from '@/services/curatedShelves';
 
+import { Flame } from 'lucide-react';
+
 export const HomeCuratedShelves: React.FC = () => {
   const [talkOfTheTown, setTalkOfTheTown] = useState<CuratedShelfItem[]>([]);
-  const [prime, setPrime] = useState<CuratedShelfItem[]>([]);
-  const [netflix, setNetflix] = useState<CuratedShelfItem[]>([]);
-  const [jiohotstar, setJiohotstar] = useState<CuratedShelfItem[]>([]);
-  const [district, setDistrict] = useState<CuratedShelfItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [prime, setPrime]                 = useState<CuratedShelfItem[]>([]);
+  const [netflix, setNetflix]             = useState<CuratedShelfItem[]>([]);
+  const [jiohotstar, setJiohotstar]       = useState<CuratedShelfItem[]>([]);
+  const [district, setDistrict]           = useState<CuratedShelfItem[]>([]);
+  const [loading, setLoading]             = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-
     async function loadShelves() {
       try {
         const [talkRes, primeRes, netflixRes, jioRes, distRes] = await Promise.all([
@@ -26,7 +27,6 @@ export const HomeCuratedShelves: React.FC = () => {
           curatedShelvesService.getJioHotstarDontMiss(),
           curatedShelvesService.getDistrictCollection(),
         ]);
-
         if (isMounted) {
           setTalkOfTheTown(talkRes);
           setPrime(primeRes);
@@ -40,20 +40,17 @@ export const HomeCuratedShelves: React.FC = () => {
         if (isMounted) setLoading(false);
       }
     }
-
     loadShelves();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
   return (
     <div className="space-y-10 my-6">
-      {/* 1. Talk Of The Town */}
+      {/* 1. Everyone's Watching */}
       <CuratedShelfRow
-        title="Talk Of The Town"
-        iconEmoji="📢"
+        title="Everyone's Watching"
+        subtitle="The films & shows taking over the internet"
+        icon={Flame}
         items={talkOfTheTown}
         loading={loading}
       />
@@ -61,6 +58,7 @@ export const HomeCuratedShelves: React.FC = () => {
       {/* 2. Worth Watching on Prime */}
       <CuratedShelfRow
         title="Worth Watching on Prime"
+        subtitle="Hand-picked Prime Video essentials"
         logoSrc="/assets/logos/prime.png"
         items={prime}
         loading={loading}
@@ -69,6 +67,7 @@ export const HomeCuratedShelves: React.FC = () => {
       {/* 3. Don't Miss These on Netflix */}
       <CuratedShelfRow
         title="Don't Miss These on Netflix"
+        subtitle="Netflix originals & must-see picks"
         logoSrc="/assets/logos/netflix.png"
         items={netflix}
         loading={loading}
@@ -77,6 +76,7 @@ export const HomeCuratedShelves: React.FC = () => {
       {/* 4. Don't Miss These on JioHotstar */}
       <CuratedShelfRow
         title="Don't Miss These on JioHotstar"
+        subtitle="Top picks streaming on JioHotstar"
         logoSrc="/assets/logos/jiohotstar.svg"
         items={jiohotstar}
         loading={loading}
@@ -85,6 +85,7 @@ export const HomeCuratedShelves: React.FC = () => {
       {/* 5. Watch It With District */}
       <CuratedShelfRow
         title="Watch It With District"
+        subtitle="Curated by the District community"
         logoSrc="/assets/logos/district.svg"
         items={district}
         loading={loading}

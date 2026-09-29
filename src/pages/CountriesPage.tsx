@@ -13,65 +13,65 @@ interface CountryItem {
 
 const COUNTRIES_DATA: Record<string, CountryItem[]> = {
   A: [
-    { name: 'Argentina', code: 'AR', flag: '🇦🇷' },
-    { name: 'Australia', code: 'AU', flag: '🇦🇺' },
-    { name: 'Austria', code: 'AT', flag: '🇦🇹' },
+    { name: 'Argentina', code: 'AR', flag: '????' },
+    { name: 'Australia', code: 'AU', flag: '????' },
+    { name: 'Austria', code: 'AT', flag: '????' },
   ],
   B: [
-    { name: 'Belgium', code: 'BE', flag: '🇧🇪' },
-    { name: 'Brazil', code: 'BR', flag: '🇧🇷' },
+    { name: 'Belgium', code: 'BE', flag: '????' },
+    { name: 'Brazil', code: 'BR', flag: '????' },
   ],
   C: [
-    { name: 'Canada', code: 'CA', flag: '🇨🇦' },
-    { name: 'China', code: 'CN', flag: '🇨🇳' },
-    { name: 'Colombia', code: 'CO', flag: '🇨🇴' },
+    { name: 'Canada', code: 'CA', flag: '????' },
+    { name: 'China', code: 'CN', flag: '????' },
+    { name: 'Colombia', code: 'CO', flag: '????' },
   ],
   D: [
-    { name: 'Denmark', code: 'DK', flag: '🇩🇰' },
+    { name: 'Denmark', code: 'DK', flag: '????' },
   ],
   F: [
-    { name: 'Finland', code: 'FI', flag: '🇫🇮' },
-    { name: 'France', code: 'FR', flag: '🇫🇷' },
+    { name: 'Finland', code: 'FI', flag: '????' },
+    { name: 'France', code: 'FR', flag: '????' },
   ],
   G: [
-    { name: 'Germany', code: 'DE', flag: '🇩🇪' },
-    { name: 'Greece', code: 'GR', flag: '🇬🇷' },
+    { name: 'Germany', code: 'DE', flag: '????' },
+    { name: 'Greece', code: 'GR', flag: '????' },
   ],
   I: [
-    { name: 'India (Bollywood & Regional)', code: 'IN', flag: '🇮🇳' },
-    { name: 'Indonesia', code: 'ID', flag: '🇮🇩' },
-    { name: 'Ireland', code: 'IE', flag: '🇮🇪' },
-    { name: 'Italy', code: 'IT', flag: '🇮🇹' },
+    { name: 'India (Bollywood & Regional)', code: 'IN', flag: '????' },
+    { name: 'Indonesia', code: 'ID', flag: '????' },
+    { name: 'Ireland', code: 'IE', flag: '????' },
+    { name: 'Italy', code: 'IT', flag: '????' },
   ],
   J: [
-    { name: 'Japan', code: 'JP', flag: '🇯🇵' },
+    { name: 'Japan', code: 'JP', flag: '????' },
   ],
   M: [
-    { name: 'Mexico', code: 'MX', flag: '🇲🇽' },
+    { name: 'Mexico', code: 'MX', flag: '????' },
   ],
   N: [
-    { name: 'Netherlands', code: 'NL', flag: '🇳🇱' },
-    { name: 'New Zealand', code: 'NZ', flag: '🇳🇿' },
-    { name: 'Norway', code: 'NO', flag: '🇳🇴' },
+    { name: 'Netherlands', code: 'NL', flag: '????' },
+    { name: 'New Zealand', code: 'NZ', flag: '????' },
+    { name: 'Norway', code: 'NO', flag: '????' },
   ],
   P: [
-    { name: 'Poland', code: 'PL', flag: '🇵🇱' },
-    { name: 'Portugal', code: 'PT', flag: '🇵🇹' },
+    { name: 'Poland', code: 'PL', flag: '????' },
+    { name: 'Portugal', code: 'PT', flag: '????' },
   ],
   S: [
-    { name: 'South Africa', code: 'ZA', flag: '🇿🇦' },
-    { name: 'South Korea (K-Drama & Film)', code: 'KR', flag: '🇰🇷' },
-    { name: 'Spain', code: 'ES', flag: '🇪🇸' },
-    { name: 'Sweden', code: 'SE', flag: '🇸🇪' },
-    { name: 'Switzerland', code: 'CH', flag: '🇨🇭' },
+    { name: 'South Africa', code: 'ZA', flag: '????' },
+    { name: 'South Korea (K-Drama & Film)', code: 'KR', flag: '????' },
+    { name: 'Spain', code: 'ES', flag: '????' },
+    { name: 'Sweden', code: 'SE', flag: '????' },
+    { name: 'Switzerland', code: 'CH', flag: '????' },
   ],
   T: [
-    { name: 'Thailand', code: 'TH', flag: '🇹🇭' },
-    { name: 'Turkey', code: 'TR', flag: '🇹🇷' },
+    { name: 'Thailand', code: 'TH', flag: '????' },
+    { name: 'Turkey', code: 'TR', flag: '????' },
   ],
   U: [
-    { name: 'United Kingdom', code: 'GB', flag: '🇬🇧' },
-    { name: 'United States (Hollywood)', code: 'US', flag: '🇺🇸' },
+    { name: 'United Kingdom', code: 'GB', flag: '????' },
+    { name: 'United States (Hollywood)', code: 'US', flag: '????' },
   ],
 };
 
@@ -101,7 +101,7 @@ export const CountriesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080b] text-[#f8fafc] selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#060810] text-[#f8fafc] selection:bg-red-600 selection:text-white">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28">
@@ -126,7 +126,7 @@ export const CountriesPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search country"
-              className="w-full bg-[#121520] border border-white/10 focus:border-amber-400/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none transition-colors"
+              className="w-full bg-[#121520] border border-white/10 focus:border-red-600/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none transition-colors"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export const CountriesPage: React.FC = () => {
                   <button
                     key={country.code}
                     onClick={() => handleSelectCountry(country)}
-                    className="flex items-center gap-3 p-3.5 rounded-xl bg-[#121520]/90 hover:bg-[#1c2234] border border-white/[0.06] hover:border-amber-400/50 text-left transition-all duration-200 cursor-pointer group shadow-sm hover:scale-[1.02]"
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-[#121520]/90 hover:bg-[#1c2234] border border-white/[0.06] hover:border-red-600/60 text-left transition-all duration-200 cursor-pointer group shadow-sm hover:scale-[1.02]"
                   >
                     <span className="text-xl leading-none">{country.flag}</span>
                     <span className="text-sm font-medium text-white/90 group-hover:text-white truncate block">

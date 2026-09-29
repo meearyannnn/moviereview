@@ -68,7 +68,7 @@ function parseDateHeader(dateStr: string, todayStr: string): { dayName: string; 
         isToday: dateStr === todayStr,
       };
     }
-  } catch {}
+  } catch { }
   return { dayName: 'TUE', dayNumber: '15', monthName: 'SEP', isToday: dateStr === todayStr };
 }
 
@@ -134,7 +134,7 @@ export const scheduleService = {
             }
           });
         }
-      } catch {}
+      } catch { }
 
       // 2. Discover day-by-day releases via TMDB
       const promises: Promise<any>[] = [];

@@ -52,7 +52,7 @@ const TIERS: { key: TierKey; label: string; color: string }[] = [
   { key: "hardPass", label: "Hard Pass", color: "#ef4444" },
   { key: "decentWatch", label: "Decent Watch", color: "#38bdf8" },
   { key: "mustWatch", label: "Must Watch", color: "#10b981" },
-  { key: "absoluteCinema", label: "Absolute Cinema", color: "#f59e0b" },
+  { key: "absoluteCinema", label: "Absolute Cinema", color: "#d946ef" },
 ];
 
 // ── Scoring engine (same logistic + Hare-Niemeyer as MovieGuyMeter) ─────
@@ -443,10 +443,10 @@ export const SeasonDetailModal = memo(({
                     </div>
                     {leadTier && (
                       leadTier.key === 'absoluteCinema' ? (
-                        <span className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-red-600/25 text-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.4)] overflow-hidden">
+                        <span className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black border border-fuchsia-400/50 bg-gradient-to-r from-fuchsia-600/30 via-purple-600/25 to-pink-600/30 text-fuchsia-100 shadow-[0_0_16px_rgba(217,70,239,0.45)] overflow-hidden">
                           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer-fast pointer-events-none" />
-                          <Sparkles className="h-2.5 w-2.5 text-amber-300 animate-pulse" />
-                          <span className="bg-gradient-to-r from-amber-200 to-rose-300 bg-clip-text text-transparent">
+                          <Sparkles className="h-2.5 w-2.5 text-fuchsia-300 animate-pulse" />
+                          <span className="bg-gradient-to-r from-pink-200 to-violet-300 bg-clip-text text-transparent">
                             Absolute Cinema
                           </span>
                         </span>
@@ -483,13 +483,13 @@ export const SeasonDetailModal = memo(({
                           const isAC = t.key === 'absoluteCinema';
 
                           const background = isAC
-                            ? 'linear-gradient(180deg, #fef08a 0%, #f59e0b 35%, #ef4444 80%, #991b1b 100%)'
+                            ? 'linear-gradient(180deg, #fdf4ff 0%, #f472b6 22%, #d946ef 55%, #9333ea 82%, #4c1d95 100%)'
                             : `linear-gradient(180deg, ${t.color} 0%, ${t.color}cc 100%)`;
 
                           const boxShadow = isAC
                             ? (isLead
-                                ? '0 0 20px rgba(245,158,11,0.7), inset 0 0 0 1px rgba(254,240,138,0.5)'
-                                : '0 0 12px rgba(245,158,11,0.4), inset 0 0 0 1px rgba(254,240,138,0.3)')
+                                ? '0 0 22px rgba(217,70,239,0.75), inset 0 0 0 1px rgba(253,244,255,0.7)'
+                                : '0 0 14px rgba(217,70,239,0.45), inset 0 0 0 1px rgba(245,208,254,0.35)')
                             : (isLead
                                 ? `0 0 16px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.2)`
                                 : 'inset 0 0 0 1px rgba(255,255,255,0.07)');
@@ -521,16 +521,16 @@ export const SeasonDetailModal = memo(({
                           <div key={t.key}>
                             <div className="flex items-center gap-1.5">
                               {isAC ? (
-                                <span className="h-2 w-2 rounded-full shrink-0 bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-200 shadow-[0_0_6px_#f59e0b]" />
+                                <span className="h-2 w-2 rounded-full shrink-0 bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-300 shadow-[0_0_6px_#d946ef]" />
                               ) : (
                                 <span className="h-2 w-2 rounded-full" style={{ background: t.color }} />
                               )}
-                              <span className={`text-[10px] font-semibold ${isAC ? 'text-amber-200/90 font-bold' : 'text-white/50'}`}>{t.label}</span>
+                              <span className={`text-[10px] font-semibold ${isAC ? 'text-fuchsia-200/90 font-bold' : 'text-white/50'}`}>{t.label}</span>
                             </div>
                             <div
                               className={`mt-0.5 pl-3.5 text-lg font-black tabular-nums ${
                                 isAC
-                                  ? 'bg-gradient-to-r from-amber-200 via-amber-400 to-rose-400 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(245,158,11,0.45)]'
+                                  ? 'bg-gradient-to-r from-pink-200 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(217,70,239,0.5)]'
                                   : ''
                               }`}
                               style={!isAC ? { color: t.color } : {}}

@@ -20,7 +20,7 @@ export const VERDICT_TIERS: VerdictTier[] = [
   { key: 'hardPass', label: 'Hard Pass', color: '#ef4444' },
   { key: 'decentWatch', label: 'Decent Watch', color: '#38bdf8' },
   { key: 'mustWatch', label: 'Must Watch', color: '#10b981' },
-  { key: 'absoluteCinema', label: 'Absolute Cinema', color: '#f59e0b' },
+  { key: 'absoluteCinema', label: 'Absolute Cinema', color: '#d946ef' },
 ];
 
 export type VerdictDist = Record<TierKey, number>;
@@ -214,13 +214,13 @@ const FilmStrip: React.FC<{ dist: VerdictDist; leadKey: TierKey }> = ({ dist, le
           const isAC = t.key === 'absoluteCinema';
 
           const background = isAC
-            ? 'linear-gradient(180deg, #fef08a 0%, #f59e0b 35%, #ef4444 80%, #991b1b 100%)'
+            ? 'linear-gradient(180deg, #fdf4ff 0%, #f472b6 22%, #d946ef 55%, #9333ea 82%, #4c1d95 100%)'
             : `linear-gradient(180deg, ${t.color} 0%, ${t.color}cc 100%)`;
 
           const boxShadow = isAC
             ? (isLead
-                ? '0 0 24px rgba(245,158,11,0.7), 0 0 45px rgba(239,68,68,0.35), inset 0 0 0 1px rgba(254,240,138,0.6)'
-                : '0 0 14px rgba(245,158,11,0.45), inset 0 0 0 1px rgba(254,240,138,0.35)')
+                ? '0 0 26px rgba(217,70,239,0.75), 0 0 50px rgba(168,85,247,0.45), inset 0 0 0 1px rgba(253,244,255,0.7)'
+                : '0 0 16px rgba(217,70,239,0.5), inset 0 0 0 1px rgba(245,208,254,0.4)')
             : (isLead
                 ? `0 0 18px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.25)`
                 : 'inset 0 0 0 1px rgba(255,255,255,0.08)');
@@ -360,10 +360,10 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
 
           <div className="flex items-center gap-2 shrink-0">
             {lead.key === 'absoluteCinema' ? (
-              <span className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide border border-amber-400/60 bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-red-600/25 text-amber-200 shadow-[0_0_24px_rgba(245,158,11,0.45)] whitespace-nowrap overflow-hidden">
+              <span className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide border border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-600/30 via-purple-600/25 to-pink-600/30 text-fuchsia-100 shadow-[0_0_24px_rgba(217,70,239,0.5)] whitespace-nowrap overflow-hidden">
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer-fast pointer-events-none" />
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-rose-300 bg-clip-text text-transparent drop-shadow-[0_1px_4px_rgba(245,158,11,0.5)]">
+                <Sparkles className="w-3.5 h-3.5 text-fuchsia-300 animate-pulse" />
+                <span className="bg-gradient-to-r from-pink-200 via-fuchsia-200 to-violet-300 bg-clip-text text-transparent drop-shadow-[0_1px_4px_rgba(217,70,239,0.6)]">
                   Absolute Cinema
                 </span>
               </span>
@@ -396,18 +396,18 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
               <div key={t.key} className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   {isAC ? (
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-200 shadow-[0_0_10px_#f59e0b]" />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-300 shadow-[0_0_10px_#d946ef]" />
                   ) : (
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
                   )}
-                  <span className={`text-xs font-semibold whitespace-nowrap ${isAC ? 'text-amber-200/90 font-bold' : 'text-white/60'}`}>
+                  <span className={`text-xs font-semibold whitespace-nowrap ${isAC ? 'text-fuchsia-200/95 font-bold' : 'text-white/60'}`}>
                     {t.label}
                   </span>
                 </div>
                 <div
                   className={`mt-1 pl-3.5 text-xl font-black tabular-nums ${
                     isAC
-                      ? 'bg-gradient-to-r from-amber-200 via-amber-400 to-rose-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]'
+                      ? 'bg-gradient-to-r from-pink-200 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(217,70,239,0.55)]'
                       : ''
                   }`}
                   style={!isAC ? { color: t.color } : {}}

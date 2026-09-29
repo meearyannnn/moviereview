@@ -33,7 +33,7 @@ export const VERDICT_META: Record<Verdict, { label: string; color: string; bg: s
   'Hard Pass': { label: 'Hard Pass', color: '#ef4444', ...tint('#ef4444') },
   'Decent Watch': { label: 'Decent Watch', color: '#38bdf8', ...tint('#38bdf8') },
   'Must Watch': { label: 'Must Watch', color: '#10b981', ...tint('#10b981') },
-  'Absolute Cinema': { label: 'Absolute Cinema', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)', border: 'rgba(251, 191, 36, 0.55)' },
+  'Absolute Cinema': { label: 'Absolute Cinema', color: '#d946ef', bg: 'rgba(217, 70, 239, 0.16)', border: 'rgba(232, 121, 249, 0.55)' },
 };
 const VERDICTS = Object.keys(VERDICT_META) as Verdict[];
 
@@ -232,15 +232,15 @@ const WriteReview: React.FC<{
                   onClick={() => setVerdict(v)}
                   className={`relative flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-black transition-all overflow-hidden ${
                     active
-                      ? 'border-amber-400 bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-red-600/25 text-amber-200 shadow-[0_0_22px_rgba(245,158,11,0.45)]'
-                      : 'border-amber-500/30 bg-amber-500/[0.04] text-amber-300/70 hover:border-amber-400/60 hover:text-amber-200'
+                      ? 'border-fuchsia-400 bg-gradient-to-r from-fuchsia-600/30 via-purple-600/25 to-pink-600/30 text-fuchsia-100 shadow-[0_0_22px_rgba(217,70,239,0.5)]'
+                      : 'border-fuchsia-500/30 bg-fuchsia-500/[0.04] text-fuchsia-300/70 hover:border-fuchsia-400/60 hover:text-fuchsia-200'
                   }`}
                 >
-                  <span className="h-2 w-2 rounded-full bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-200 shadow-[0_0_8px_#f59e0b] shrink-0" />
-                  <span className={active ? 'bg-gradient-to-r from-amber-200 to-rose-300 bg-clip-text text-transparent' : ''}>
+                  <span className="h-2 w-2 rounded-full bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-300 shadow-[0_0_8px_#d946ef] shrink-0" />
+                  <span className={active ? 'bg-gradient-to-r from-pink-200 to-violet-300 bg-clip-text text-transparent' : ''}>
                     {m.label}
                   </span>
-                  {active && <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />}
+                  {active && <Sparkles className="w-3 h-3 text-fuchsia-300 shrink-0" />}
                 </button>
               );
             }
@@ -342,7 +342,7 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
         <div
           className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black border ${
             isAC
-              ? 'border-amber-400/80 bg-gradient-to-br from-amber-500/25 to-rose-950/40 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.35)]'
+              ? 'border-fuchsia-400/80 bg-gradient-to-br from-fuchsia-600/25 to-purple-950/40 text-fuchsia-200 shadow-[0_0_12px_rgba(217,70,239,0.35)]'
               : 'bg-white/[0.07] text-white'
           }`}
           style={!isAC ? { borderColor: `${meta.color}66` } : {}}
@@ -356,9 +356,9 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
             <span className="text-white/30 text-xs">•</span>
             <span className="text-white/40 text-xs">{review.date}</span>
             {isAC ? (
-              <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-rose-500/15 to-red-600/20 text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.35)]">
-                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-rose-300 bg-clip-text text-transparent">
+              <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border border-fuchsia-400/50 bg-gradient-to-r from-fuchsia-600/25 via-purple-600/15 to-pink-600/20 text-fuchsia-200 shadow-[0_0_14px_rgba(217,70,239,0.35)]">
+                <Sparkles className="w-2.5 h-2.5 text-fuchsia-300" />
+                <span className="bg-gradient-to-r from-pink-200 via-fuchsia-200 to-violet-300 bg-clip-text text-transparent">
                   Absolute Cinema
                 </span>
               </span>

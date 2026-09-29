@@ -555,7 +555,7 @@ export const calculateMeterData = (overallScore: number): MeterTierItem[] => {
   }
 
   return [
-    { label: 'Absolute Cinema', percent: absoluteCinema, color: '#f59e0b' },
+    { label: 'Absolute Cinema', percent: absoluteCinema, color: '#d946ef' },
     { label: 'Must Watch',      percent: mustWatch,      color: '#dc2626' },
     { label: 'Decent Watch',   percent: decentWatch,    color: '#94a3b8' },
     { label: 'Hard Pass',       percent: hardPass,       color: '#ef4444' },

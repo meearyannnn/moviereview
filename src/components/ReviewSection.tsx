@@ -33,7 +33,7 @@ export const VERDICT_META: Record<Verdict, { label: string; color: string; bg: s
   'Hard Pass': { label: 'Hard Pass', color: '#ef4444', ...tint('#ef4444') },
   'Decent Watch': { label: 'Decent Watch', color: '#38bdf8', ...tint('#38bdf8') },
   'Must Watch': { label: 'Must Watch', color: '#10b981', ...tint('#10b981') },
-  'Absolute Cinema': { label: 'Absolute Cinema', color: '#fbbf24', ...tint('#fbbf24') },
+  'Absolute Cinema': { label: 'Absolute Cinema', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)', border: 'rgba(251, 191, 36, 0.55)' },
 };
 const VERDICTS = Object.keys(VERDICT_META) as Verdict[];
 
@@ -222,6 +222,29 @@ const WriteReview: React.FC<{
           {VERDICTS.map((v) => {
             const m = VERDICT_META[v];
             const active = verdict === v;
+            const isAC = v === 'Absolute Cinema';
+
+            if (isAC) {
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setVerdict(v)}
+                  className={`relative flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-black transition-all overflow-hidden ${
+                    active
+                      ? 'border-amber-400 bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-red-600/25 text-amber-200 shadow-[0_0_22px_rgba(245,158,11,0.45)]'
+                      : 'border-amber-500/30 bg-amber-500/[0.04] text-amber-300/70 hover:border-amber-400/60 hover:text-amber-200'
+                  }`}
+                >
+                  <span className="h-2 w-2 rounded-full bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-200 shadow-[0_0_8px_#f59e0b] shrink-0" />
+                  <span className={active ? 'bg-gradient-to-r from-amber-200 to-rose-300 bg-clip-text text-transparent' : ''}>
+                    {m.label}
+                  </span>
+                  {active && <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />}
+                </button>
+              );
+            }
+
             return (
               <button
                 key={v}
@@ -305,7 +328,9 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
   revealAll,
   onLike,
 }) => {
-  const meta = VERDICT_META[normalizeVerdict(review.verdict)];
+  const normVerdict = normalizeVerdict(review.verdict);
+  const meta = VERDICT_META[normVerdict];
+  const isAC = normVerdict === 'Absolute Cinema';
   const [revealed, setRevealed] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const isLong = review.text.length > 260;
@@ -315,8 +340,12 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
     <article className="py-5 first:pt-2 last:pb-2">
       <div className="flex items-start gap-3.5">
         <div
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-xs font-black text-white border"
-          style={{ borderColor: `${meta.color}66` }}
+          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black border ${
+            isAC
+              ? 'border-amber-400/80 bg-gradient-to-br from-amber-500/25 to-rose-950/40 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.35)]'
+              : 'bg-white/[0.07] text-white'
+          }`}
+          style={!isAC ? { borderColor: `${meta.color}66` } : {}}
         >
           {review.avatar || review.author.slice(0, 2).toUpperCase()}
         </div>
@@ -326,12 +355,21 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
             <span className="font-semibold text-white text-sm">{review.author}</span>
             <span className="text-white/30 text-xs">•</span>
             <span className="text-white/40 text-xs">{review.date}</span>
-            <span
-              className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold border"
-              style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.border }}
-            >
-              {meta.label}
-            </span>
+            {isAC ? (
+              <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-rose-500/15 to-red-600/20 text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.35)]">
+                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-rose-300 bg-clip-text text-transparent">
+                  Absolute Cinema
+                </span>
+              </span>
+            ) : (
+              <span
+                className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold border"
+                style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.border }}
+              >
+                {meta.label}
+              </span>
+            )}
           </div>
 
           <div className="mt-1.5 flex items-center gap-2">

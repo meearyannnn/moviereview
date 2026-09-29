@@ -6,7 +6,7 @@
  * Episode-level IMDb inflation bias is corrected via anchor blending.
  */
 import { useEffect, useState, memo } from "react";
-import { X, Star, Calendar, Clock, Film, BarChart2, ChevronRight } from "lucide-react";
+import { X, Star, Calendar, Clock, Film, BarChart2, ChevronRight, Sparkles } from "lucide-react";
 import { tmdb } from "@/services/tmdb";
 import { getOmdbSeasonEpisodes, type OmdbSeasonEpisode, type OmdbMovieData } from "@/services/omdb";
 
@@ -52,7 +52,7 @@ const TIERS: { key: TierKey; label: string; color: string }[] = [
   { key: "hardPass", label: "Hard Pass", color: "#ef4444" },
   { key: "decentWatch", label: "Decent Watch", color: "#38bdf8" },
   { key: "mustWatch", label: "Must Watch", color: "#10b981" },
-  { key: "absoluteCinema", label: "Absolute Cinema", color: "#fbbf24" },
+  { key: "absoluteCinema", label: "Absolute Cinema", color: "#f59e0b" },
 ];
 
 // ── Scoring engine (same logistic + Hare-Niemeyer as MovieGuyMeter) ─────
@@ -442,10 +442,20 @@ export const SeasonDetailModal = memo(({
                       )}
                     </div>
                     {leadTier && (
-                      <span className="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold"
-                        style={{ color: leadTier.color, background: `${leadTier.color}1a`, border: `1px solid ${leadTier.color}40` }}>
-                        {leadTier.label}
-                      </span>
+                      leadTier.key === 'absoluteCinema' ? (
+                        <span className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-red-600/25 text-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.4)] overflow-hidden">
+                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer-fast pointer-events-none" />
+                          <Sparkles className="h-2.5 w-2.5 text-amber-300 animate-pulse" />
+                          <span className="bg-gradient-to-r from-amber-200 to-rose-300 bg-clip-text text-transparent">
+                            Absolute Cinema
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold"
+                          style={{ color: leadTier.color, background: `${leadTier.color}1a`, border: `1px solid ${leadTier.color}40` }}>
+                          {leadTier.label}
+                        </span>
+                      )
                     )}
                   </div>
 
@@ -470,16 +480,34 @@ export const SeasonDetailModal = memo(({
                           const pct = verdict[t.key] as number;
                           if (pct <= 0) return null;
                           const isLead = t.key === leadTier?.key;
+                          const isAC = t.key === 'absoluteCinema';
+
+                          const background = isAC
+                            ? 'linear-gradient(180deg, #fef08a 0%, #f59e0b 35%, #ef4444 80%, #991b1b 100%)'
+                            : `linear-gradient(180deg, ${t.color} 0%, ${t.color}cc 100%)`;
+
+                          const boxShadow = isAC
+                            ? (isLead
+                                ? '0 0 20px rgba(245,158,11,0.7), inset 0 0 0 1px rgba(254,240,138,0.5)'
+                                : '0 0 12px rgba(245,158,11,0.4), inset 0 0 0 1px rgba(254,240,138,0.3)')
+                            : (isLead
+                                ? `0 0 16px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.2)`
+                                : 'inset 0 0 0 1px rgba(255,255,255,0.07)');
+
                           return (
-                            <div key={t.key} className="rounded-md min-w-[4px]"
+                            <div key={t.key} className={`rounded-md min-w-[4px] relative overflow-hidden ${isAC ? 'animate-pulse-glow' : ''}`}
                               style={{
                                 flexBasis: 0,
                                 flexGrow: barsReady ? pct : 0,
                                 transition: `flex-grow 0.9s cubic-bezier(0.22,1,0.36,1) ${i * 90}ms`,
-                                background: `linear-gradient(180deg, ${t.color} 0%, ${t.color}cc 100%)`,
-                                boxShadow: isLead ? `0 0 16px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.2)` : "inset 0 0 0 1px rgba(255,255,255,0.07)",
+                                background,
+                                boxShadow,
                               }}
-                            />
+                            >
+                              {isAC && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full animate-shimmer-fast pointer-events-none" />
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -487,17 +515,31 @@ export const SeasonDetailModal = memo(({
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-                      {TIERS.map((t) => (
-                        <div key={t.key}>
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full" style={{ background: t.color }} />
-                            <span className="text-[10px] font-semibold text-white/50">{t.label}</span>
+                      {TIERS.map((t) => {
+                        const isAC = t.key === 'absoluteCinema';
+                        return (
+                          <div key={t.key}>
+                            <div className="flex items-center gap-1.5">
+                              {isAC ? (
+                                <span className="h-2 w-2 rounded-full shrink-0 bg-gradient-to-tr from-rose-500 via-amber-400 to-yellow-200 shadow-[0_0_6px_#f59e0b]" />
+                              ) : (
+                                <span className="h-2 w-2 rounded-full" style={{ background: t.color }} />
+                              )}
+                              <span className={`text-[10px] font-semibold ${isAC ? 'text-amber-200/90 font-bold' : 'text-white/50'}`}>{t.label}</span>
+                            </div>
+                            <div
+                              className={`mt-0.5 pl-3.5 text-lg font-black tabular-nums ${
+                                isAC
+                                  ? 'bg-gradient-to-r from-amber-200 via-amber-400 to-rose-400 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(245,158,11,0.45)]'
+                                  : ''
+                              }`}
+                              style={!isAC ? { color: t.color } : {}}
+                            >
+                              {verdict[t.key]}%
+                            </div>
                           </div>
-                          <div className="mt-0.5 pl-3.5 text-lg font-black tabular-nums" style={{ color: t.color }}>
-                            {verdict[t.key]}%
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

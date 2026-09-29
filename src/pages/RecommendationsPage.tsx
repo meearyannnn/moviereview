@@ -116,9 +116,8 @@ function MovieCard({ movie, onOpen }: MovieCardProps) {
           decoding="async"
           draggable={false}
           onLoad={() => setIsImageLoaded(true)}
-          className={`h-full w-full object-cover pointer-events-none select-none transition-all duration-300 group-hover:scale-105 ${
-            isImageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`h-full w-full object-cover pointer-events-none select-none transition-all duration-300 group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
         />
 
         {/* Top-right: Rating */}
@@ -293,11 +292,10 @@ export const RecommendationsPage = () => {
                 soundEffects.playHoverTick();
                 setActiveTab('solo');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'solo'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'solo'
                   ? 'bg-red-600 text-white font-bold shadow-[0_0_12px_rgba(220,38,38,0.4)]'
                   : 'text-white/60 hover:text-white'
-              }`}
+                }`}
             >
               <User className="w-3.5 h-3.5" />
               <span>Solo Vibe</span>
@@ -308,11 +306,10 @@ export const RecommendationsPage = () => {
                 soundEffects.playHoverTick();
                 setActiveTab('couple');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'couple'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'couple'
                   ? 'bg-red-600 text-white font-bold shadow-[0_0_12px_rgba(220,38,38,0.4)]'
                   : 'text-white/60 hover:text-white'
-              }`}
+                }`}
             >
               <Users className="w-3.5 h-3.5" />
               <span>Couple Mode</span>
@@ -320,11 +317,10 @@ export const RecommendationsPage = () => {
 
             <button
               onClick={handleSmartWatchlistMatch}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'smart'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'smart'
                   ? 'bg-red-600 text-white font-bold shadow-[0_0_12px_rgba(220,38,38,0.4)]'
                   : 'text-white/60 hover:text-white'
-              }`}
+                }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-red-500 group-hover:text-white" />
               <span>Smart Taste</span>
@@ -476,16 +472,14 @@ export const RecommendationsPage = () => {
                     key={preset.label}
                     onClick={() => handlePresetClick(preset)}
                     aria-pressed={isSelected}
-                    className={`group flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
-                      isSelected
+                    className={`group flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer ${isSelected
                         ? 'bg-red-600 text-white font-bold border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.35)] scale-[1.02]'
                         : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.07] hover:border-red-500/40 text-white/80 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-white/5 text-red-400 group-hover:text-red-300'
-                      }`}
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-white/20 text-white' : 'bg-white/5 text-red-400 group-hover:text-red-300'
+                        }`}
                     >
                       <IconComponent className="w-3.5 h-3.5" />
                     </div>
@@ -511,11 +505,10 @@ export const RecommendationsPage = () => {
                     setEraFilter(era);
                   }}
                   aria-pressed={eraFilter === era}
-                  className={`px-2.5 py-1 rounded-md text-xs font-mono capitalize transition-all cursor-pointer ${
-                    eraFilter === era
+                  className={`px-2.5 py-1 rounded-md text-xs font-mono capitalize transition-all cursor-pointer ${eraFilter === era
                       ? 'bg-red-600 text-white font-bold shadow-sm'
                       : 'hover:text-white text-white/60'
-                  }`}
+                    }`}
                 >
                   {era}
                 </button>

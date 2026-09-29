@@ -172,8 +172,8 @@ export const ExplorePage: React.FC = () => {
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-1.5">
             Discover
           </p>
-          <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight leading-none">
-            Explore <span className="text-red-500">Cinema</span>
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white tracking-tight leading-none">
+            Explore Cinema
           </h1>
         </div>
 

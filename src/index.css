@@ -50,9 +50,9 @@
     --tier-absolute-cinema-glow: rgba(217, 70, 239, 0.55);
 
     /* Typography */
-    --font-display: 'Oswald', system-ui, sans-serif;
+    --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
     --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-    --font-accent: 'Oswald', system-ui, sans-serif;
+    --font-accent: 'Outfit', system-ui, sans-serif;
 
     /* Rating source brand colors */
     --imdb-yellow: #f5c518;

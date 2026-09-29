@@ -74,10 +74,8 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
             </div>
           )}
           <div>
-            <h2 className="font-display font-black text-lg sm:text-xl leading-tight">
-              <span className="bg-gradient-to-r from-white via-white to-red-400 bg-clip-text text-transparent">
-                {title}
-              </span>
+            <h2 className="font-display font-bold text-lg sm:text-xl tracking-tight text-white">
+              {title}
             </h2>
             {subtitle && (
               <p className="text-[11px] text-white/35 font-sans mt-0.5">{subtitle}</p>

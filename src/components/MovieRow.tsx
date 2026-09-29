@@ -75,20 +75,17 @@ export const MovieRow = ({
               </div>
             )}
             <div className="flex items-baseline gap-2.5 truncate">
-              <h2 className="font-display text-2xl sm:text-3xl font-black tracking-tight leading-tight bg-gradient-to-r from-white via-white/90 to-red-300 bg-clip-text text-transparent">
-                {title}
+              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
+                <span>{title}</span>
                 {accent && (
-                  <>
-                    {' '}
-                    <span className="bg-gradient-to-r from-red-500 via-red-400 to-red-600 bg-clip-text text-transparent">
-                      {accent}
-                    </span>
-                  </>
+                  <span className="text-white/60 font-semibold text-lg sm:text-xl">
+                    {accent}
+                  </span>
                 )}
               </h2>
               {subtitle && (
                 <span className="hidden sm:inline text-xs sm:text-sm text-white/40 truncate">
-                  {subtitle}
+                  • {subtitle}
                 </span>
               )}
             </div>

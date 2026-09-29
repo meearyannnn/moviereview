@@ -63,8 +63,8 @@ const TVPage = () => {
                 Television Series
               </span>
             </div>
-            <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight leading-none">
-              Binge Worthy <span className="text-red-500">Shows</span>
+            <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight leading-none">
+              Binge Worthy Series
             </h1>
           </div>
 

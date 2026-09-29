@@ -63,8 +63,8 @@ const MoviesPage = () => {
                 Movie Catalog
               </span>
             </div>
-            <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight leading-none">
-              Featured <span className="text-red-500">Cinema</span>
+            <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight leading-none">
+              Featured Cinema
             </h1>
           </div>
 

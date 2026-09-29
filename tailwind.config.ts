@@ -7,9 +7,9 @@ export default {
   theme: {
     fontFamily: {
       sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
-      serif: ["'Oswald'", "system-ui", "sans-serif"],
-      display: ["'Oswald'", "system-ui", "sans-serif"],
-      cinema: ["'Oswald'", "system-ui", "sans-serif"],
+      serif: ["'Outfit'", "'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+      display: ["'Outfit'", "'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+      cinema: ["'Outfit'", "'Plus Jakarta Sans'", "system-ui", "sans-serif"],
       mono: ["'IBM Plex Mono'", "'JetBrains Mono'", "monospace"],
     },
     // NOTE: fontSize here REPLACES Tailwind's defaults, so every size the app

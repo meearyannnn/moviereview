@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { MovieCard } from '@/components/MovieCard';
@@ -80,8 +80,8 @@ const GenresPage = () => {
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-2">
             Categories & Themes
           </p>
-          <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight leading-none">
-            Browse by <span className="text-red-500">Genre</span>
+          <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight leading-none">
+            Browse by Genre
           </h1>
         </div>
 

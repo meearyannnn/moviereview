@@ -9,9 +9,6 @@ import {
   Sparkles,
   Bookmark,
   Film,
-  Volume2,
-  VolumeX,
-  HelpCircle,
   Hourglass,
   Flame,
   Calendar,
@@ -34,8 +31,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
-import { ReelSwiperModal } from './ReelSwiperModal';
 import { MidnightVaultModal } from './MidnightVaultModal';
 import { ExploreHubModal } from './ExploreHubModal';
 import { AuthModal } from './AuthModal';
@@ -46,14 +41,11 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showWatchlistModal, setShowWatchlistModal] = useState(false);
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
-  const [showSwiperModal, setShowSwiperModal] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showExploreHub, setShowExploreHub] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, profile, signOut } = useAuth();
-  const [soundOn, setSoundOn] = useState(() => soundEffects.getSoundEnabled());
   const keySequenceRef = useRef<string>('');
 
   const { watchlist, removeFromWatchlist } = useWatchlist();
@@ -81,8 +73,6 @@ export const Navbar = () => {
 
       if (e.key === 'Escape') {
         setShowWatchlistModal(false);
-        setShowShortcutsModal(false);
-        setShowSwiperModal(false);
         setShowVaultModal(false);
         setShowExploreHub(false);
         setShowNotificationModal(false);
@@ -104,18 +94,6 @@ export const Navbar = () => {
         e.preventDefault();
         soundEffects.playHoverTick();
         navigate('/search');
-      } else if (e.key === 's' || e.key === 'S') {
-        e.preventDefault();
-        soundEffects.playHoverTick();
-        setShowSwiperModal((prev) => !prev);
-      } else if (e.key === 'm' || e.key === 'M') {
-        e.preventDefault();
-        const newState = soundEffects.toggleSound();
-        setSoundOn(newState);
-      } else if (e.key === '?') {
-        e.preventDefault();
-        soundEffects.playHoverTick();
-        setShowShortcutsModal((prev) => !prev);
       }
     };
 
@@ -123,10 +101,6 @@ export const Navbar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
-  const toggleAudio = () => {
-    const newState = soundEffects.toggleSound();
-    setSoundOn(newState);
-  };
 
   // Original PC navigation links
   const navItems = useMemo(
@@ -519,7 +493,7 @@ export const Navbar = () => {
               )}
 
               {/* Mobile primary nav links */}
-              <div className="flex flex-col gap-1.5 pb-3 border-b border-white/10">
+              <div className="flex flex-col gap-1.5">
                 {navItems.map(({ path, label }) => {
                   const active = isActive(path);
                   return (
@@ -539,101 +513,6 @@ export const Navbar = () => {
                     </Link>
                   );
                 })}
-              </div>
-
-              {/* Discovery Directories */}
-              <div className="pb-3 border-b border-white/10">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2 px-1">
-                  Directories
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/categories"
-                    onClick={() => {
-                      soundEffects.playHoverTick();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80"
-                  >
-                    <Clapperboard className="w-3.5 h-3.5 text-[#dc2626]" />
-                    <span>Categories A-Z</span>
-                  </Link>
-
-                  <Link
-                    to="/languages"
-                    onClick={() => {
-                      soundEffects.playHoverTick();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80"
-                  >
-                    <span className="text-[#dc2626] font-bold text-xs">?A</span>
-                    <span>Languages A-Z</span>
-                  </Link>
-
-                  <Link
-                    to="/countries"
-                    onClick={() => {
-                      soundEffects.playHoverTick();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80"
-                  >
-                    <span className="text-[#dc2626] text-xs">??</span>
-                    <span>Countries A-Z</span>
-                  </Link>
-
-                  <Link
-                    to="/explore"
-                    onClick={() => {
-                      soundEffects.playHoverTick();
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5 text-[#dc2626]" />
-                    <span>Explore Catalog</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Extra Cinema Features */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setShowSwiperModal(true);
-                  }}
-                  className="flex items-center gap-2.5 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80 transition-all text-left"
-                >
-                  <Flame className="w-4 h-4 text-[#dc2626]" />
-                  <span>Reel Swiper</span>
-                </button>
-
-
-
-                <button
-                  onClick={toggleAudio}
-                  className="flex items-center gap-2.5 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80 transition-all text-left"
-                >
-                  {soundOn ? (
-                    <Volume2 className="w-4 h-4 text-[#dc2626]" />
-                  ) : (
-                    <VolumeX className="w-4 h-4 text-white/40" />
-                  )}
-                  <span>{soundOn ? 'Sound: ON' : 'Sound: OFF'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setShowShortcutsModal(true);
-                  }}
-                  className="flex items-center gap-2.5 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white/80 transition-all text-left"
-                >
-                  <HelpCircle className="w-4 h-4 text-white/50" />
-                  <span>Shortcuts</span>
-                </button>
               </div>
             </div>
           </div>
@@ -832,17 +711,7 @@ export const Navbar = () => {
 
 
 
-      {/* -- Keyboard Shortcuts Modal -- */}
-      <KeyboardShortcutsModal
-        isOpen={showShortcutsModal}
-        onClose={() => setShowShortcutsModal(false)}
-      />
 
-      {/* -- Reel Swiper Modal -- */}
-      <ReelSwiperModal
-        isOpen={showSwiperModal}
-        onClose={() => setShowSwiperModal(false)}
-      />
 
       {/* -- Midnight Cult Vault Modal -- */}
       <MidnightVaultModal

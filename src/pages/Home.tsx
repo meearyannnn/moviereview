@@ -8,6 +8,7 @@ import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy } from 'lucide-react';
+import { TicketLoader } from '@/components/TicketLoader';
 
 type MediaType = 'movie' | 'tv';
 
@@ -115,55 +116,101 @@ const Trending = () => {
     };
   }, []);
 
-  const [feature, ...rest] = picks ?? [];
+  const feature = picks?.find((p) => p.backdrop && !p.backdrop.includes('unsplash')) || picks?.[0];
+  const rest = picks ? picks.filter((p) => p !== feature) : [];
 
   return (
     <section aria-labelledby="trending-heading" className="pb-14 pt-24 sm:pt-28">
-      <div className="mb-5 flex items-baseline justify-between gap-4">
-        <h1 id="trending-heading" className="font-display text-2xl font-semibold text-[#efeae2] sm:text-3xl">
-          Trending this week
-        </h1>
-        <Link to="/movies" className="text-sm text-[#efeae2]/55 transition-colors hover:text-[#f5c542]">
-          Browse all
+      {/* ── Marquee Header with MG Logo ── */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-[#c9a24b]/20 pb-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c9a24b]/35 bg-[#1a110a]/90 px-3 py-1 shadow-[0_0_15px_rgba(201,162,75,0.25)] backdrop-blur-md">
+              <img
+                src="/assets/branding/ticket-loader.png"
+                alt=""
+                className="h-3.5 w-auto object-contain animate-pulse"
+              />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#f5c542]">
+                Box Office Marquee
+              </span>
+            </span>
+            <span className="h-1 w-1 rounded-full bg-white/20" />
+            <span className="font-mono text-xs text-white/40">Curated weekly cinema picks</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <h1 id="trending-heading" className="font-display text-2xl font-black tracking-tight text-[#efeae2] sm:text-4xl">
+              Trending this week
+            </h1>
+            <div className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#c9a24b]/25 bg-[#140a0d] px-2.5 py-1 shadow-md shadow-black/60">
+              <img
+                src="/assets/branding/movieguy-logo-tight.png"
+                alt="MG"
+                className="h-4.5 w-auto object-contain brightness-110 drop-shadow-[0_0_8px_rgba(245,197,66,0.5)]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to="/explore"
+          className="group inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-[#c9a24b]/20 bg-white/[0.03] px-4 py-1.5 text-xs font-mono text-[#efeae2]/70 transition-all hover:border-[#f5c542]/60 hover:bg-[#f5c542]/10 hover:text-[#f5c542]"
+        >
+          <span>Browse all releases</span>
+          <span className="transition-transform duration-300 group-hover:translate-x-1 text-[#f5c542]">→</span>
         </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
         {picks === null && (
-          <>
-            <div className="col-span-3 aspect-[16/10] animate-pulse rounded-xl bg-white/5 md:col-span-2 md:row-span-2 md:aspect-auto" />
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className={i >= 6 ? 'hidden sm:block' : ''}>
-                <div className="aspect-[2/3] animate-pulse rounded-lg bg-white/5" />
-                <div className="mt-2.5 h-3.5 w-3/4 animate-pulse rounded bg-white/5" />
-              </div>
-            ))}
-          </>
+          <div className="col-span-full py-16 flex justify-center">
+            <TicketLoader size="lg" label="Curating Trending Cinema…" />
+          </div>
         )}
 
         {feature && (
           <Link
             to={`/${feature.type}/${feature.id}`}
-            className="group relative col-span-3 aspect-[16/10] overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f5c542] md:col-span-2 md:row-span-2 md:aspect-auto"
+            className="group relative col-span-3 aspect-[16/10] overflow-hidden rounded-2xl bg-white/5 border border-[#c9a24b]/25 shadow-2xl transition-all duration-300 hover:border-[#f5c542]/60 hover:shadow-[0_16px_50px_rgba(201,162,75,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f5c542] md:col-span-2 md:row-span-2 md:aspect-auto"
           >
+            {/* MG Top Pick Ribbon */}
+            <div className="absolute top-3.5 left-3.5 z-20 flex items-center gap-1.5 rounded-full border border-[#c9a24b]/40 bg-[#0a0608]/90 px-2.5 py-1 shadow-xl shadow-black/90 backdrop-blur-md">
+              <img
+                src="/assets/branding/ticket-loader.png"
+                alt=""
+                className="h-3 w-auto object-contain"
+              />
+              <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#f5c542]">
+                MG Spotlight
+              </span>
+            </div>
+
             <img
-              src={feature.backdrop}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
+              src={feature.backdrop || FALLBACK_BACKDROP}
+              alt={feature.title}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:transition-none"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (feature.poster && target.src !== feature.poster) {
+                  target.src = feature.poster;
+                } else if (target.src !== FALLBACK_BACKDROP) {
+                  target.src = FALLBACK_BACKDROP;
+                }
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-              <p className="text-sm text-white/70">
-                {meta(feature)}
+              <p className="text-xs font-mono text-[#f5c542] flex items-center gap-2">
+                <span>{meta(feature)}</span>
                 {feature.rating > 0 && (
-                  <>
-                    {', '}
-                    <span className="text-[#f5c542]">★</span> {feature.rating.toFixed(1)}
-                  </>
+                  <span className="flex items-center gap-1 rounded bg-[#f5c542]/20 px-1.5 py-0.5 font-bold text-[#f5c542]">
+                    ★ {feature.rating.toFixed(1)}
+                  </span>
                 )}
               </p>
-              <h2 className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">{feature.title}</h2>
-              <p className="mt-2 line-clamp-2 max-w-md text-sm leading-relaxed text-white/70">{feature.overview}</p>
+              <h2 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl">{feature.title}</h2>
+              <p className="mt-2 line-clamp-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/70">{feature.overview}</p>
             </div>
           </Link>
         )}
@@ -174,11 +221,19 @@ const Trending = () => {
             to={`/${p.type}/${p.id}`}
             className={`group block focus-visible:outline-none ${i >= 6 ? 'hidden sm:block' : ''}`}
           >
-            <div className="aspect-[2/3] overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10 transition-shadow group-hover:ring-white/35 group-focus-visible:ring-2 group-focus-visible:ring-[#f5c542]">
-              <img src={p.poster} alt="" loading="lazy" className="h-full w-full object-cover" />
+            <div className="aspect-[2/3] overflow-hidden rounded-xl bg-white/5 border border-white/10 transition-all duration-300 group-hover:border-[#f5c542]/50 group-hover:shadow-[0_12px_30px_rgba(201,162,75,0.2)] group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-[#f5c542]">
+              <img
+                src={p.poster || FALLBACK_POSTER}
+                alt={p.title}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK_POSTER;
+                }}
+              />
             </div>
-            <p className="mt-2.5 truncate text-sm font-medium text-[#efeae2]/90 group-hover:text-white">{p.title}</p>
-            <p className="text-xs text-[#efeae2]/45">{meta(p)}</p>
+            <p className="mt-2.5 truncate text-sm font-medium text-[#efeae2]/90 group-hover:text-[#f5c542] transition-colors">{p.title}</p>
+            <p className="text-xs font-mono text-[#efeae2]/45">{meta(p)}</p>
           </Link>
         ))}
 
@@ -254,7 +309,7 @@ const Home = () => {
               <img
                 src="/assets/branding/movieguy-hero-tight.png"
                 alt="MovieGuy"
-                className="h-6 w-auto object-contain sm:h-7"
+                className="h-[18px] w-auto object-contain sm:h-[21px]"
               />
             </Link>
             <span className="text-sm text-[#efeae2]/45">Honest reviews for cinema and television</span>

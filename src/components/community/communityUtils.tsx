@@ -46,10 +46,14 @@ export function Avatar({
 }
 
 export function Spinner({ size = 4 }: { size?: number }) {
+  const width = Math.max(size * 5.5, 18);
+  const height = width * 0.46;
   return (
-    <span
-      className="block animate-spin rounded-full border-2 border-white/20 border-t-white/70"
-      style={{ width: size * 4, height: size * 4 }}
+    <img
+      src="/assets/branding/ticket-loader.png"
+      alt="Loading"
+      className="inline-block object-contain animate-pulse drop-shadow-[0_0_8px_rgba(245,197,66,0.6)]"
+      style={{ width: `${width}px`, height: `${height}px` }}
     />
   );
 }

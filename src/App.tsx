@@ -26,6 +26,7 @@ import CategoriesPage from '@/pages/CategoriesPage';
 import CountriesPage from '@/pages/CountriesPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { RouteTransitionLoader } from '@/components/RouteTransitionLoader';
 
 // Optimized QueryClient configuration for better performance
 const queryClient = new QueryClient({
@@ -64,6 +65,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <RouteTransitionLoader />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/movies" element={<Navigate to="/explore?type=movie" replace />} />

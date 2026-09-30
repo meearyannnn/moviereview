@@ -101,7 +101,7 @@ export const Navbar = () => {
             <img
               src="/assets/branding/movieguy-hero-tight.png"
               alt="MovieGuy"
-              className="h-6 sm:h-7 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:drop-shadow-[0_0_14px_rgba(245,197,66,0.6)]"
+              className="h-[18px] sm:h-[21px] w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.5)]"
             />
           </Link>
 

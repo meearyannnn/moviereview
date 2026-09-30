@@ -15,6 +15,7 @@ import { ReviewSection } from '@/components/ReviewSection';
 import { SeasonRatings } from '@/components/SeasonRatings';
 import { WatchProviders } from '@/components/WatchProviders';
 import { GenreOrbitMeter } from '@/components/GenreOrbitMeter';
+import { TicketLoader } from '@/components/TicketLoader';
 import {
   ActionBar,
   CastRow,
@@ -122,11 +123,7 @@ const TVDetailPage = () => {
   const closeTrailer = useCallback(() => setShowTrailer(false), []);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0608]">
-        <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#c9a24b]/20 border-t-[#f5c542]" />
-      </div>
-    );
+    return <TicketLoader fullScreen size="lg" label="Preparing cinema presentation…" />;
   }
 
   if (!show) {

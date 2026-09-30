@@ -340,7 +340,7 @@ const SchedulePage: React.FC = () => {
               <img
                 src="/assets/branding/movieguy-hero-tight.png"
                 alt="MovieGuy"
-                className="h-6 sm:h-7 w-auto object-contain transition-all group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+                className="h-[18px] sm:h-[21px] w-auto object-contain transition-all group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
               />
             </Link>
             <span className="hidden sm:inline text-white/20">|</span>

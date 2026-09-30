@@ -24,6 +24,8 @@ import ExplorePage from '@/pages/ExplorePage';
 import LanguagesPage from '@/pages/LanguagesPage';
 import CategoriesPage from '@/pages/CategoriesPage';
 import CountriesPage from '@/pages/CountriesPage';
+import DirectorsPage from '@/pages/DirectorsPage';
+import DirectorDetailPage from '@/pages/DirectorDetailPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { RouteTransitionLoader } from '@/components/RouteTransitionLoader';
@@ -72,6 +74,8 @@ const App = () => (
             <Route path="/tv" element={<Navigate to="/explore?type=tv" replace />} />
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/genres" element={<Genres />} />
+            <Route path="/directors" element={<DirectorsPage />} />
+            <Route path="/director/:id" element={<DirectorDetailPage />} />
             <Route path="/search" element={<Search />} />
             <Route path="/movie/:id" element={<MovieDetail />} />
             <Route path="/tv/:id" element={<TVDetail />} />

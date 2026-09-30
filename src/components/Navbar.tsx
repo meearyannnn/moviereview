@@ -21,6 +21,7 @@ const NAV = [
   { path: '/community', label: 'Community' },
   { path: '/schedule', label: 'Schedule' },
   { path: '/genres', label: 'Genres' },
+  { path: '/directors', label: 'Directors' },
   { path: '/time-machine', label: 'Time Machine' },
 ];
 
@@ -54,7 +55,8 @@ export const Navbar = () => {
   const [showAuth, setShowAuth] = useState(false);
   const keys = useRef('');
 
-  const isActive = (p: string) => pathname === p;
+  const isActive = (p: string) =>
+    pathname === p || (p === '/directors' && pathname.startsWith('/director'));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -214,6 +216,9 @@ export const Navbar = () => {
                 {/* Mobile-only nav items */}
                 <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
                   <Link to="/genres">Genres</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                  <Link to="/directors">Directors</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
                   <Link to="/time-machine">Time Machine</Link>

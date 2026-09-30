@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Layers } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { tmdb, type MovieDetail, type CastMember } from '@/services/tmdb';
+import { tmdb, type MovieDetail, type CastMember, type CrewMember } from '@/services/tmdb';
 import { RecommendedShelf } from '@/components/RecommendedShelf';
 import { CineVibeMeter } from '@/components/CineVibeMeter';
 import { MovieGuyMeter } from '@/components/MovieGuyMeter';
@@ -19,6 +19,7 @@ import { TicketLoader } from '@/components/TicketLoader';
 import {
   ActionBar,
   CastRow,
+  CrewRow,
   DetailLayout,
   Fact,
   Pill,
@@ -57,6 +58,7 @@ const TVDetailPage = () => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailer, setTrailer] = useState<VideoTrailer | null>(null);
   const [cast, setCast] = useState<CastMember[]>([]);
+  const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
@@ -102,7 +104,54 @@ const TVDetailPage = () => {
             (v: VideoTrailer) => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube'
           ) || null
         );
-        setCast(credits?.cast?.slice(0, 12) || []);
+        setCast(credits?.cast?.slice(0, 14) || []);
+
+        // Process creators and crew
+        const rawCrew: CrewMember[] = credits?.crew || [];
+        const seenCrew = new Map<number, CrewMember>();
+
+        // Add TV creators first
+        const tvData = data as any;
+        if (tvData?.created_by && Array.isArray(tvData.created_by)) {
+          for (const creator of tvData.created_by) {
+            seenCrew.set(creator.id, {
+              id: creator.id,
+              name: creator.name,
+              job: 'Creator',
+              department: 'Writing',
+              profile_path: creator.profile_path || null,
+            });
+          }
+        }
+
+        // Add other key crew
+        for (const c of rawCrew) {
+          if (!c.id || !c.name || !c.job) continue;
+          const existing = seenCrew.get(c.id);
+          if (existing) {
+            if (!existing.job.includes(c.job)) {
+              existing.job = `${existing.job}, ${c.job}`;
+            }
+          } else {
+            seenCrew.set(c.id, { ...c });
+          }
+        }
+
+        const sortedCrew = Array.from(seenCrew.values())
+          .sort((a, b) => {
+            const isPriorityA =
+              a.job.toLowerCase().includes('creator') ||
+              a.job.toLowerCase().includes('director');
+            const isPriorityB =
+              b.job.toLowerCase().includes('creator') ||
+              b.job.toLowerCase().includes('director');
+            if (isPriorityA && !isPriorityB) return -1;
+            if (!isPriorityA && isPriorityB) return 1;
+            return 0;
+          })
+          .slice(0, 16);
+
+        setCrew(sortedCrew);
       } catch (error) {
         console.error('Error loading show details:', error);
       } finally {
@@ -261,6 +310,7 @@ const TVDetailPage = () => {
         )}
 
         <CastRow cast={cast} onSelect={setSelectedActor} />
+        <CrewRow crew={crew} onSelect={setSelectedActor} />
 
         {show.seasons && show.seasons.filter((s) => s.season_number > 0).length > 0 && (
           <SeasonRatings

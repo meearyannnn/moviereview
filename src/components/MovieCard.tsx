@@ -98,7 +98,6 @@ export const MovieCard = memo(
 
     const handleClick = useCallback(() => {
       navigate(`/${mediaType}/${movie.id}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [navigate, mediaType, movie.id]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {

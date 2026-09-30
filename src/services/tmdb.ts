@@ -61,6 +61,14 @@ export interface CastMember {
   order: number;
 }
 
+export interface CrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
+}
+
 const tmdbFetch = async (endpoint: string) => {
   const sep = endpoint.includes("?") ? "&" : "?";
   const response = await fetch(`${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
@@ -92,6 +100,12 @@ export const tmdb = {
 
   getPersonDetails: (personId: number) =>
     tmdbFetch(`/person/${personId}`),
+
+  getPerson: (personId: number, appendToResponse: string = 'movie_credits,external_ids') =>
+    tmdbFetch(`/person/${personId}?append_to_response=${appendToResponse}`),
+
+  searchPerson: (query: string) =>
+    tmdbFetch(`/search/person?query=${encodeURIComponent(query)}`),
 
   getPersonCombinedCredits: (personId: number) =>
     tmdbFetch(`/person/${personId}/combined_credits`),

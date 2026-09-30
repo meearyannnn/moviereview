@@ -3,8 +3,9 @@
  * Shared building blocks for MovieDetailPage and TVDetailPage styled with Cinema Box Office elegance.
  */
 import { useEffect, useState, type ElementType, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star } from 'lucide-react';
-import type { CastMember } from '@/services/tmdb';
+import type { CastMember, CrewMember } from '@/services/tmdb';
 
 // ── Small atoms ────────────────────────────────────────────────────────
 export const SectionTitle = ({ children }: { children: ReactNode }) => (
@@ -287,6 +288,92 @@ export const CastRow = ({
             <span className="block truncate text-[10px] font-mono text-white/40">{m.character}</span>
           </button>
         ))}
+      </div>
+    </section>
+  );
+};
+
+// ── Crew row ───────────────────────────────────────────────────────────
+const CrewAvatar = ({ m }: { m: CrewMember }) => {
+  const [failed, setFailed] = useState(false);
+  const photoUrl = m.profile_path ? `https://image.tmdb.org/t/p/w200${m.profile_path}` : null;
+  const isDirector = m.job.toLowerCase().includes('director');
+
+  return (
+    <div
+      className={`mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border bg-[#140c10] transition-all group-hover:scale-105 group-focus-visible:ring-2 shadow-md ${
+        isDirector
+          ? 'border-[#f5c542]/60 ring-2 ring-[#f5c542]/20 group-hover:border-[#f5c542] group-hover:shadow-[0_0_16px_rgba(245,197,66,0.35)]'
+          : 'border-[#c9a24b]/20 group-hover:border-[#c9a24b]/60'
+      }`}
+    >
+      {photoUrl && !failed ? (
+        <img
+          src={photoUrl}
+          alt={m.name}
+          loading="lazy"
+          className="h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="text-xs font-mono font-bold text-[#c9a24b]">{initials(m.name)}</span>
+      )}
+    </div>
+  );
+};
+
+export const CrewRow = ({
+  crew,
+  onSelect,
+}: {
+  crew: CrewMember[];
+  onSelect?: (person: { id: number; name: string }) => void;
+}) => {
+  const navigate = useNavigate();
+  if (!crew || crew.length === 0) return null;
+
+  const handleClick = (m: CrewMember) => {
+    // If director, navigate to the Director Showcase page
+    if (m.job.toLowerCase().includes('director')) {
+      navigate(`/director/${m.id}`);
+    } else if (onSelect) {
+      onSelect({ id: m.id, name: m.name });
+    } else {
+      navigate(`/director/${m.id}`);
+    }
+  };
+
+  return (
+    <section className="mb-6">
+      <SectionTitle>Directors &amp; Crew</SectionTitle>
+      <div className="scrollbar-hide -mx-4 flex touch-pan-x snap-x gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 md:mx-0 md:gap-4 md:px-0">
+        {crew.map((m, idx) => {
+          const isDirector = m.job.toLowerCase().includes('director');
+          return (
+            <button
+              key={`${m.id}-${m.job}-${idx}`}
+              onClick={() => handleClick(m)}
+              title={
+                isDirector
+                  ? `Explore ${m.name}'s Director Filmography`
+                  : `View ${m.name} (${m.job})`
+              }
+              className="group w-[88px] flex-none snap-start text-center focus-visible:outline-none"
+            >
+              <CrewAvatar m={m} />
+              <span className="mt-2 block truncate text-xs font-semibold text-white/90 group-hover:text-[#f5c542] transition-colors">
+                {m.name}
+              </span>
+              <span
+                className={`block truncate text-[10px] font-mono ${
+                  isDirector ? 'text-[#f5c542] font-bold' : 'text-white/40'
+                }`}
+              >
+                {m.job}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

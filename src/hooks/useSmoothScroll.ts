@@ -1,3 +1,4 @@
+// src/hooks/useSmoothScroll.ts — High-Performance, Glitch-Free Carousel Scroll Hook
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 interface UseSmoothScrollOptions {
@@ -25,51 +26,31 @@ export function useSmoothScroll<T extends HTMLElement = HTMLDivElement>(
   const isDraggingRef = useRef(false);
   const dragOccurredRef = useRef(false);
   const startXRef = useRef(0);
-  const startYRef = useRef(0);
   const startScrollLeftRef = useRef(0);
-  const lastXRef = useRef(0);
-  const lastTimeRef = useRef(0);
-  const velocityRef = useRef(0);
-  const animationFrameRef = useRef<number | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
-  // Wheel smooth scrolling target
-  const wheelTargetRef = useRef<number | null>(null);
-  const wheelRafRef = useRef<number | null>(null);
-
-  // Update arrow states
+  // Efficient scroll state updater (only triggers React re-render when boolean state actually changes)
   const updateScrollState = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
+
     const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 6);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+    const canLeft = scrollLeft > 8;
+    const canRight = scrollLeft < scrollWidth - clientWidth - 8;
+
+    setCanScrollLeft((prev) => (prev !== canLeft ? canLeft : prev));
+    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
   }, []);
 
-  // Cancel any running animations
-  const cancelAnimations = useCallback(() => {
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (wheelRafRef.current !== null) {
-      cancelAnimationFrame(wheelRafRef.current);
-      wheelRafRef.current = null;
-    }
-    wheelTargetRef.current = null;
-  }, []);
-
-  // Smooth programmatic scroll (aligned to whole cards)
+  // Native hardware-accelerated smooth scrolling for Prev / Next arrows
   const scrollToDirection = useCallback(
     (direction: 'left' | 'right', customAmount?: number) => {
       const el = containerRef.current;
       if (!el) return;
 
-      cancelAnimations();
-
       const clientWidth = el.clientWidth;
-
-      // Calculate whole-card step so cards never get sliced in half
       let step = customAmount;
+
       if (!step) {
         const firstCard = el.querySelector(':scope > *') as HTMLElement | null;
         if (firstCard) {
@@ -84,106 +65,56 @@ export function useSmoothScroll<T extends HTMLElement = HTMLDivElement>(
       }
 
       const targetDelta = direction === 'left' ? -step : step;
-      const startPos = el.scrollLeft;
       const maxScroll = el.scrollWidth - clientWidth;
-      const targetPos = Math.max(0, Math.min(maxScroll, startPos + targetDelta));
+      const targetPos = Math.max(0, Math.min(maxScroll, el.scrollLeft + targetDelta));
 
-      if (Math.abs(targetPos - startPos) < 1) return;
-
-      const duration = 350; // ms
-      const startTime = performance.now();
-
-      // Smooth ease-out cubic
-      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
-      const stepAnimation = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        const easedProgress = easeOutCubic(progress);
-
-        el.scrollLeft = startPos + (targetPos - startPos) * easedProgress;
-        updateScrollState();
-
-        if (progress < 1) {
-          animationFrameRef.current = requestAnimationFrame(stepAnimation);
-        } else {
-          animationFrameRef.current = null;
-          updateScrollState();
-        }
-      };
-
-      animationFrameRef.current = requestAnimationFrame(stepAnimation);
+      // Use native smooth scrolling (GPU compositor-accelerated, 60–120fps)
+      el.scrollTo({
+        left: targetPos,
+        behavior: 'smooth',
+      });
     },
-    [cancelAnimations, scrollStepRatio, updateScrollState]
+    [scrollStepRatio]
   );
 
-  // Drag Momentum Physics
-  const applyMomentum = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    let v = velocityRef.current;
-    if (Math.abs(v) < 0.2) return;
-
-    const friction = 0.92;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-
-    const momentumStep = () => {
-      v *= friction;
-      el.scrollLeft -= v;
-      updateScrollState();
-
-      if (Math.abs(v) > 0.4 && el.scrollLeft > 0 && el.scrollLeft < maxScroll) {
-        animationFrameRef.current = requestAnimationFrame(momentumStep);
-      } else {
-        animationFrameRef.current = null;
-        updateScrollState();
-      }
-    };
-
-    animationFrameRef.current = requestAnimationFrame(momentumStep);
-  }, [updateScrollState]);
-
-  // Pointer Down
+  // Mouse drag handling (only for desktop mouse pointers, leaves touch to native hardware scroll)
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!enableDrag) return;
-      if (e.button !== 0) return; // Only primary mouse button
+      // Only drag on primary mouse button, ignore touch events so mobile kinetic scroll is 100% native
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
 
       const el = containerRef.current;
       if (!el) return;
-
-      cancelAnimations();
 
       isPointerDownRef.current = true;
       isDraggingRef.current = false;
       dragOccurredRef.current = false;
       startXRef.current = e.clientX;
-      startYRef.current = e.clientY;
       startScrollLeftRef.current = el.scrollLeft;
-      lastXRef.current = e.clientX;
-      lastTimeRef.current = performance.now();
-      velocityRef.current = 0;
     },
-    [enableDrag, cancelAnimations]
+    [enableDrag]
   );
 
-  // Pointer Move
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPointerDownRef.current) return;
+      if (!isPointerDownRef.current || e.pointerType !== 'mouse') return;
       const el = containerRef.current;
       if (!el) return;
 
       const deltaX = e.clientX - startXRef.current;
-      const deltaY = e.clientY - startYRef.current;
 
-      // Only enter drag mode if horizontal movement exceeds 10px and is greater than vertical movement
+      // Threshold before initiating drag to allow clean clicks
       if (!isDraggingRef.current) {
-        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (Math.abs(deltaX) > 6) {
           isDraggingRef.current = true;
           dragOccurredRef.current = true;
           setIsDragging(true);
+          try {
+            el.setPointerCapture(e.pointerId);
+          } catch {
+            // Safe fallback if pointer capture fails
+          }
         } else {
           return;
         }
@@ -191,46 +122,44 @@ export function useSmoothScroll<T extends HTMLElement = HTMLDivElement>(
 
       if (isDraggingRef.current) {
         el.scrollLeft = startScrollLeftRef.current - deltaX;
-
-        const now = performance.now();
-        const dt = now - lastTimeRef.current;
-        if (dt > 10) {
-          const dx = e.clientX - lastXRef.current;
-          velocityRef.current = (dx / dt) * 16;
-          lastXRef.current = e.clientX;
-          lastTimeRef.current = now;
-        }
-
-        updateScrollState();
       }
     },
-    [updateScrollState]
+    []
   );
 
-  // Pointer Up
   const onPointerUp = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPointerDownRef.current) return;
+      if (!isPointerDownRef.current || e.pointerType !== 'mouse') return;
       isPointerDownRef.current = false;
+
+      const el = containerRef.current;
+      if (el && isDraggingRef.current) {
+        try {
+          if (el.hasPointerCapture(e.pointerId)) {
+            el.releasePointerCapture(e.pointerId);
+          }
+        } catch {
+          // Safe fallback
+        }
+      }
 
       if (isDraggingRef.current) {
         isDraggingRef.current = false;
         setIsDragging(false);
-        applyMomentum();
 
-        // Keep dragOccurredRef true just long enough to cancel the immediate synthetic click
+        // Keep dragOccurredRef true briefly to prevent firing click event on the dragged card
         setTimeout(() => {
           dragOccurredRef.current = false;
-        }, 80);
+        }, 50);
       } else {
         dragOccurredRef.current = false;
         setIsDragging(false);
       }
     },
-    [applyMomentum]
+    []
   );
 
-  // Intercept click on children ONLY if an actual drag gesture occurred
+  // Intercept click on children ONLY if a drag action was performed
   const onClickCapture = useCallback((e: React.MouseEvent) => {
     if (dragOccurredRef.current) {
       e.preventDefault();
@@ -238,100 +167,67 @@ export function useSmoothScroll<T extends HTMLElement = HTMLDivElement>(
     }
   }, []);
 
-  // Smooth wheel support
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !enableWheel) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        updateScrollState();
-        return;
-      }
-
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      const isAtLeft = el.scrollLeft <= 2;
-      const isAtRight = el.scrollLeft >= maxScroll - 2;
-
-      if ((isAtLeft && e.deltaY < 0) || (isAtRight && e.deltaY > 0)) {
-        return;
-      }
-
-      e.preventDefault();
-
-      if (wheelTargetRef.current === null) {
-        wheelTargetRef.current = el.scrollLeft;
-      }
-
-      const delta = e.deltaY * 1.2;
-      wheelTargetRef.current = Math.max(
-        0,
-        Math.min(maxScroll, wheelTargetRef.current + delta)
-      );
-
-      if (wheelRafRef.current === null) {
-        const smoothWheelStep = () => {
-          if (!containerRef.current || wheelTargetRef.current === null) {
-            wheelRafRef.current = null;
-            return;
-          }
-
-          const current = containerRef.current.scrollLeft;
-          const diff = wheelTargetRef.current - current;
-
-          if (Math.abs(diff) < 0.5) {
-            containerRef.current.scrollLeft = wheelTargetRef.current;
-            wheelTargetRef.current = null;
-            wheelRafRef.current = null;
-            updateScrollState();
-          } else {
-            containerRef.current.scrollLeft += diff * 0.18;
-            updateScrollState();
-            wheelRafRef.current = requestAnimationFrame(smoothWheelStep);
-          }
-        };
-
-        wheelRafRef.current = requestAnimationFrame(smoothWheelStep);
-      }
-    };
-
-    el.addEventListener('wheel', handleWheel, { passive: false });
-
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-      if (wheelRafRef.current) cancelAnimationFrame(wheelRafRef.current);
-    };
-  }, [enableWheel, updateScrollState]);
-
-  // Initial, resize and mutation observer updates
+  // Optimized scroll and wheel event listeners
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    updateScrollState();
-    const timer = setTimeout(updateScrollState, 150);
+    // Passive scroll listener for smooth button updates
+    const handleScroll = () => {
+      if (rafIdRef.current !== null) return;
+      rafIdRef.current = requestAnimationFrame(() => {
+        updateScrollState();
+        rafIdRef.current = null;
+      });
+    };
 
+    el.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Wheel event handler:
+    // CRITICAL: NEVER hijack vertical page scrolling (deltaY) when user is scrolling the webpage!
+    // Only scroll horizontally if user is explicitly holding Shift or trackpad has horizontal swipe.
+    const handleWheel = (e: WheelEvent) => {
+      if (!enableWheel) return;
+
+      // If user holds Shift, allow smooth horizontal scroll
+      if (e.shiftKey) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY || e.deltaX;
+        return;
+      }
+
+      // If trackpad has native horizontal gesture (deltaX > deltaY), let it scroll horizontally
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        // Native horizontal trackpad scrolling, no preventDefault needed
+        return;
+      }
+
+      // Otherwise: PURE VERTICAL SCROLL. DO NOT INTERCEPT!
+      // Let the page scroll normally without any jumping or trapping!
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+
+    // Initial state check
+    updateScrollState();
+    const timeout = setTimeout(updateScrollState, 150);
+
+    // Resize observer for container dimensions
     const resizeObserver = new ResizeObserver(() => {
       updateScrollState();
     });
     resizeObserver.observe(el);
 
-    const mutationObserver = new MutationObserver(() => {
-      updateScrollState();
-    });
-    mutationObserver.observe(el, { childList: true, subtree: true });
-
-    const handleResize = () => updateScrollState();
-    window.addEventListener('resize', handleResize);
-
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timeout);
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('wheel', handleWheel);
       resizeObserver.disconnect();
-      mutationObserver.disconnect();
-      window.removeEventListener('resize', handleResize);
-      cancelAnimations();
     };
-  }, [updateScrollState, cancelAnimations]);
+  }, [enableWheel, updateScrollState]);
 
   return {
     containerRef,

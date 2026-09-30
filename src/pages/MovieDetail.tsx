@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Clock, Calendar } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { tmdb, type MovieDetail, type CastMember } from '@/services/tmdb';
+import { tmdb, type MovieDetail, type CastMember, type CrewMember } from '@/services/tmdb';
 import { RecommendedShelf } from '@/components/RecommendedShelf';
 import { CineVibeMeter } from '@/components/CineVibeMeter';
 import { MovieGuyMeter } from '@/components/MovieGuyMeter';
@@ -18,6 +18,7 @@ import { TicketLoader } from '@/components/TicketLoader';
 import {
   ActionBar,
   CastRow,
+  CrewRow,
   DetailLayout,
   Fact,
   Pill,
@@ -49,6 +50,7 @@ const MovieDetailPage = () => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailer, setTrailer] = useState<VideoTrailer | null>(null);
   const [cast, setCast] = useState<CastMember[]>([]);
+  const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
@@ -86,7 +88,34 @@ const MovieDetailPage = () => {
             (v: VideoTrailer) => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube'
           ) || null
         );
-        setCast(credits?.cast?.slice(0, 12) || []);
+        setCast(credits?.cast?.slice(0, 14) || []);
+
+        // Process and dedupe crew (directors first, then writers, producers, music, cinematography)
+        const rawCrew: CrewMember[] = credits?.crew || [];
+        const seenCrew = new Map<number, CrewMember>();
+        for (const c of rawCrew) {
+          if (!c.id || !c.name || !c.job) continue;
+          const existing = seenCrew.get(c.id);
+          if (existing) {
+            if (!existing.job.includes(c.job)) {
+              existing.job = `${existing.job}, ${c.job}`;
+            }
+          } else {
+            seenCrew.set(c.id, { ...c });
+          }
+        }
+
+        const sortedCrew = Array.from(seenCrew.values())
+          .sort((a, b) => {
+            const isDirA = a.job.toLowerCase().includes('director');
+            const isDirB = b.job.toLowerCase().includes('director');
+            if (isDirA && !isDirB) return -1;
+            if (!isDirA && isDirB) return 1;
+            return 0;
+          })
+          .slice(0, 16);
+
+        setCrew(sortedCrew);
       } catch (error) {
         console.error('Error loading movie details:', error);
       } finally {
@@ -243,6 +272,7 @@ const MovieDetailPage = () => {
         )}
 
         <CastRow cast={cast} onSelect={setSelectedActor} />
+        <CrewRow crew={crew} onSelect={setSelectedActor} />
 
         <div className="mt-12 border-t border-white/[0.06] pt-10">
           <WatchProviders mediaId={movie.id} mediaType="movie" />

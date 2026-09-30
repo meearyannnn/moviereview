@@ -58,23 +58,34 @@ const Row = ({ s }: { s: Section }) => (
   </section>
 );
 
-/* Simple horizontal quick-nav */
-const JumpBar = () => (
-  <nav
-    aria-label="Jump to section"
-    className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-  >
-    {MAIN.filter((s) => s.chip).map((s) => (
-      <a
-        key={s.key}
-        href={`#${s.key}`}
-        className="shrink-0 rounded-full border border-white/[0.10] bg-white/[0.04] px-4 py-1.5 text-[11px] font-mono text-white/50 transition-all hover:border-[#c9a24b]/40 hover:text-[#f5c542]"
-      >
-        {s.chip}
-      </a>
-    ))}
-  </nav>
-);
+/* Simple horizontal quick-nav with smooth scroll into view */
+const JumpBar = () => {
+  const handleJump = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  return (
+    <nav
+      aria-label="Jump to section"
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {MAIN.filter((s) => s.chip).map((s) => (
+        <a
+          key={s.key}
+          href={`#${s.key}`}
+          onClick={(e) => handleJump(e, s.key)}
+          className="shrink-0 rounded-full border border-white/[0.10] bg-white/[0.04] px-4 py-1.5 text-[11px] font-mono text-white/50 transition-all hover:border-[#c9a24b]/40 hover:text-[#f5c542]"
+        >
+          {s.chip}
+        </a>
+      ))}
+    </nav>
+  );
+};
 
 const Home = () => {
   const { watchlist } = useWatchlist();

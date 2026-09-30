@@ -11,6 +11,8 @@ import { ActorFilmographyModal } from '@/components/ActorFilmographyModal';
 import { TitleLogo } from '@/components/TitleLogo';
 import { useOmdb } from '@/services/omdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { useUserLibrary } from '@/hooks/useUserLibrary';
+import { AddToCollectionModal } from '@/components/library/AddToCollectionModal';
 import { ReviewSection } from '@/components/ReviewSection';
 import { SeasonRatings } from '@/components/SeasonRatings';
 import { WatchProviders } from '@/components/WatchProviders';
@@ -61,7 +63,8 @@ const TVDetailPage = () => {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater } = useUserLibrary();
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
 
   const omdbParams = useMemo(() => {
     if (!show) return null;
@@ -190,7 +193,7 @@ const TVDetailPage = () => {
     );
   }
 
-  const inWatchlist = isInWatchlist(show.id);
+  const inWatchLater = isInWatchLater(show.id, 'tv');
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : null;
   const rating = show.vote_average ? show.vote_average.toFixed(1) : null;
   const isReleased = show.first_air_date ? new Date(show.first_air_date) <= new Date() : true;
@@ -221,18 +224,16 @@ const TVDetailPage = () => {
     }
   };
 
-  const handleToggleWatchlist = () => {
-    const added = toggleWatchlist({
-      id: show.id,
+  const handleToggleWatchLater = () => {
+    toggleWatchLater({
+      media_id: show.id,
+      media_type: 'tv',
       title: displayTitle,
       poster_path: show.poster_path,
       backdrop_path: show.backdrop_path,
-      vote_average: show.vote_average,
       release_date: show.first_air_date,
-      media_type: 'tv',
+      vote_average: show.vote_average,
     });
-    if (added) toast.success('Added to your watchlist');
-    else toast.info('Removed from watchlist');
   };
 
   return (
@@ -282,10 +283,23 @@ const TVDetailPage = () => {
 
         <ActionBar
           hasTrailer={!!trailer}
-          inWatchlist={inWatchlist}
+          inWatchLater={inWatchLater}
+          isWatched={isWatched(show.id, 'tv')}
+          onToggleWatched={() =>
+            toggleWatched({
+              media_id: show.id,
+              media_type: 'tv',
+              title: show.name,
+              poster_path: show.poster_path,
+              backdrop_path: show.backdrop_path,
+              release_year: show.first_air_date ? show.first_air_date.slice(0, 4) : undefined,
+              vote_average: show.vote_average,
+            })
+          }
+          onAddToCollections={() => setShowCollectionModal(true)}
           onReview={scrollToReviews}
           onTrailer={() => setShowTrailer(true)}
-          onToggleWatchlist={handleToggleWatchlist}
+          onToggleWatchLater={handleToggleWatchLater}
           onShare={handleShare}
         />
 
@@ -309,6 +323,11 @@ const TVDetailPage = () => {
           <UpcomingCard heading="Not aired yet" verb="Premieres" date={show.first_air_date} />
         )}
 
+        {/* ── Write Review & Community Reviews (Directly below TV Meter) ── */}
+        <div className="mb-12 border-t border-white/[0.06] pt-10">
+          <ReviewSection mediaId={show.id} mediaType="tv" title={displayTitle} />
+        </div>
+
         <CastRow cast={cast} onSelect={setSelectedActor} />
         <CrewRow crew={crew} onSelect={setSelectedActor} />
 
@@ -324,7 +343,6 @@ const TVDetailPage = () => {
 
         <div className="mt-8 border-t border-white/[0.06] pt-10">
           <WatchProviders mediaId={show.id} mediaType="tv" />
-          <ReviewSection mediaId={show.id} mediaType="tv" title={displayTitle} />
         </div>
 
         <div className="mt-12 border-t border-white/[0.06] pt-10 pb-32 md:pb-16 safe-bottom-content">
@@ -340,6 +358,21 @@ const TVDetailPage = () => {
       />
 
       {showTrailer && trailer && <TrailerModal trailerKey={trailer.key} onClose={closeTrailer} />}
+
+      {show && (
+        <AddToCollectionModal
+          isOpen={showCollectionModal}
+          onClose={() => setShowCollectionModal(false)}
+          media={{
+            id: show.id,
+            title: show.name,
+            mediaType: 'tv',
+            posterPath: show.poster_path,
+            releaseYear: show.first_air_date ? show.first_air_date.slice(0, 4) : undefined,
+            voteAverage: show.vote_average,
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { RouteTransitionLoader } from '@/components/RouteTransitionLoader';
 import { TicketLoader } from '@/components/TicketLoader';
+import { GoldenAestheticBackground } from '@/components/GoldenAestheticBackground';
 
 const MovieDetail = lazy(() => import("./pages/MovieDetail"));
 const TVDetail = lazy(() => import("./pages/TVDetail"));
@@ -22,6 +23,7 @@ const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const DiscussionsPage = lazy(() => import("./pages/community/DiscussionsPage"));
 const ReviewsPage = lazy(() => import("./pages/community/ReviewsPage"));
 const CollectionsPage = lazy(() => import("./pages/community/CollectionsPage"));
+const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const TimeMachinePage = lazy(() => import("./pages/TimeMachinePage"));
@@ -67,6 +69,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GoldenAestheticBackground />
           <ScrollToTop />
           <RouteTransitionLoader />
           <Suspense fallback={<TicketLoader fullScreen size="lg" label="Preparing cinema presentation…" />}>
@@ -85,7 +88,11 @@ const App = () => (
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/community/discussions" element={<DiscussionsPage />} />
               <Route path="/community/reviews" element={<ReviewsPage />} />
-              <Route path="/community/collections" element={<CollectionsPage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/collections" element={<LibraryPage />} />
+              <Route path="/watch-later" element={<Navigate to="/library?tab=watch-later" replace />} />
+              <Route path="/history" element={<Navigate to="/library?tab=history" replace />} />
+              <Route path="/community/collections" element={<LibraryPage />} />
               <Route path="/community/user/:userId" element={<UserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/time-machine" element={<TimeMachinePage />} />

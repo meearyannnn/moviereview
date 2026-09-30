@@ -11,6 +11,8 @@ import { ActorFilmographyModal } from '@/components/ActorFilmographyModal';
 import { TitleLogo } from '@/components/TitleLogo';
 import { useOmdb } from '@/services/omdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { useUserLibrary } from '@/hooks/useUserLibrary';
+import { AddToCollectionModal } from '@/components/library/AddToCollectionModal';
 import { ReviewSection } from '@/components/ReviewSection';
 import { WatchProviders } from '@/components/WatchProviders';
 import { GenreOrbitMeter } from '@/components/GenreOrbitMeter';
@@ -53,7 +55,8 @@ const MovieDetailPage = () => {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater } = useUserLibrary();
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
 
   const omdbParams = useMemo(() => {
     if (!movie) return null;
@@ -154,7 +157,7 @@ const MovieDetailPage = () => {
     );
   }
 
-  const inWatchlist = isInWatchlist(movie.id);
+  const inWatchLater = isInWatchLater(movie.id, 'movie');
   const year = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
   const isReleased = movie.release_date ? new Date(movie.release_date) <= new Date() : true;
@@ -183,22 +186,20 @@ const MovieDetailPage = () => {
     }
   };
 
-  const handleToggleWatchlist = () => {
-    const added = toggleWatchlist({
-      id: movie.id,
+  const handleToggleWatchLater = () => {
+    toggleWatchLater({
+      media_id: movie.id,
+      media_type: 'movie',
       title: movie.title,
       poster_path: movie.poster_path,
       backdrop_path: movie.backdrop_path,
-      vote_average: movie.vote_average,
       release_date: movie.release_date,
-      media_type: 'movie',
+      vote_average: movie.vote_average,
     });
-    if (added) toast.success('Added to your watchlist');
-    else toast.info('Removed from watchlist');
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
+    <div className="min-h-screen overflow-x-hidden bg-transparent text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
       <Navbar />
 
       {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
@@ -239,10 +240,23 @@ const MovieDetailPage = () => {
 
         <ActionBar
           hasTrailer={!!trailer}
-          inWatchlist={inWatchlist}
+          inWatchLater={inWatchLater}
+          isWatched={isWatched(movie.id, 'movie')}
+          onToggleWatched={() =>
+            toggleWatched({
+              media_id: movie.id,
+              media_type: 'movie',
+              title: movie.title,
+              poster_path: movie.poster_path,
+              backdrop_path: movie.backdrop_path,
+              release_year: movie.release_date ? movie.release_date.slice(0, 4) : undefined,
+              vote_average: movie.vote_average,
+            })
+          }
+          onAddToCollections={() => setShowCollectionModal(true)}
           onReview={scrollToReviews}
           onTrailer={() => setShowTrailer(true)}
-          onToggleWatchlist={handleToggleWatchlist}
+          onToggleWatchLater={handleToggleWatchLater}
           onShare={handleShare}
         />
 
@@ -271,12 +285,16 @@ const MovieDetailPage = () => {
           <UpcomingCard heading="Not released yet" verb="Arrives" date={movie.release_date} />
         )}
 
+        {/* ── Write Review & Community Reviews (Directly below Movie Meter) ── */}
+        <div className="mb-12 border-t border-white/[0.06] pt-10">
+          <ReviewSection mediaId={movie.id} mediaType="movie" title={movie.title} />
+        </div>
+
         <CastRow cast={cast} onSelect={setSelectedActor} />
         <CrewRow crew={crew} onSelect={setSelectedActor} />
 
         <div className="mt-12 border-t border-white/[0.06] pt-10">
           <WatchProviders mediaId={movie.id} mediaType="movie" />
-          <ReviewSection mediaId={movie.id} mediaType="movie" title={movie.title} />
         </div>
 
         <div className="mt-12 border-t border-white/[0.06] pt-10 pb-32 md:pb-16 safe-bottom-content">
@@ -292,6 +310,21 @@ const MovieDetailPage = () => {
       />
 
       {showTrailer && trailer && <TrailerModal trailerKey={trailer.key} onClose={closeTrailer} />}
+
+      {movie && (
+        <AddToCollectionModal
+          isOpen={showCollectionModal}
+          onClose={() => setShowCollectionModal(false)}
+          media={{
+            id: movie.id,
+            title: movie.title,
+            mediaType: 'movie',
+            posterPath: movie.poster_path,
+            releaseYear: movie.release_date ? movie.release_date.slice(0, 4) : undefined,
+            voteAverage: movie.vote_average,
+          }}
+        />
+      )}
     </div>
   );
 };

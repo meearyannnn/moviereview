@@ -4,7 +4,7 @@
  */
 import { useEffect, useState, type ElementType, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star } from 'lucide-react';
+import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock } from 'lucide-react';
 import type { CastMember, CrewMember } from '@/services/tmdb';
 
 // ── Small atoms ────────────────────────────────────────────────────────
@@ -133,56 +133,100 @@ const savedBtn = 'border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c
 
 interface ActionBarProps {
   hasTrailer: boolean;
-  inWatchlist: boolean;
+  inWatchlist?: boolean;
+  inWatchLater?: boolean;
   onReview: () => void;
   onTrailer: () => void;
-  onToggleWatchlist: () => void;
-  onShare: () => void;
+  onToggleWatchlist?: () => void;
+  onToggleWatchLater?: () => void;
+  onShare?: () => void;
+  isWatched?: boolean;
+  onToggleWatched?: () => void;
+  onAddToCollections?: () => void;
 }
 
 export const ActionBar = ({
   hasTrailer,
   inWatchlist,
+  inWatchLater,
   onReview,
   onTrailer,
   onToggleWatchlist,
-  onShare,
-}: ActionBarProps) => (
-  <div className="mb-8 grid gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-    <button
-      onClick={onReview}
-      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] px-6 text-xs font-display font-extrabold text-[#1c120c] shadow-lg shadow-[#c9a24b]/20 transition-all hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80 sm:w-auto"
-    >
-      <PenLine className="h-4 w-4" aria-hidden="true" />
-      Write a Review
-    </button>
+  onToggleWatchLater,
+  isWatched = false,
+  onToggleWatched,
+  onAddToCollections,
+}: ActionBarProps) => {
+  const isInLater = inWatchLater ?? inWatchlist ?? false;
+  const toggleLater = onToggleWatchLater ?? onToggleWatchlist;
 
-    <div className={`grid gap-2.5 sm:flex sm:gap-3 ${hasTrailer ? 'grid-cols-3' : 'grid-cols-2'}`}>
-      {hasTrailer && (
-        <button onClick={onTrailer} className={`${secondaryBtn} ${idleBtn}`}>
-          <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
-          Trailer
+  return (
+    <div className="mb-8 flex flex-wrap items-center gap-2 sm:gap-2.5">
+      {/* ── 1. Primary Action: Write a Review ── */}
+      <button
+        onClick={onReview}
+        className="flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] px-5 text-xs font-display font-extrabold text-[#1a0f05] shadow-lg shadow-[#f5c542]/25 ring-1 ring-[#f5c542]/50 transition-all hover:brightness-110 active:scale-95"
+      >
+        <PenLine className="h-4 w-4" aria-hidden="true" />
+        <span>Review</span>
+      </button>
+
+      {/* ── 2. Watched Status ── */}
+      {onToggleWatched && (
+        <button
+          onClick={onToggleWatched}
+          aria-pressed={isWatched}
+          className={`flex h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-mono font-medium transition-all shadow-sm active:scale-95 ${
+            isWatched
+              ? 'bg-[#10b981] hover:bg-[#059669] text-white shadow-emerald-500/20 font-bold'
+              : 'border border-white/[0.12] bg-[#140c10]/90 text-white/80 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300'
+          }`}
+        >
+          <Check className={`h-3.5 w-3.5 ${isWatched ? 'stroke-[3]' : 'text-white/40'}`} aria-hidden="true" />
+          <span>{isWatched ? 'Watched' : 'Mark as Watched'}</span>
         </button>
       )}
-      <button
-        onClick={onToggleWatchlist}
-        aria-pressed={inWatchlist}
-        className={`${secondaryBtn} ${inWatchlist ? savedBtn : idleBtn}`}
-      >
-        {inWatchlist ? (
-          <Check className="h-3.5 w-3.5 text-red-400 stroke-[3]" aria-hidden="true" />
-        ) : (
+
+      {/* ── 3. Watch Later ── */}
+      {toggleLater && (
+        <button
+          onClick={toggleLater}
+          aria-pressed={isInLater}
+          className={`flex h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-mono font-medium transition-all shadow-sm active:scale-95 ${
+            isInLater
+              ? 'border border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c542]/30 font-bold'
+              : 'border border-white/[0.12] bg-[#140c10]/90 text-white/80 hover:border-[#f5c542]/50 hover:bg-[#f5c542]/10 hover:text-[#f5c542]'
+          }`}
+        >
+          <Clock className={`h-3.5 w-3.5 ${isInLater ? 'text-[#f5c542]' : 'text-white/40'}`} aria-hidden="true" />
+          <span>{isInLater ? 'In Watch Later' : 'Watch Later'}</span>
+        </button>
+      )}
+
+      {/* ── 4. Add to Collections ── */}
+      {onAddToCollections && (
+        <button
+          onClick={onAddToCollections}
+          className="flex h-10 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-[#140c10]/90 px-4 text-xs font-mono font-medium text-white/85 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 hover:text-[#f5c542] transition-all shadow-sm active:scale-95"
+        >
           <Bookmark className="h-3.5 w-3.5 text-[#c9a24b]" aria-hidden="true" />
-        )}
-        {inWatchlist ? 'RESERVED' : 'Reserve Seat'}
-      </button>
-      <button onClick={onShare} className={`${secondaryBtn} ${idleBtn}`}>
-        <Share2 className="h-3.5 w-3.5 text-white/70" aria-hidden="true" />
-        Share
-      </button>
+          <span>Add to Collections</span>
+        </button>
+      )}
+
+      {/* ── 5. Trailer (compact cinema pill if available) ── */}
+      {hasTrailer && (
+        <button
+          onClick={onTrailer}
+          className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 px-3.5 text-xs font-mono font-medium text-white/80 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 hover:text-white transition-all active:scale-95"
+        >
+          <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
+          <span>Trailer</span>
+        </button>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // ── Storyline (collapses on mobile) ────────────────────────────────────
 export const Storyline = ({ text, fallback }: { text?: string; fallback: string }) => {

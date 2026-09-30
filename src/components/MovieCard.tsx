@@ -121,11 +121,9 @@ export const MovieCard = memo(
       });
 
       if (added) {
-        toast.success(`Seat reserved for "${title}"`, {
-          description: 'Stamped into your admission collection',
-        });
+        toast.success(`Saved "${title}" to Watch Later`);
       } else {
-        toast.info(`Reservation released for "${title}"`);
+        toast.info(`Removed "${title}" from Watch Later`);
       }
     };
 
@@ -183,11 +181,11 @@ export const MovieCard = memo(
               </div>
             )}
 
-            {/* "Reserve Seat" Heart Button on hover */}
+            {/* "Watch Later" Heart Button on hover */}
             <button
               type="button"
               onClick={handleReserve}
-              aria-label={inWatchlist ? 'Cancel reservation' : 'Reserve seat'}
+              aria-label={inWatchlist ? 'Remove from Watch Later' : 'Save to Watch Later'}
               className={`absolute top-2.5 left-2.5 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                 inWatchlist
                   ? 'bg-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/50'

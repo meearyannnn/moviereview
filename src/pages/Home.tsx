@@ -5,10 +5,11 @@ import { MovieRow } from '@/components/MovieRow';
 import { Navbar } from '@/components/Navbar';
 import { TraktAnticipatedShelf } from '@/components/TraktAnticipatedShelf';
 import { HomeCuratedShelves } from '@/components/HomeCuratedShelves';
+import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy } from 'lucide-react';
+import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy, Clapperboard } from 'lucide-react';
 
 type MediaType = 'movie' | 'tv';
 
@@ -68,12 +69,17 @@ const JumpBar = () => {
     }
   };
 
+  const jumpChips = [
+    { key: 'directors-spotlight', chip: 'Directors Vault' },
+    ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, chip: s.chip! })),
+  ];
+
   return (
     <nav
       aria-label="Jump to section"
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
-      {MAIN.filter((s) => s.chip).map((s) => (
+      {jumpChips.map((s) => (
         <a
           key={s.key}
           href={`#${s.key}`}
@@ -98,7 +104,7 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
+    <div className="min-h-screen overflow-x-hidden bg-transparent text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -120,21 +126,29 @@ const Home = () => {
             </section>
           )}
 
-          {/* 2-column layout */}
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
+          {/* 1. Directors Vault Showcase — Full Width at Top */}
+          <HomeDirectorsSpotlight />
 
-            {/* Main content */}
+          {/* 2. Curated Shelves & Trending paired with Sidebar */}
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
+            {/* Shelves column */}
             <div className="min-w-0 space-y-10">
               <HomeCuratedShelves />
               {TOP.map((s) => <Row key={s.key} s={s} />)}
-              <TraktAnticipatedShelf />
-              {MAIN.map((s) => <Row key={s.key} s={s} />)}
             </div>
 
             {/* Sidebar */}
             <div>
               <HomeSidebar />
             </div>
+          </div>
+
+          {/* 3. Trakt Anticipated Shelf — Full Width */}
+          <TraktAnticipatedShelf />
+
+          {/* 4. Main Category & Genre Shelves (Top Rated, Action, Sci-Fi, Drama, TV) — Full Width */}
+          <div className="space-y-10">
+            {MAIN.map((s) => <Row key={s.key} s={s} />)}
           </div>
 
         </div>

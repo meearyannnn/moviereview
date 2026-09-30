@@ -35,6 +35,9 @@ const GENRE_MAP: Record<number, string> = {
   10768: 'War',
 };
 
+const FALLBACK_POSTER =
+  'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+
 export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) => {
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -146,6 +149,10 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
               alt={title}
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_POSTER;
+                setImageLoaded(true);
+              }}
               className={`w-full h-full object-cover transition-all duration-500 group-hover:brightness-105 group-hover:scale-[1.03] ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}

@@ -9,7 +9,8 @@ import {
   Globe,
   Film,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from 'lucide-react';
 import { Avatar, CATEGORIES, Spinner } from '@/components/community/communityUtils';
 import { useAuth } from '@/contexts/AuthContext';

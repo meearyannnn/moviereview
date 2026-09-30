@@ -15,7 +15,7 @@ ALTER TABLE public.profiles
 CREATE TABLE IF NOT EXISTS public.community_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 2000),
+  content TEXT DEFAULT '',
   media_id INTEGER,
   media_type TEXT CHECK (media_type IN ('movie', 'tv')),
   media_title TEXT,
@@ -37,6 +37,21 @@ ALTER TABLE public.community_posts
   ADD COLUMN IF NOT EXISTS video_url TEXT,
   ADD COLUMN IF NOT EXISTS link_url TEXT,
   ADD COLUMN IF NOT EXISTS link_title TEXT;
+
+-- Relax content constraint to allow image-only, video-only, or link-only posts
+ALTER TABLE public.community_posts DROP CONSTRAINT IF EXISTS community_posts_content_check;
+ALTER TABLE public.community_posts ALTER COLUMN content DROP NOT NULL;
+ALTER TABLE public.community_posts ALTER COLUMN content SET DEFAULT '';
+ALTER TABLE public.community_posts ADD CONSTRAINT community_posts_content_check
+  CHECK (
+    char_length(content) <= 2000 AND (
+      char_length(trim(content)) >= 1
+      OR image_url IS NOT NULL
+      OR video_url IS NOT NULL
+      OR link_url IS NOT NULL
+      OR media_id IS NOT NULL
+    )
+  );
 
 CREATE INDEX IF NOT EXISTS idx_community_posts_user ON public.community_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_community_posts_created ON public.community_posts(created_at DESC);

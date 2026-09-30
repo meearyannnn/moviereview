@@ -121,7 +121,7 @@ async function enrichWithProfiles<T extends { user_id: string; id?: string; cont
     const { content, attachments } = unpackPostAttachments(item.content || '');
     return {
       ...item,
-      content,
+      content: (content || '').replace(/\u200B/g, '').trim(),
       image_url: item.image_url || attachments.image_url || null,
       video_url: item.video_url || attachments.video_url || null,
       link_url: item.link_url || attachments.link_url || null,
@@ -242,10 +242,18 @@ export const communityService = {
       };
       const hasAttachments = Object.values(attachments).some(Boolean);
 
+      // In PostgreSQL: legacy tables may have CHECK (char_length(content) BETWEEN 1 AND 2000).
+      // If user posts an image, video, link, or movie without typing text, content must have at least
+      // 1 char to avoid PostgreSQL constraint violation 'community_posts_content_check'.
+      let postContent = (params.content || '').trim();
+      if (!postContent) {
+        postContent = '\u200B'; // Zero-width space: char_length=1 in Postgres, invisible in UI
+      }
+
       // Attempt 1: Try inserting with columns if DB table has them
       let insertData: any = {
         user_id: params.userId,
-        content: params.content.trim(),
+        content: postContent,
         category: params.category ?? 'general',
         media_id: params.mediaId ?? null,
         media_type: params.mediaType ?? null,
@@ -265,7 +273,7 @@ export const communityService = {
 
       // If schema cache error because extra column doesn't exist yet, fallback to packed attachments in content
       if (error && hasAttachments && (error.message?.includes('schema cache') || error.message?.includes('column'))) {
-        const packedContent = params.content.trim() + '\n\n<!--attachments:' + JSON.stringify(attachments) + '-->';
+        const packedContent = postContent + '\n\n<!--attachments:' + JSON.stringify(attachments) + '-->';
         const fallbackInsert = {
           user_id: params.userId,
           content: packedContent,
@@ -300,7 +308,7 @@ export const communityService = {
         success: true,
         post: {
           ...data,
-          content,
+          content: (content || '').replace(/\u200B/g, '').trim(),
           image_url: data.image_url || unpacked.image_url || null,
           video_url: data.video_url || unpacked.video_url || null,
           link_url: data.link_url || unpacked.link_url || null,
@@ -330,15 +338,27 @@ export const communityService = {
         });
 
       if (!error && data) {
+        // Try signed URL first (works for both public and private buckets)
+        try {
+          const { data: signed } = await supabase.storage
+            .from('community-media')
+            .createSignedUrl(cleanFileName, 60 * 60 * 24 * 365 * 2);
+          if (signed?.signedUrl) {
+            return { url: signed.signedUrl };
+          }
+        } catch {
+          // Fall back to public URL
+        }
+
         const { data: pub } = supabase.storage.from('community-media').getPublicUrl(cleanFileName);
         if (pub?.publicUrl) {
           return { url: pub.publicUrl };
         }
       }
 
-      // 2. Fallback: if storage bucket does not exist or upload fails,
-      // For images under 5MB, read as data URL so it never fails!
-      if (file.type.startsWith('image/') && file.size < 5 * 1024 * 1024) {
+      // 2. Fallback: if storage bucket does not exist, upload fails, or permissions error,
+      // For images, read as data URL so it never fails!
+      if (file.type.startsWith('image/')) {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve({ url: reader.result as string });
@@ -347,8 +367,8 @@ export const communityService = {
         });
       }
 
-      // For videos under 15MB, also read as data URL if storage is unconfigured
-      if (file.type.startsWith('video/') && file.size < 15 * 1024 * 1024) {
+      // For videos under 25MB, also read as data URL if storage is unconfigured
+      if (file.type.startsWith('video/') && file.size < 25 * 1024 * 1024) {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve({ url: reader.result as string });

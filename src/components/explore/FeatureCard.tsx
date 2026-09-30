@@ -21,7 +21,13 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({ item, typeOverride }) 
   const title = item.title || item.name || 'Featured Title';
   const dateStr = item.release_date || item.first_air_date || '';
   const year = dateStr ? dateStr.slice(0, 4) : '';
-  const backdropUrl = item.backdrop_path ? tmdb.getImageUrl(item.backdrop_path, 'original') : null;
+  const FALLBACK_BACKDROP =
+    'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1280&q=80';
+  const backdropUrl = item.backdrop_path
+    ? tmdb.getImageUrl(item.backdrop_path, 'original')
+    : item.poster_path
+    ? tmdb.getImageUrl(item.poster_path, 'original')
+    : FALLBACK_BACKDROP;
   const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
   const inWatchlist = isInWatchlist(item.id);
 
@@ -46,16 +52,15 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({ item, typeOverride }) 
       className="col-span-2 relative aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden border border-[#c9a24b]/20 bg-[#140c10] group cursor-pointer transition-all duration-300 hover:border-[#c9a24b]/50 hover:shadow-[0_16px_40px_rgba(201,162,75,0.18)] hover:-translate-y-1"
     >
       {/* Background image */}
-      {backdropUrl ? (
-        <img
-          src={backdropUrl}
-          alt={title}
-          loading="lazy"
-          className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-        />
-      ) : (
-        <div className="w-full h-full bg-[#100b0f]" />
-      )}
+      <img
+        src={backdropUrl || FALLBACK_BACKDROP}
+        alt={title}
+        loading="lazy"
+        onError={(e) => {
+          e.currentTarget.src = FALLBACK_BACKDROP;
+        }}
+        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+      />
 
       {/* Cinematic Vignettes */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#0a0608]/95 via-[#0a0608]/65 to-transparent" />

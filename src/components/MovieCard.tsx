@@ -160,6 +160,10 @@ export const MovieCard = memo(
               decoding="async"
               draggable={false}
               onLoad={() => setImageLoaded(true)}
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_POSTER;
+                setImageLoaded(true);
+              }}
               className={`w-full h-full object-cover transition-all duration-500 group-hover:brightness-105 group-hover:scale-[1.03] ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}

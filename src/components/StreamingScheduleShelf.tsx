@@ -222,11 +222,10 @@ export const StreamingScheduleShelf: React.FC = () => {
         >
           {filtered.slice(0, 18).map((ep, idx) => {
             const show = ep._embedded?.show;
-            const channelName = show?.webChannel?.name || show?.network?.name || 'Streaming';
-            const imgUrl =
-              ep.image?.medium ||
-              show?.image?.medium ||
-              'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+            const rawImg = ep.image?.medium || ep.image?.original || show?.image?.medium || show?.image?.original || '';
+            const imgUrl = rawImg
+              ? rawImg.replace(/^http:\/\//i, 'https://')
+              : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
             const meta = getPlatformMeta(channelName);
 
             return (
@@ -249,10 +248,13 @@ export const StreamingScheduleShelf: React.FC = () => {
                 <div className="relative aspect-[3/2] overflow-hidden bg-neutral-900">
                   <img
                     src={imgUrl}
-                    alt={show?.name}
+                    alt=""
                     draggable={false}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none select-none"
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140a0d] via-black/20 to-transparent" />
 

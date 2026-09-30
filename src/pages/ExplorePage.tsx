@@ -341,15 +341,15 @@ export const ExplorePage: React.FC = () => {
             </div>
 
             {/* Right: Box Office Window Search & Live Tonight Count */}
-            <div className="flex items-center gap-3">
-              <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-auto">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#c9a24b]/70" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search Box Office window…"
-                  className="pl-9 pr-4 py-2 rounded-xl bg-black/40 border border-[#c9a24b]/25 hover:border-[#c9a24b]/50 focus:border-[#f5c542] text-xs text-white placeholder-white/40 focus:outline-none transition-all w-52 sm:w-64"
+                  className="pl-9 pr-4 py-2.5 rounded-xl bg-black/40 border border-[#c9a24b]/25 hover:border-[#c9a24b]/50 focus:border-[#f5c542] text-xs text-white placeholder-white/40 focus:outline-none transition-all w-full sm:w-64"
                 />
               </form>
 
@@ -454,7 +454,7 @@ export const ExplorePage: React.FC = () => {
 
             {/* Main Admission Ticket Grid */}
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-6">
                 {Array.from({ length: 15 }).map((_, i) => (
                   <div
                     key={i}
@@ -493,7 +493,7 @@ export const ExplorePage: React.FC = () => {
               </div>
             ) : (
               <div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-6">
                   {items.map((item, index) => {
                     // Bento rhythm: every 11th item with a backdrop becomes a wide feature card spanning 2 columns
                     const isBentoSpot = index > 0 && index % 11 === 0 && item.backdrop_path;
@@ -553,12 +553,14 @@ export const ExplorePage: React.FC = () => {
         type="button"
         onClick={() => setMobileDrawerOpen(true)}
         aria-label="Open Ticket Booth"
-        className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-2xl shadow-black flex items-center gap-2 active:scale-95 transition-all border border-amber-300/40"
+        className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-[0_8px_25px_rgba(0,0,0,0.8),0_0_15px_rgba(201,162,75,0.4)] flex items-center gap-2 active:scale-95 transition-all border border-amber-300/40"
       >
         <Ticket className="w-4 h-4" />
         <span>Ticket Booth</span>
         {activeFiltersCount > 0 && (
-          <span className="w-2 h-2 rounded-full bg-[#8c1c2b]" />
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-[#8c1c2b] text-[#f3e9d2] border border-[#c9a24b]/40">
+            {activeFiltersCount}
+          </span>
         )}
       </button>
 
@@ -572,7 +574,7 @@ export const ExplorePage: React.FC = () => {
           />
 
           {/* Drawer Sheet */}
-          <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-[#0c090e] border-l border-[#c9a24b]/20 p-5 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-250">
+          <div className="fixed inset-y-0 right-0 w-full max-w-[340px] sm:max-w-sm bg-[#0c090e] border-l border-[#c9a24b]/20 p-5 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-250">
             <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-[#c9a24b]/25 mb-4 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#c9a24b] shadow-[0_0_6px_rgba(201,162,75,0.8)]" />

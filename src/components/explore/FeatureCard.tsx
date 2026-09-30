@@ -62,26 +62,26 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({ item, typeOverride }) 
       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-transparent to-transparent" />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col justify-end p-5 sm:p-7 max-w-lg">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-widest bg-[#c9a24b]/20 text-[#f5c542] border border-[#c9a24b]/35">
+      <div className="relative z-10 h-full flex flex-col justify-end p-3.5 sm:p-7 max-w-lg">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 rounded-full text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-widest bg-[#c9a24b]/20 text-[#f5c542] border border-[#c9a24b]/35">
             <Sparkles className="w-2.5 h-2.5" />
             Marquee Feature
           </span>
 
-          <span className="text-[11px] font-mono text-white/50">
+          <span className="text-[10px] sm:text-[11px] font-mono text-white/50">
             {isTV ? 'SCREEN 2 · TV' : 'SCREEN 1 · MOVIE'} {year ? `· ${year}` : ''}
           </span>
 
           {rating && Number(rating) > 0 && (
-            <span className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#f5c542] ml-auto">
+            <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-mono font-bold text-[#f5c542] ml-auto">
               <Star className="w-3 h-3 fill-current stroke-none" />
               {rating}
             </span>
           )}
         </div>
 
-        <h3 className="font-display font-extrabold text-base sm:text-xl text-white tracking-tight leading-tight line-clamp-1 group-hover:text-[#f5c542] transition-colors">
+        <h3 className="font-display font-extrabold text-sm sm:text-xl text-white tracking-tight leading-tight line-clamp-1 group-hover:text-[#f5c542] transition-colors">
           {title}
         </h3>
 
@@ -92,21 +92,21 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({ item, typeOverride }) 
         )}
 
         {/* Buttons */}
-        <div className="flex items-center gap-2.5 mt-3.5">
+        <div className="flex items-center gap-2 mt-2.5 sm:mt-3.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/${mediaType}/${item.id}`);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-md shadow-[#c9a24b]/20 hover:brightness-110 transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 rounded-lg bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-[11px] sm:text-xs shadow-md shadow-[#c9a24b]/20 hover:brightness-110 transition-all"
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
+            <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />
             <span>Show Details</span>
           </button>
 
           <button
             onClick={handleToggleWatchlist}
-            className={`p-2 rounded-lg border transition-all ${
+            className={`p-1.5 sm:p-2 rounded-lg border transition-all ${
               inWatchlist
                 ? 'bg-[#f5c542] border-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/30'
                 : 'border-[#c9a24b]/30 bg-black/40 text-white/70 hover:text-white hover:border-[#c9a24b]/60'

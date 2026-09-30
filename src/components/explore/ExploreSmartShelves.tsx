@@ -81,8 +81,8 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
           </div>
         </div>
 
-        {/* Arrow Controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Arrow Controls (Desktop only) */}
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => scrollToDirection('left')}
@@ -104,13 +104,13 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
         </div>
       </div>
 
-      {/* Horizontal Carousel Track */}
+      {/* Horizontal Carousel Track - edge-to-edge touch swipe on phone */}
       {loading ? (
-        <div className="flex gap-4 overflow-hidden py-1">
+        <div className="flex gap-3 sm:gap-4 overflow-hidden py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="w-40 sm:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#140a0d] border border-[#c9a24b]/15 animate-pulse"
+              className="w-[136px] sm:w-44 md:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#140a0d] border border-[#c9a24b]/15 animate-pulse"
             />
           ))}
         </div>
@@ -118,13 +118,13 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
         <div
           ref={containerRef}
           {...handlers}
-          className="flex gap-4 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-2 px-0.5 cursor-grab active:cursor-grabbing select-none"
+          className="flex gap-3 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-2 -mx-4 px-4 sm:mx-0 sm:px-0.5 cursor-grab active:cursor-grabbing select-none touch-pan-x"
         >
           {items.map((item, index) =>
             renderItem ? (
               renderItem(item, index)
             ) : (
-              <div key={`${item.media_type || 'm'}_${item.id}_${index}`} className="w-40 sm:w-48 shrink-0">
+              <div key={`${item.media_type || 'm'}_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
                 <PosterCard item={item} typeOverride={typeOverride} />
               </div>
             )
@@ -291,15 +291,15 @@ export const ExploreSmartShelves: React.FC = () => {
             {/* Massive Cinema Gold / Yellow Stroked Rank Number */}
             <span
               aria-hidden="true"
-              className="select-none font-display font-black text-7xl sm:text-8xl leading-none text-transparent -mr-6 sm:-mr-8 z-10 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] translate-y-3 pointer-events-none transition-transform duration-300 group-hover:scale-105"
+              className="select-none font-display font-black text-6xl sm:text-8xl leading-none text-transparent -mr-5 sm:-mr-8 z-10 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] translate-y-2 sm:translate-y-3 pointer-events-none transition-transform duration-300 group-hover:scale-105"
               style={{
-                WebkitTextStroke: '2.5px #f5c542',
+                WebkitTextStroke: '2px #f5c542',
                 color: '#0a0608',
               }}
             >
               {index + 1}
             </span>
-            <div className="w-40 sm:w-48 shrink-0">
+            <div className="w-[136px] sm:w-44 md:w-48 shrink-0">
               <PosterCard item={item} />
             </div>
           </div>
@@ -307,24 +307,24 @@ export const ExploreSmartShelves: React.FC = () => {
       />
 
       {/* ── 2. On Streaming Platforms Shelf (Netflix, Prime, Apple TV+, etc.) ── */}
-      <section className="space-y-4 mb-10 min-w-0 p-5 rounded-3xl bg-[#140a0d]/90 border border-[#c9a24b]/20 shadow-xl">
+      <section className="space-y-4 mb-10 min-w-0 p-4 sm:p-5 rounded-3xl bg-[#140a0d]/90 border border-[#c9a24b]/20 shadow-xl -mx-2 sm:mx-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c9a24b]/15">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] shrink-0">
               <Sparkles className="h-4 w-4" />
             </div>
-            <div>
-              <h2 className="font-display text-lg sm:text-xl font-extrabold text-white">
+            <div className="min-w-0">
+              <h2 className="font-display text-base sm:text-xl font-extrabold text-white truncate">
                 Streaming on {activeChannel.name}
               </h2>
-              <p className="text-xs font-mono text-[#f3e9d2]/50">
+              <p className="text-[11px] sm:text-xs font-mono text-[#f3e9d2]/50 truncate">
                 {activeChannel.tagline}
               </p>
             </div>
           </div>
 
           {/* Controls: Mode toggle + Arrow buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             <div className="flex rounded-full border border-[#c9a24b]/20 bg-black/40 p-0.5 shrink-0">
               <button
                 type="button"
@@ -350,7 +350,7 @@ export const ExploreSmartShelves: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => scrollStreaming('left')}
@@ -374,7 +374,7 @@ export const ExploreSmartShelves: React.FC = () => {
         </div>
 
         {/* Network Selector Tabs */}
-        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x">
           {WEB_CHANNELS.map((ch) => {
             const active = activeChannel.id === ch.id;
             return (
@@ -382,7 +382,7 @@ export const ExploreSmartShelves: React.FC = () => {
                 key={ch.id}
                 type="button"
                 onClick={() => setActiveChannel(ch)}
-                className={`flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border whitespace-nowrap ${
+                className={`flex-none flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border whitespace-nowrap ${
                   active
                     ? 'bg-[#c9a24b]/20 border-[#f5c542] text-white shadow-[0_0_14px_rgba(245,197,66,0.3)]'
                     : 'bg-black/30 border-white/[0.08] text-white/60 hover:text-white hover:border-[#c9a24b]/40'
@@ -399,11 +399,11 @@ export const ExploreSmartShelves: React.FC = () => {
 
         {/* Streaming Shelf Carousel */}
         {loadingStreaming ? (
-          <div className="flex gap-4 overflow-hidden py-1">
+          <div className="flex gap-3 sm:gap-4 overflow-hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="w-40 sm:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#0c0609] border border-[#c9a24b]/15 animate-pulse"
+                className="w-[136px] sm:w-44 md:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#0c0609] border border-[#c9a24b]/15 animate-pulse"
               />
             ))}
           </div>
@@ -411,10 +411,10 @@ export const ExploreSmartShelves: React.FC = () => {
           <div
             ref={streamingScrollRef}
             {...streamingHandlers}
-            className="flex gap-4 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 cursor-grab active:cursor-grabbing select-none"
+            className="flex gap-3 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0 cursor-grab active:cursor-grabbing select-none touch-pan-x"
           >
             {streamingItems.map((item, index) => (
-              <div key={`streaming_${item.id}_${index}`} className="w-40 sm:w-48 shrink-0">
+              <div key={`streaming_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
                 <PosterCard item={item} />
               </div>
             ))}

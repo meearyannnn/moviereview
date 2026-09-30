@@ -61,8 +61,9 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
   // Formatted ticket serial number (e.g. No. 0428)
   const ticketNo = `No. ${String(item.id).slice(-4).padStart(4, '0')}`;
 
-  // 3D tilt calculation on cursor move (max 5 degrees)
+  // 3D tilt calculation on cursor move (max 5 degrees) - only for mouse hover devices
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!window.matchMedia('(hover: hover)').matches) return;
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -77,7 +78,9 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
   };
 
   const handleMouseEnter = () => {
-    setIsHovered(true);
+    if (window.matchMedia('(hover: hover)').matches) {
+      setIsHovered(true);
+    }
   };
 
   const handleMouseLeave = () => {
@@ -125,7 +128,7 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
           handleClick();
         }
       }}
-      className="group cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24b] rounded-2xl transition-all duration-300 ease-out flex flex-col"
+      className="group cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24b] rounded-2xl transition-all duration-300 ease-out flex flex-col active:scale-[0.98]"
       style={{
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${
           isHovered ? 'translateY(-5px) scale(1.02)' : 'translateY(0) scale(1)'
@@ -158,28 +161,28 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
 
           {/* Rating Chip: Popcorn Yellow in corner */}
           {rating && (
-            <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f5c542] text-[#1c120c] font-mono font-bold text-[10px] shadow-lg shadow-black/50">
+            <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-10 flex items-center gap-1 px-1.5 py-0.5 sm:px-2 rounded-full bg-[#f5c542] text-[#1c120c] font-mono font-bold text-[9px] sm:text-[10px] shadow-lg shadow-black/50">
               <Star className="w-2.5 h-2.5 fill-current stroke-none" />
               <span>{rating}</span>
             </div>
           )}
 
-          {/* "Reserve Seat" Heart Button on hover */}
+          {/* "Reserve Seat" Heart Button: visible on mobile, hover on desktop */}
           <button
             type="button"
             onClick={handleReserve}
             aria-label={inWatchlist ? 'Cancel reservation' : 'Reserve seat'}
-            className={`absolute top-2.5 left-2.5 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+            className={`absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-10 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all ${
               inWatchlist
-                ? 'bg-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/50'
-                : 'bg-black/60 text-white/80 hover:text-white hover:bg-black/90 opacity-0 group-hover:opacity-100 backdrop-blur-sm'
+                ? 'bg-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/50 opacity-100'
+                : 'bg-black/60 text-white/80 hover:text-white hover:bg-black/90 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm'
             }`}
           >
-            <Heart className={`w-3.5 h-3.5 ${inWatchlist ? 'fill-current' : ''}`} />
+            <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${inWatchlist ? 'fill-current' : ''}`} />
           </button>
 
-          {/* Play Icon in center on hover */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          {/* Play Icon in center on hover (desktop only) */}
+          <div className="hidden sm:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
             <div className="w-11 h-11 rounded-full bg-[#c9a24b] text-[#1c120c] flex items-center justify-center shadow-lg shadow-black/60 transform group-hover:scale-105 transition-transform">
               <Play className="w-5 h-5 ml-0.5 fill-current" />
             </div>

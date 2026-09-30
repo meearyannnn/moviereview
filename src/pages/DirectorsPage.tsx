@@ -383,6 +383,15 @@ export const DirectorsPage: React.FC = () => {
                       id={d.id}
                       fallbackName={d.name}
                       era={d.era}
+                      initialData={
+                        d.topFilms
+                          ? {
+                              profilePath: d.profilePath,
+                              totalFilms: d.totalFilms,
+                              topFilms: d.topFilms,
+                            }
+                          : undefined
+                      }
                     />
                   ))}
                 </div>

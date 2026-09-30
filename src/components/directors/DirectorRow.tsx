@@ -5,19 +5,45 @@ import { Star, Film, ChevronRight } from 'lucide-react';
 import { useDirector } from '@/hooks/useDirector';
 import { tmdb } from '@/services/tmdb';
 
+export interface InitialDirectorData {
+  profilePath?: string;
+  totalFilms?: number;
+  topFilms?: {
+    id: number;
+    title: string;
+    year: string;
+    poster: string;
+    rating: number;
+  }[];
+}
+
 interface DirectorRowProps {
   id: number;
   fallbackName?: string;
   era?: string;
+  initialData?: InitialDirectorData;
 }
 
 const FALLBACK_PORTRAIT =
   'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=500&q=80';
 
-export const DirectorRow: React.FC<DirectorRowProps> = ({ id, fallbackName, era }) => {
-  const { data: director, isLoading, isError } = useDirector(id);
+export const DirectorRow: React.FC<DirectorRowProps> = ({
+  id,
+  fallbackName,
+  era,
+  initialData,
+}) => {
+  const hasInitialData = Boolean(
+    initialData && initialData.topFilms && initialData.topFilms.length > 0
+  );
 
-  if (isLoading) {
+  // If initialData is available, skip network request entirely for instant 0ms rendering
+  const { data: dynamicDirector, isLoading } = useDirector(id, {
+    enabled: !hasInitialData,
+  });
+
+  // Skeleton only shown if no initialData is preloaded and dynamic fetch is in progress
+  if (!hasInitialData && isLoading) {
     return (
       <div className="py-8 border-b border-white/[0.06] animate-pulse">
         {/* Row Header Skeleton */}
@@ -45,28 +71,44 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({ id, fallbackName, era 
     );
   }
 
-  if (isError || !director) {
-    return null;
-  }
+  // Resolve director info from either initialData or dynamic fetch
+  const name =
+    dynamicDirector?.name || fallbackName || 'Director';
 
-  const name = director.name || fallbackName || 'Director';
-  // Split name for two-line dramatic display heading (e.g. "Martin" & "Scorsese")
   const nameParts = name.trim().split(' ');
   const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : name;
   const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
 
-  const photoUrl = director.profile_path
-    ? tmdb.getImageUrl(director.profile_path, 'h632' as any) || tmdb.getImageUrl(director.profile_path, 'w500')
+  const rawPhoto =
+    dynamicDirector?.profile_path || initialData?.profilePath;
+  const photoUrl = rawPhoto
+    ? tmdb.getImageUrl(rawPhoto, 'w500')
     : FALLBACK_PORTRAIT;
 
-  // Take top 5 films directed
-  const topFive = director.topFilms.slice(0, 5);
+  const totalFilmsCount =
+    dynamicDirector?.stats.totalFilms ||
+    initialData?.totalFilms ||
+    initialData?.topFilms?.length ||
+    0;
+
+  const topFive = dynamicDirector?.topFilms.slice(0, 5) ||
+    initialData?.topFilms?.slice(0, 5)?.map((f) => ({
+      id: f.id,
+      title: f.title,
+      release_date: f.year ? `${f.year}-01-01` : '',
+      poster_path: f.poster,
+      vote_average: f.rating,
+      backdrop_path: '',
+      overview: '',
+      genre_ids: [],
+    })) ||
+    [];
 
   return (
     <article className="group/row py-8 sm:py-10 border-b border-white/[0.07] last:border-b-0 transition-colors">
       {/* ── Row Header: Director Photo + Large Wide-Tracked Name ── */}
       <Link
-        to={`/director/${director.id}`}
+        to={`/director/${id}`}
         aria-label={`View ${name}'s filmography`}
         className="group flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 mb-6 sm:mb-8 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] rounded-2xl p-1"
       >
@@ -85,10 +127,12 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({ id, fallbackName, era 
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
           {/* Quick badge */}
-          <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-[#c9a24b]/30 text-[9px] font-mono text-[#f5c542]">
-            <Film className="w-2.5 h-2.5" />
-            <span>{director.stats.totalFilms} films</span>
-          </div>
+          {totalFilmsCount > 0 && (
+            <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-[#c9a24b]/30 text-[9px] font-mono text-[#f5c542]">
+              <Film className="w-2.5 h-2.5" />
+              <span>{totalFilmsCount} films</span>
+            </div>
+          )}
         </div>
 
         {/* Large Wide-Tracked Name Heading */}
@@ -99,7 +143,7 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({ id, fallbackName, era 
             </span>
             <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono text-white/40">
               <Star className="w-3 h-3 fill-[#f5c542] text-[#f5c542]" />
-              {director.stats.avgRating > 0 ? `${director.stats.avgRating} Avg TMDB` : 'Master of Cinema'}
+              Master of Cinema
             </span>
           </div>
 
@@ -123,10 +167,10 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({ id, fallbackName, era 
               Key Works &amp; Masterpieces
             </p>
             <Link
-              to={`/director/${director.id}`}
+              to={`/director/${id}`}
               className="text-[11px] font-mono text-[#c9a24b]/70 hover:text-[#f5c542] transition-colors"
             >
-              All {director.movies.length} films →
+              All {totalFilmsCount} films →
             </Link>
           </div>
 

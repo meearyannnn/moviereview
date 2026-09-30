@@ -69,11 +69,78 @@ export interface CrewMember {
   profile_path: string | null;
 }
 
-const tmdbFetch = async (endpoint: string) => {
-  const sep = endpoint.includes("?") ? "&" : "?";
-  const response = await fetch(`${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
-  if (!response.ok) throw new Error('TMDB API request failed');
-  return response.json();
+// High-performance multi-tier cache (in-memory + sessionStorage)
+const tmdbMemoryCache = new Map<string, { data: any; timestamp: number }>();
+const tmdbInFlightRequests = new Map<string, Promise<any>>();
+const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+
+const tmdbFetch = async (endpoint: string): Promise<any> => {
+  const now = Date.now();
+
+  // 1. Fast in-memory cache check (0ms)
+  const memCached = tmdbMemoryCache.get(endpoint);
+  if (memCached && now - memCached.timestamp < CACHE_TTL_MS) {
+    return memCached.data;
+  }
+
+  // 2. SessionStorage cache check (survives tab navigation, 0 network requests)
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const stored = sessionStorage.getItem(`tmdb_${endpoint}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && now - parsed.timestamp < CACHE_TTL_MS) {
+          tmdbMemoryCache.set(endpoint, parsed);
+          return parsed.data;
+        }
+      }
+    } catch {
+      // Storage quota or privacy mode, continue to fetch
+    }
+  }
+
+  // 3. Deduplicate concurrent identical in-flight requests
+  if (tmdbInFlightRequests.has(endpoint)) {
+    return tmdbInFlightRequests.get(endpoint)!;
+  }
+
+  // 4. Network fetch with abort timeout
+  const fetchPromise = (async () => {
+    try {
+      const sep = endpoint.includes('?') ? '&' : '?';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
+      const response = await fetch(
+        `${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`TMDB API request failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const cacheEntry = { data, timestamp: Date.now() };
+
+      tmdbMemoryCache.set(endpoint, cacheEntry);
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+          sessionStorage.setItem(`tmdb_${endpoint}`, JSON.stringify(cacheEntry));
+        } catch {
+          // Quota exceeded
+        }
+      }
+
+      return data;
+    } finally {
+      tmdbInFlightRequests.delete(endpoint);
+    }
+  })();
+
+  tmdbInFlightRequests.set(endpoint, fetchPromise);
+  return fetchPromise;
 };
 
 export const tmdb = {

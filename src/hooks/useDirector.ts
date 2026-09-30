@@ -62,8 +62,15 @@ const GENRE_MAP: Record<number, string> = {
   37: 'Western',
 };
 
-export const useDirector = (directorId: number | string | undefined) => {
+export const useDirector = (
+  directorId: number | string | undefined,
+  options: { enabled?: boolean } = {}
+) => {
   const numericId = Number(directorId);
+  const isEnabled =
+    options.enabled !== undefined
+      ? options.enabled && Boolean(numericId && !Number.isNaN(numericId))
+      : Boolean(numericId && !Number.isNaN(numericId));
 
   return useQuery<DirectorProfile, Error>({
     queryKey: ['director', numericId],
@@ -192,8 +199,8 @@ export const useDirector = (directorId: number | string | undefined) => {
         },
       };
     },
-    enabled: Boolean(numericId && !Number.isNaN(numericId)),
-    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    enabled: isEnabled,
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    gcTime: 1000 * 60 * 60 * 2,
   });
 };

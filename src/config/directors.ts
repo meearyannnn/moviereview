@@ -9,7 +9,18 @@ export type DirectorCategory =
   | 'indian'
   | 'genre';
 
+export interface DirectorFilmSummary {
+  id: number;
+  title: string;
+  year: string;
+  poster: string;
+  rating: number;
+}
+
 export interface CuratedDirector {
+  profilePath?: string;
+  totalFilms?: number;
+  topFilms?: DirectorFilmSummary[];
   id: number;
   name: string;
   knownFor: string;
@@ -30,6 +41,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   // ── Modern Icons & Masterminds ──
   {
     id: 1032,
+    profilePath: "/g3DjfKsgZQWZiw30I20hZVk1oMX.jpg",
+    totalFilms: 58,
+    topFilms: [{"id":106646,"title":"The Wolf of Wall Street","year":"2013","poster":"/kW9LmvYHAaS9iA0tHmZVq8hQYoq.jpg","rating":8},{"id":11324,"title":"Shutter Island","year":"2010","poster":"/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg","rating":8.2},{"id":1422,"title":"The Departed","year":"2006","poster":"/nT97ifVT2J1yMQmeq20Qblg61T.jpg","rating":8.2},{"id":769,"title":"GoodFellas","year":"1990","poster":"/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg","rating":8.5},{"id":103,"title":"Taxi Driver","year":"1976","poster":"/ekstpH614fwDX8DUln1a2Opz0N8.jpg","rating":8.1}],
     name: 'Martin Scorsese',
     knownFor: 'Taxi Driver, GoodFellas, The Wolf of Wall Street',
     era: '1967–Present',
@@ -37,6 +51,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 525,
+    profilePath: "/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg",
+    totalFilms: 19,
+    topFilms: [{"id":157336,"title":"Interstellar","year":"2014","poster":"/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg","rating":8.4},{"id":27205,"title":"Inception","year":"2010","poster":"/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg","rating":8.4},{"id":155,"title":"The Dark Knight","year":"2008","poster":"/qJ2tW6WMUDux911r6m7haRef0WH.jpg","rating":8.5},{"id":872585,"title":"Oppenheimer","year":"2023","poster":"/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg","rating":8.1},{"id":49026,"title":"The Dark Knight Rises","year":"2012","poster":"/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg","rating":7.8}],
     name: 'Christopher Nolan',
     knownFor: 'Oppenheimer, Interstellar, The Dark Knight, Inception',
     era: '1998–Present',
@@ -44,6 +61,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 138,
+    profilePath: "/1gjcpAa99FAOWGnrUvHEXXsRs7o.jpg",
+    totalFilms: 15,
+    topFilms: [{"id":680,"title":"Pulp Fiction","year":"1994","poster":"/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg","rating":8.5},{"id":68718,"title":"Django Unchained","year":"2012","poster":"/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg","rating":8.2},{"id":16869,"title":"Inglourious Basterds","year":"2009","poster":"/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg","rating":8.2},{"id":24,"title":"Kill Bill: Vol. 1","year":"2003","poster":"/v7TaX8kXMXs5yFFGR41guUDNcnB.jpg","rating":8},{"id":500,"title":"Reservoir Dogs","year":"1992","poster":"/xi8Iu6qyTfyZVDVy60raIOYJJmk.jpg","rating":8.1}],
     name: 'Quentin Tarantino',
     knownFor: 'Pulp Fiction, Inglourious Basterds, Kill Bill',
     era: '1992–Present',
@@ -51,6 +71,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 488,
+    profilePath: "/tZxcg19YQ3e8fJ0pOs7hjlnmmr6.jpg",
+    totalFilms: 45,
+    topFilms: [{"id":329,"title":"Jurassic Park","year":"1993","poster":"/d9mtMGQDLANKieb9PbD3yK7xxzo.jpg","rating":8},{"id":424,"title":"Schindler's List","year":"1993","poster":"/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg","rating":8.6},{"id":857,"title":"Saving Private Ryan","year":"1998","poster":"/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg","rating":8.2},{"id":640,"title":"Catch Me If You Can","year":"2002","poster":"/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg","rating":8},{"id":333339,"title":"Ready Player One","year":"2018","poster":"/pU1ULUq8D3iRxl1fdX2lZIzdHuI.jpg","rating":7.6}],
     name: 'Steven Spielberg',
     knownFor: 'Jurassic Park, Schindler’s List, Jaws, Raiders of the Lost Ark',
     era: '1971–Present',
@@ -58,6 +81,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 7467,
+    profilePath: "/tpEczFclQZeKAiCeKZZ0adRvtfz.jpg",
+    totalFilms: 19,
+    topFilms: [{"id":550,"title":"Fight Club","year":"1999","poster":"/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg","rating":8.4},{"id":807,"title":"Se7en","year":"1995","poster":"/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg","rating":8.4},{"id":210577,"title":"Gone Girl","year":"2014","poster":"/ts996lKsxvjkO2yiYG0ht4qAicO.jpg","rating":7.9},{"id":4922,"title":"The Curious Case of Benjamin Button","year":"2008","poster":"/26wEWZYt6yJkwRVkjcbwJEFh9IS.jpg","rating":7.6},{"id":37799,"title":"The Social Network","year":"2010","poster":"/n0ybibhJtQ5icDqTp8eRytcIHJx.jpg","rating":7.4}],
     name: 'David Fincher',
     knownFor: 'Fight Club, Se7en, The Social Network, Zodiac',
     era: '1992–Present',
@@ -65,6 +91,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 137427,
+    profilePath: "/xzQYqb4nR8xT7Zdw5itbEL9K3fd.jpg",
+    totalFilms: 24,
+    topFilms: [{"id":329865,"title":"Arrival","year":"2016","poster":"/pEzNVQfdzYDzVK0XqxERIw2x2se.jpg","rating":7.6},{"id":335984,"title":"Blade Runner 2049","year":"2017","poster":"/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg","rating":7.6},{"id":438631,"title":"Dune","year":"2021","poster":"/v1tRXZ4JtD2Iv6fjkPvT4GiwslV.jpg","rating":7.8},{"id":146233,"title":"Prisoners","year":"2013","poster":"/uhviyknTT5cEQXbn6vWIqfM4vGm.jpg","rating":8.1},{"id":273481,"title":"Sicario","year":"2015","poster":"/lz8vNyXeidqqOdJW9ZjnDAMb5Vr.jpg","rating":7.4}],
     name: 'Denis Villeneuve',
     knownFor: 'Dune, Blade Runner 2049, Arrival, Sicario',
     era: '1998–Present',
@@ -72,6 +101,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 2710,
+    profilePath: "/2Hh4Jos62luf90CCglP5K32qaWO.jpg",
+    totalFilms: 21,
+    topFilms: [{"id":19995,"title":"Avatar","year":"2009","poster":"/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg","rating":7.6},{"id":597,"title":"Titanic","year":"1997","poster":"/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg","rating":7.9},{"id":218,"title":"The Terminator","year":"1984","poster":"/qvktm0BHcnmDpul4Hz01GIazWPr.jpg","rating":7.7},{"id":280,"title":"Terminator 2: Judgment Day","year":"1991","poster":"/jFTVD4XoWQTcg7wdyJKa8PEds5q.jpg","rating":8.2},{"id":76600,"title":"Avatar: The Way of Water","year":"2022","poster":"/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg","rating":7.6}],
     name: 'James Cameron',
     knownFor: 'Titanic, Avatar, Terminator 2, Aliens',
     era: '1981–Present',
@@ -79,6 +111,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 578,
+    profilePath: "/zABJmN9opmqD4orWl3KSdCaSo7Q.jpg",
+    totalFilms: 42,
+    topFilms: [{"id":286217,"title":"The Martian","year":"2015","poster":"/5BHuvQ6p9kfc091Z8RiFNhCwL4b.jpg","rating":7.7},{"id":98,"title":"Gladiator","year":"2000","poster":"/wN2xWp1eIwCKOD0BHTcErTBv1Uq.jpg","rating":8.2},{"id":348,"title":"Alien","year":"1979","poster":"/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg","rating":8.2},{"id":78,"title":"Blade Runner","year":"1982","poster":"/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg","rating":7.9},{"id":70981,"title":"Prometheus","year":"2012","poster":"/qsYQflQhOuhDpQ0W2aOcwqgDAeI.jpg","rating":6.6}],
     name: 'Ridley Scott',
     knownFor: 'Alien, Blade Runner, Gladiator, The Martian',
     era: '1977–Present',
@@ -86,6 +121,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 4762,
+    profilePath: "/wKAs2LtLYSUzt3ZZ8pnxMwuEWuR.jpg",
+    totalFilms: 23,
+    topFilms: [{"id":7345,"title":"There Will Be Blood","year":"2007","poster":"/fa0RDkAlCec0STeMNAhPaF89q6U.jpg","rating":8.1},{"id":1054867,"title":"One Battle After Another","year":"2025","poster":"/lbBWwxBht4JFP5PsuJ5onpMqugW.jpg","rating":7.3},{"id":334,"title":"Magnolia","year":"1999","poster":"/tpfC325Jk6S38VTe5dDWjWtoyxr.jpg","rating":7.7},{"id":400617,"title":"Phantom Thread","year":"2017","poster":"/hgoWjp9Sh0MI97eAMZCnIoVfgvq.jpg","rating":7.3},{"id":4995,"title":"Boogie Nights","year":"1997","poster":"/2hVSN9yOfoI8EUTqcVW6zCIyQ1G.jpg","rating":7.6}],
     name: 'Paul Thomas Anderson',
     knownFor: 'There Will Be Blood, Boogie Nights, Magnolia',
     era: '1996–Present',
@@ -93,6 +131,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 5655,
+    profilePath: "/s03CeUeC5yAXyB1acqP0zGNo2SC.jpg",
+    totalFilms: 23,
+    topFilms: [{"id":120467,"title":"The Grand Budapest Hotel","year":"2014","poster":"/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg","rating":8},{"id":83666,"title":"Moonrise Kingdom","year":"2012","poster":"/y4SXcbNl6CEF2t36icuzuBioj7K.jpg","rating":7.7},{"id":10315,"title":"Fantastic Mr. Fox","year":"2009","poster":"/bOVr292mwn3jxr1e0NmUPM1rcjo.jpg","rating":7.8},{"id":399174,"title":"Isle of Dogs","year":"2018","poster":"/4C7ZHv5LUPq7XzxC3nq8mBr77sP.jpg","rating":7.8},{"id":9428,"title":"The Royal Tenenbaums","year":"2001","poster":"/nG7hZJn7wQTSDCQT39Gy3s3tbrp.jpg","rating":7.5}],
     name: 'Wes Anderson',
     knownFor: 'The Grand Budapest Hotel, Moonrise Kingdom, Fantastic Mr. Fox',
     era: '1996–Present',
@@ -100,6 +141,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 10828,
+    profilePath: "/cWvt8FdPAH0j3QtLzAN1j7ZJJrr.jpg",
+    totalFilms: 16,
+    topFilms: [{"id":68726,"title":"Pacific Rim","year":"2013","poster":"/8wo4eN8dWKaKlxhSvBz19uvj8gA.jpg","rating":7},{"id":399055,"title":"The Shape of Water","year":"2017","poster":"/9zfwPffUXpBrEP26yp0q1ckXDcj.jpg","rating":7.2},{"id":1417,"title":"Pan's Labyrinth","year":"2006","poster":"/7wb2Ldp0oAx1lcZvffq9RfWoI2h.jpg","rating":7.8},{"id":1487,"title":"Hellboy","year":"2004","poster":"/lbaTEneOofwvAyg77R8HbFML2zT.jpg","rating":6.7},{"id":11253,"title":"Hellboy II: The Golden Army","year":"2008","poster":"/zO0Wdrxnhx3KoJEvychSmnY3urC.jpg","rating":6.8}],
     name: 'Guillermo del Toro',
     knownFor: 'Pan’s Labyrinth, The Shape of Water, Pinocchio',
     era: '1993–Present',
@@ -107,6 +151,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 108,
+    profilePath: "/bNc908d59Ba8VDNr4eCcm4G1cR.jpg",
+    totalFilms: 22,
+    topFilms: [{"id":120,"title":"The Lord of the Rings: The Fellowship of the Ring","year":"2001","poster":"/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg","rating":8.4},{"id":122,"title":"The Lord of the Rings: The Return of the King","year":"2003","poster":"/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg","rating":8.5},{"id":121,"title":"The Lord of the Rings: The Two Towers","year":"2002","poster":"/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg","rating":8.4},{"id":49051,"title":"The Hobbit: An Unexpected Journey","year":"2012","poster":"/yHA9Fc37VmpUA5UncTxxo3rTGVA.jpg","rating":7.4},{"id":122917,"title":"The Hobbit: The Battle of the Five Armies","year":"2014","poster":"/xT98tLqatZPQApyRmlPL12LtiWp.jpg","rating":7.3}],
     name: 'Peter Jackson',
     knownFor: 'The Lord of the Rings Trilogy, King Kong',
     era: '1987–Present',
@@ -114,6 +161,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 45400,
+    profilePath: "/dxKAhpkz4XNwmRzMG5QOpXjPZ1N.jpg",
+    totalFilms: 6,
+    topFilms: [{"id":346698,"title":"Barbie","year":"2023","poster":"/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg","rating":6.9},{"id":391713,"title":"Lady Bird","year":"2017","poster":"/gl66K7zRdtNYGrxyS2YDUP5ASZd.jpg","rating":7.2},{"id":331482,"title":"Little Women","year":"2019","poster":"/yn5ihODtZ7ofn8pDYfxCmxh8AXI.jpg","rating":7.8},{"id":48204,"title":"Nights and Weekends","year":"2008","poster":"/zFPvD0dxmqrfKu0qqAgzGVEfCn3.jpg","rating":5.6},{"id":1147572,"title":"Narnia: The Magician's Nephew","year":"2027","poster":"/8vTNfYamvnHIgrMpSg1c4jnfD9y.jpg","rating":0}],
     name: 'Greta Gerwig',
     knownFor: 'Barbie, Little Women, Lady Bird',
     era: '2008–Present',
@@ -121,6 +171,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 136495,
+    profilePath: "/14kRZ3XxNMyBv717YQSXr3wCucy.jpg",
+    totalFilms: 8,
+    topFilms: [{"id":313369,"title":"La La Land","year":"2016","poster":"/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg","rating":7.9},{"id":244786,"title":"Whiplash","year":"2014","poster":"/7fn624j5lj3xTme2SgiLCeuedmO.jpg","rating":8.4},{"id":369972,"title":"First Man","year":"2018","poster":"/i91mfvFcPPlaegcbOyjGgiWfZzh.jpg","rating":7},{"id":615777,"title":"Babylon","year":"2022","poster":"/wjOHjWCUE0YzDiEzKv8AfqHj3ir.jpg","rating":7.3},{"id":367412,"title":"Whiplash","year":"2013","poster":"/2yQkiGAmztaBkGLjVIrHUYHTex5.jpg","rating":7.8}],
     name: 'Damien Chazelle',
     knownFor: 'Whiplash, La La Land, First Man, Babylon',
     era: '2009–Present',
@@ -128,6 +181,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 291263,
+    profilePath: "/kFUKn5g3ebpyZ3CSZZZo2HFWRNQ.jpg",
+    totalFilms: 3,
+    topFilms: [{"id":419430,"title":"Get Out","year":"2017","poster":"/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg","rating":7.6},{"id":458723,"title":"Us","year":"2019","poster":"/ux2dU1jQ2ACIMShzB3yP93Udpzc.jpg","rating":6.9},{"id":762504,"title":"Nope","year":"2022","poster":"/AcKVlWaNVVVFQwro3nLXqPljcYA.jpg","rating":6.8}],
     name: 'Jordan Peele',
     knownFor: 'Get Out, Us, Nope',
     era: '2017–Present',
@@ -135,6 +191,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 122423,
+    profilePath: "/dvtv8eV1O8Fl385ctOu3sqO2PbD.jpg",
+    totalFilms: 16,
+    topFilms: [{"id":254320,"title":"The Lobster","year":"2015","poster":"/7Y9ILV1unpW9mLpGcqyGQU72LUy.jpg","rating":7},{"id":375262,"title":"The Favourite","year":"2018","poster":"/cwBq0onfmeilU5xgqNNjJAMPfpw.jpg","rating":7.5},{"id":792307,"title":"Poor Things","year":"2023","poster":"/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg","rating":7.6},{"id":399057,"title":"The Killing of a Sacred Deer","year":"2017","poster":"/e4DGlsc9g0h5AyoyvvAuIRnofN7.jpg","rating":7},{"id":38810,"title":"Dogtooth","year":"2009","poster":"/7nLuUGlH12cegPfR84QX4xIIH9k.jpg","rating":7}],
     name: 'Yorgos Lanthimos',
     knownFor: 'Poor Things, The Favourite, The Lobster',
     era: '2001–Present',
@@ -158,6 +217,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   // ── Golden Age & Historical Legends ──
   {
     id: 240,
+    profilePath: "/yFT0VyIelI9aegZrsAwOG5iVP4v.jpg",
+    totalFilms: 16,
+    topFilms: [{"id":694,"title":"The Shining","year":"1980","poster":"/uAR0AWqhQL1hQa69UDEbb2rE5Wx.jpg","rating":8.2},{"id":185,"title":"A Clockwork Orange","year":"1971","poster":"/4sHeTAp65WrSSuc05nRBKddhBxO.jpg","rating":8.2},{"id":62,"title":"2001: A Space Odyssey","year":"1968","poster":"/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg","rating":8},{"id":600,"title":"Full Metal Jacket","year":"1987","poster":"/kMKyx1k8hWWscYFnPbnxxN4Eqo4.jpg","rating":8.1},{"id":345,"title":"Eyes Wide Shut","year":"1999","poster":"/knEIz1eNGl5MQDbrEAVWA7iRqF9.jpg","rating":7.5}],
     name: 'Stanley Kubrick',
     knownFor: '2001: A Space Odyssey, The Shining, A Clockwork Orange',
     era: '1953–1999',
@@ -165,6 +227,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 2636,
+    profilePath: "/108fiNM6poRieMg7RIqLJRxdAwG.jpg",
+    totalFilms: 65,
+    topFilms: [{"id":539,"title":"Psycho","year":"1960","poster":"/yz4QVqPx3h1hD1DfqqQkCq3rmxW.jpg","rating":8.4},{"id":567,"title":"Rear Window","year":"1954","poster":"/ILVF0eJxHMddjxeQhswFtpMtqx.jpg","rating":8.3},{"id":426,"title":"Vertigo","year":"1958","poster":"/15uOEfqBNTVtDUT7hGBVCka0rZz.jpg","rating":8.1},{"id":213,"title":"North by Northwest","year":"1959","poster":"/kNOFPQrel9YFCVzI0DF8FnCEpCw.jpg","rating":8},{"id":571,"title":"The Birds","year":"1963","poster":"/eClg8QPg8mwB6INIC4pyR5pAbDr.jpg","rating":7.5}],
     name: 'Alfred Hitchcock',
     knownFor: 'Psycho, Vertigo, Rear Window, North by Northwest',
     era: '1922–1976',
@@ -172,6 +237,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 5026,
+    profilePath: "/g2iwSho2vJxVz7cbD1FAKAmPD6A.jpg",
+    totalFilms: 32,
+    topFilms: [{"id":346,"title":"Seven Samurai","year":"1954","poster":"/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg","rating":8.5},{"id":548,"title":"Rashomon","year":"1950","poster":"/ijWibsAU1iBcCD8tuIZfTmDzMVE.jpg","rating":8},{"id":11645,"title":"Ran","year":"1985","poster":"/dGgiXMWDcS5aJTBEFu7bmaQPNox.jpg","rating":8},{"id":11878,"title":"Yojimbo","year":"1961","poster":"/tN7kYPjRhDolpui9sc9Eq9n5b2O.jpg","rating":8.1},{"id":3782,"title":"Ikiru","year":"1952","poster":"/dgNTS4EQDDVfkzJI5msKuHu2Ei3.jpg","rating":8.3}],
     name: 'Akira Kurosawa',
     knownFor: 'Seven Samurai, Rashomon, Ran, Yojimbo',
     era: '1943–1993',
@@ -179,6 +247,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 1776,
+    profilePath: "/3Pblihd6KjXliie9vj4iQJwbNPU.jpg",
+    totalFilms: 35,
+    topFilms: [{"id":238,"title":"The Godfather","year":"1972","poster":"/3bhkrj58Vtu7enYsRolD1fZdja1.jpg","rating":8.7},{"id":240,"title":"The Godfather Part II","year":"1974","poster":"/8a1lJs7mFyGhGhZZDT1azJUoQiZ.jpg","rating":8.6},{"id":28,"title":"Apocalypse Now","year":"1979","poster":"/gQB8Y5RCMkv2zwzFHbUJX3kAhvA.jpg","rating":8.3},{"id":242,"title":"The Godfather Part III","year":"1990","poster":"/lm3pQ2QoQ16pextRsmnUbG2onES.jpg","rating":7.4},{"id":6114,"title":"Bram Stoker's Dracula","year":"1992","poster":"/jSxCIZXudp5q8wQO8VERGX8hRAl.jpg","rating":7.4}],
     name: 'Francis Ford Coppola',
     knownFor: 'The Godfather Trilogy, Apocalypse Now, The Conversation',
     era: '1963–Present',
@@ -251,6 +322,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   // ── World & Asian Cinema ──
   {
     id: 21684,
+    profilePath: "/stwnTvZAoD8gEJEDHpDQyLCyDy5.jpg",
+    totalFilms: 19,
+    topFilms: [{"id":496243,"title":"Parasite","year":"2019","poster":"/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg","rating":8.5},{"id":110415,"title":"Snowpiercer","year":"2013","poster":"/kw6YQudA0TMcNmGUGy5XIw7zbnV.jpg","rating":6.9},{"id":11423,"title":"Memories of Murder","year":"2003","poster":"/jcgUjx1QcupGzjntTVlnQ15lHqy.jpg","rating":8.1},{"id":387426,"title":"Okja","year":"2017","poster":"/pHlRr2MfjK77VIIAO7p0R4jhsJI.jpg","rating":7.3},{"id":696506,"title":"Mickey 17","year":"2025","poster":"/edKpE9B5qN3e559OuMCLZdW1iBZ.jpg","rating":6.8}],
     name: 'Bong Joon-ho',
     knownFor: 'Parasite, Memories of Murder, Snowpiercer',
     era: '2000–Present',
@@ -258,6 +332,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 608,
+    profilePath: "/ouhjt9KugzhWtdEyBPipihB3ic8.jpg",
+    totalFilms: 37,
+    topFilms: [{"id":129,"title":"Spirited Away","year":"2001","poster":"/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg","rating":8.5},{"id":4935,"title":"Howl's Moving Castle","year":"2004","poster":"/13kOl2v0nD2OLbVSHnHk8GUFEhO.jpg","rating":8.4},{"id":128,"title":"Princess Mononoke","year":"1997","poster":"/cMYCDADoLKLbB83g4WnJegaZimC.jpg","rating":8.3},{"id":8392,"title":"My Neighbor Totoro","year":"1988","poster":"/rtGDOeG9LzoerkDGZF9dnVeLppL.jpg","rating":8.1},{"id":12429,"title":"Ponyo","year":"2008","poster":"/yp8vEZflGynlEylxEesbYasc06i.jpg","rating":7.8}],
     name: 'Hayao Miyazaki',
     knownFor: 'Spirited Away, Princess Mononoke, My Neighbor Totoro',
     era: '1979–Present',
@@ -265,6 +342,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 10099,
+    profilePath: "/jsSFCVB7MhuVbSLwTgESiXEiNjt.jpg",
+    totalFilms: 27,
+    topFilms: [{"id":670,"title":"Oldboy","year":"2003","poster":"/pWDtjs568ZfOTMbURQBYuT4Qxka.jpg","rating":8.2},{"id":290098,"title":"The Handmaiden","year":"2016","poster":"/dLlH4aNHdnmf62umnInL8xPlPzw.jpg","rating":8.2},{"id":86825,"title":"Stoker","year":"2013","poster":"/o0giW5oasaef5m9sgBuq0C7IkIa.jpg","rating":6.6},{"id":4550,"title":"Lady Vengeance","year":"2005","poster":"/ifcxaKfzNQ6W8uSLpnGo7AfiSL8.jpg","rating":7.5},{"id":4689,"title":"Sympathy for Mr. Vengeance","year":"2002","poster":"/uj42ubGbgVL65T10SvPVr0p9mJc.jpg","rating":7.5}],
     name: 'Park Chan-wook',
     knownFor: 'Oldboy, Decision to Leave, The Handmaiden',
     era: '1992–Present',
@@ -272,6 +352,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 12453,
+    profilePath: "/iI4IxsIA5DMhIFHcD6C2FyZGKwc.jpg",
+    totalFilms: 25,
+    topFilms: [{"id":843,"title":"In the Mood for Love","year":"2000","poster":"/8BgGbbWiLNhPtkMkN0gGTnbtvBv.jpg","rating":8.1},{"id":11104,"title":"Chungking Express","year":"1994","poster":"/43I9DcNoCzpyzK8JCkJYpHqHqGG.jpg","rating":8},{"id":11220,"title":"Fallen Angels","year":"1995","poster":"/yyM9BPdwttK5LKZSLvHae7QPKo1.jpg","rating":7.7},{"id":844,"title":"2046","year":"2004","poster":"/jIN65qw0Giplo4CshzMrxz204Wn.jpg","rating":7.2},{"id":44865,"title":"The Grandmaster","year":"2013","poster":"/ydBVVIscL6TsX5hYztA5YpBCwJ3.jpg","rating":6.6}],
     name: 'Wong Kar-wai',
     knownFor: 'In the Mood for Love, Chungking Express, Fallen Angels',
     era: '1988–Present',
@@ -288,6 +371,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   // ── Indian Cinema Masters ──
   {
     id: 147021,
+    profilePath: "/qPskSZxvoYflC8Bye4tGNBSroy5.jpg",
+    totalFilms: 15,
+    topFilms: [{"id":579974,"title":"RRR","year":"2022","poster":"/wE0I6efAW4cDDmZQWtwZMOW44EJ.jpg","rating":7.7},{"id":256040,"title":"Bāhubali: The Beginning","year":"2015","poster":"/9BAjt8nSSms62uOVYn1t3C3dVto.jpg","rating":7.6},{"id":350312,"title":"Bāhubali 2: The Conclusion","year":"2017","poster":"/21sC2assImQIYCEDA84Qh9d1RsK.jpg","rating":7.5},{"id":148265,"title":"Eega","year":"2012","poster":"/pX7fn4EZrg2YFlV4GNMIfHDOQZ6.jpg","rating":7.1},{"id":23790,"title":"Magadheera","year":"2009","poster":"/xK7MEV56GF291VG0U5XnVJuvNv3.jpg","rating":7.3}],
     name: 'S. S. Rajamouli',
     knownFor: 'RRR, Baahubali 2: The Conclusion, Eega, Magadheera',
     era: '2001–Present',
@@ -295,6 +381,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 78747,
+    profilePath: "/iXRdku91Hp8nHSL3uWxnInxN6TH.jpg",
+    totalFilms: 30,
+    topFilms: [{"id":21210,"title":"Dil Se..","year":"1998","poster":"/rdnkOPYlHf8WaPRllTz3dsuzpp8.jpg","rating":6.9},{"id":15772,"title":"Guru","year":"2007","poster":"/xX2BJ5sn3ElTZqhnOEod8ZXsCQg.jpg","rating":6.9},{"id":660046,"title":"Ponniyin Selvan: Part I","year":"2022","poster":"/zSNyZUeqDdii0doQ9970E90kCkb.jpg","rating":7.1},{"id":29971,"title":"Nayakan","year":"1987","poster":"/hnCKKPG5VkUiGQV0DTniyMTEZsT.jpg","rating":7.9},{"id":26247,"title":"Bombay","year":"1995","poster":"/g1FXpdQogl84eztCsLI3h8Kmp69.jpg","rating":7.3}],
     name: 'Mani Ratnam',
     knownFor: 'Nayakan, Iruvar, Ponniyin Selvan, Dil Se',
     era: '1983–Present',
@@ -302,6 +391,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 1592411,
+    profilePath: "/yym15SAcSzIe6xzxOWCgDWiSaZN.jpg",
+    totalFilms: 12,
+    topFilms: [{"id":743563,"title":"Vikram","year":"2022","poster":"/774UV1aCURb4s4JfEFg3IEMu5Zj.jpg","rating":7.6},{"id":587030,"title":"Kaithi","year":"2019","poster":"/nKGt7HVC7rb8TvF10OZQ0nTymcI.jpg","rating":7.6},{"id":949229,"title":"Leo","year":"2023","poster":"/2XUHC4lp3tDsgfFLFygNZ2x2Um9.jpg","rating":6.9},{"id":626392,"title":"Master","year":"2021","poster":"/wjbOlovDadOdPKkSAMohLCjbIsc.jpg","rating":6.6},{"id":1153399,"title":"Coolie","year":"2025","poster":"/kr36awqmziEI5mfUElsHB0pj9zP.jpg","rating":6.2}],
     name: 'Lokesh Kanagaraj',
     knownFor: 'Kaithi, Vikram, Leo, Master',
     era: '2017–Present',
@@ -309,6 +401,9 @@ export const CURATED_DIRECTORS: CuratedDirector[] = [
   },
   {
     id: 91552,
+    profilePath: "/p9fL8NqPX6m5u9cFDo8suAlunaR.jpg",
+    totalFilms: 18,
+    topFilms: [{"id":148284,"title":"Enthiran","year":"2010","poster":"/hai6CSCLxULO1RThjDP3lWAqOtQ.jpg","rating":6.6},{"id":373449,"title":"2.0","year":"2018","poster":"/6EYb9c707fTGrsM3bA0zKk3jNBq.jpg","rating":5.8},{"id":24049,"title":"Sivaji: The Boss","year":"2007","poster":"/t5oPb8q91gdClkyJG2hxyebEglv.jpg","rating":7.1},{"id":263471,"title":"I","year":"2015","poster":"/pZioBfNL0BHl8JZ6P9ddqBNnFuj.jpg","rating":6.7},{"id":19978,"title":"Anniyan","year":"2005","poster":"/c00EX1zqb8DppHIRB6d51kN5Y27.jpg","rating":7.4}],
     name: 'Shankar',
     knownFor: 'Indian, Anniyan, Enthiran, Sivaji',
     era: '1993–Present',

@@ -4,31 +4,32 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from 'react';
 import Home from "./pages/Home";
-import MovieDetail from "./pages/MovieDetail";
-import TVDetail from "./pages/TVDetail";
-import Search from "./pages/Search";
-import Movies from "./pages/Movies";
-import TV from "./pages/TV";
-import Genres from "./pages/Genres";
-import NotFound from "./pages/NotFound";
-import TimeMachinePage from '@/pages/TimeMachinePage';
-import CommunityPage from '@/pages/CommunityPage';
-import UserProfilePage from '@/pages/UserProfilePage';
-import DiscussionsPage from '@/pages/community/DiscussionsPage';
-import ReviewsPage from '@/pages/community/ReviewsPage';
-import CollectionsPage from '@/pages/community/CollectionsPage';
-import SettingsPage from '@/pages/SettingsPage';
-import SchedulePage from '@/pages/SchedulePage';
-import ExplorePage from '@/pages/ExplorePage';
-import LanguagesPage from '@/pages/LanguagesPage';
-import CategoriesPage from '@/pages/CategoriesPage';
-import CountriesPage from '@/pages/CountriesPage';
-import DirectorsPage from '@/pages/DirectorsPage';
-import DirectorDetailPage from '@/pages/DirectorDetailPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { RouteTransitionLoader } from '@/components/RouteTransitionLoader';
+import { TicketLoader } from '@/components/TicketLoader';
+
+const MovieDetail = lazy(() => import("./pages/MovieDetail"));
+const TVDetail = lazy(() => import("./pages/TVDetail"));
+const Search = lazy(() => import("./pages/Search"));
+const Genres = lazy(() => import("./pages/Genres"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const DirectorsPage = lazy(() => import("./pages/DirectorsPage"));
+const DirectorDetailPage = lazy(() => import("./pages/DirectorDetailPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const DiscussionsPage = lazy(() => import("./pages/community/DiscussionsPage"));
+const ReviewsPage = lazy(() => import("./pages/community/ReviewsPage"));
+const CollectionsPage = lazy(() => import("./pages/community/CollectionsPage"));
+const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const TimeMachinePage = lazy(() => import("./pages/TimeMachinePage"));
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
+const LanguagesPage = lazy(() => import("./pages/LanguagesPage"));
+const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
+const CountriesPage = lazy(() => import("./pages/CountriesPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration for better performance
 const queryClient = new QueryClient({
@@ -68,32 +69,34 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <RouteTransitionLoader />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/movies" element={<Navigate to="/explore?type=movie" replace />} />
-            <Route path="/tv" element={<Navigate to="/explore?type=tv" replace />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/genres" element={<Genres />} />
-            <Route path="/directors" element={<DirectorsPage />} />
-            <Route path="/director/:id" element={<DirectorDetailPage />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/movie/:id" element={<MovieDetail />} />
-            <Route path="/tv/:id" element={<TVDetail />} />
-            <Route path="/recommendations" element={<Navigate to="/" replace />} />
-            <Route path="/community" element={<CommunityPage />} />
-            <Route path="/community/discussions" element={<DiscussionsPage />} />
-            <Route path="/community/reviews" element={<ReviewsPage />} />
-            <Route path="/community/collections" element={<CollectionsPage />} />
-            <Route path="/community/user/:userId" element={<UserProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/time-machine" element={<TimeMachinePage />} />
-            <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/languages" element={<LanguagesPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/countries" element={<CountriesPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<TicketLoader fullScreen size="lg" label="Preparing cinema presentation…" />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/movies" element={<Navigate to="/explore?type=movie" replace />} />
+              <Route path="/tv" element={<Navigate to="/explore?type=tv" replace />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/genres" element={<Genres />} />
+              <Route path="/directors" element={<DirectorsPage />} />
+              <Route path="/director/:id" element={<DirectorDetailPage />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/movie/:id" element={<MovieDetail />} />
+              <Route path="/tv/:id" element={<TVDetail />} />
+              <Route path="/recommendations" element={<Navigate to="/" replace />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/community/discussions" element={<DiscussionsPage />} />
+              <Route path="/community/reviews" element={<ReviewsPage />} />
+              <Route path="/community/collections" element={<CollectionsPage />} />
+              <Route path="/community/user/:userId" element={<UserProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/time-machine" element={<TimeMachinePage />} />
+              <Route path="/schedule" element={<SchedulePage />} />
+              <Route path="/languages" element={<LanguagesPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/countries" element={<CountriesPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

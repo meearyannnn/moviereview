@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Tv, Trophy, Flame, Compass, ArrowRight, MessageSquare, Star } from 'lucide-react';
+import {
+  Film,
+  Tv,
+  Trophy,
+  Flame,
+  Compass,
+  ArrowRight,
+  MessageSquare,
+  Star,
+  Sparkles,
+  Crown,
+  Moon,
+  Clapperboard,
+} from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 
 interface RankedItem {
@@ -27,6 +40,10 @@ export const HomeSidebar = () => {
   const [topMovies, setTopMovies] = useState<RankedItem[]>([]);
   const [trendingShows, setTrendingShows] = useState<RankedItem[]>([]);
   const [topRatedShows, setTopRatedShows] = useState<RankedItem[]>([]);
+  const [hiddenGems, setHiddenGems] = useState<RankedItem[]>([]);
+  const [timelessVault, setTimelessVault] = useState<RankedItem[]>([]);
+  const [lateNightThrills, setLateNightThrills] = useState<RankedItem[]>([]);
+  const [bingeChampions, setBingeChampions] = useState<RankedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,41 +52,101 @@ export const HomeSidebar = () => {
       tmdb.getTrending('movie', 'week'),
       tmdb.getTrending('tv', 'week'),
       tmdb.getTopRated('tv'),
+      tmdb.discover(
+        'movie',
+        'vote_average.gte=8.0&vote_count.gte=300&vote_count.lte=4000&sort_by=vote_average.desc'
+      ),
+      tmdb.discover(
+        'movie',
+        'primary_release_date.lte=2002-01-01&vote_average.gte=8.2&vote_count.gte=1000&sort_by=vote_average.desc'
+      ),
+      tmdb.discover('movie', 'with_genres=27|53&sort_by=popularity.desc'),
+      tmdb.discover('tv', 'vote_average.gte=8.2&vote_count.gte=500&sort_by=popularity.desc'),
     ])
-      .then(([movieRes, tvRes, topTvRes]) => {
-        if (!live) return;
-        setTopMovies(
-          (movieRes.results || []).slice(0, 5).map((m: any) => ({
-            id: m.id,
-            title: m.title || m.original_title,
-            poster_path: m.poster_path,
-            year: m.release_date?.slice(0, 4),
-            rating: m.vote_average,
-            type: 'movie',
-          }))
-        );
-        setTrendingShows(
-          (tvRes.results || []).slice(0, 5).map((s: any) => ({
-            id: s.id,
-            title: s.name || s.original_name,
-            poster_path: s.poster_path,
-            year: s.first_air_date?.slice(0, 4),
-            rating: s.vote_average,
-            type: 'tv',
-          }))
-        );
-        setTopRatedShows(
-          (topTvRes.results || []).slice(0, 5).map((s: any) => ({
-            id: s.id,
-            title: s.name || s.original_name,
-            poster_path: s.poster_path,
-            year: s.first_air_date?.slice(0, 4),
-            rating: s.vote_average,
-            type: 'tv',
-          }))
-        );
-        setLoading(false);
-      })
+      .then(
+        ([
+          movieRes,
+          tvRes,
+          topTvRes,
+          gemsRes,
+          vaultRes,
+          thrillsRes,
+          bingeRes,
+        ]) => {
+          if (!live) return;
+          setTopMovies(
+            (movieRes.results || []).slice(0, 5).map((m: any) => ({
+              id: m.id,
+              title: m.title || m.original_title,
+              poster_path: m.poster_path,
+              year: m.release_date?.slice(0, 4),
+              rating: m.vote_average,
+              type: 'movie',
+            }))
+          );
+          setTrendingShows(
+            (tvRes.results || []).slice(0, 5).map((s: any) => ({
+              id: s.id,
+              title: s.name || s.original_name,
+              poster_path: s.poster_path,
+              year: s.first_air_date?.slice(0, 4),
+              rating: s.vote_average,
+              type: 'tv',
+            }))
+          );
+          setTopRatedShows(
+            (topTvRes.results || []).slice(0, 5).map((s: any) => ({
+              id: s.id,
+              title: s.name || s.original_name,
+              poster_path: s.poster_path,
+              year: s.first_air_date?.slice(0, 4),
+              rating: s.vote_average,
+              type: 'tv',
+            }))
+          );
+          setHiddenGems(
+            (gemsRes.results || []).slice(0, 5).map((m: any) => ({
+              id: m.id,
+              title: m.title || m.original_title,
+              poster_path: m.poster_path,
+              year: m.release_date?.slice(0, 4),
+              rating: m.vote_average,
+              type: 'movie',
+            }))
+          );
+          setTimelessVault(
+            (vaultRes.results || []).slice(0, 5).map((m: any) => ({
+              id: m.id,
+              title: m.title || m.original_title,
+              poster_path: m.poster_path,
+              year: m.release_date?.slice(0, 4),
+              rating: m.vote_average,
+              type: 'movie',
+            }))
+          );
+          setLateNightThrills(
+            (thrillsRes.results || []).slice(0, 5).map((m: any) => ({
+              id: m.id,
+              title: m.title || m.original_title,
+              poster_path: m.poster_path,
+              year: m.release_date?.slice(0, 4),
+              rating: m.vote_average,
+              type: 'movie',
+            }))
+          );
+          setBingeChampions(
+            (bingeRes.results || []).slice(0, 5).map((s: any) => ({
+              id: s.id,
+              title: s.name || s.original_name,
+              poster_path: s.poster_path,
+              year: s.first_air_date?.slice(0, 4),
+              rating: s.vote_average,
+              type: 'tv',
+            }))
+          );
+          setLoading(false);
+        }
+      )
       .catch((err) => {
         console.warn('HomeSidebar fetch warning:', err);
         if (live) setLoading(false);
@@ -131,7 +208,7 @@ export const HomeSidebar = () => {
   );
 
   return (
-    <aside aria-label="Trending and popular sidebar" className="space-y-10">
+    <aside aria-label="Trending and popular sidebar" className="space-y-8">
       {/* ── 1. Top Movies This Week ── */}
       <section className="rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-4 sm:p-5 shadow-lg">
         <div className="mb-3 flex items-center justify-between">
@@ -228,7 +305,135 @@ export const HomeSidebar = () => {
         )}
       </section>
 
-      {/* ── 4. Community Buzz & Hot Topics ── */}
+      {/* ── 4. Hidden Gems (Under-the-radar cinematic masterworks) ── */}
+      <section className="rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-4 sm:p-5 shadow-lg">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] shadow-[0_0_12px_rgba(245,197,66,0.2)]">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-extrabold tracking-tight text-white">Hidden Gems</h2>
+              <p className="text-[11px] font-mono text-white/40">Under-the-radar masterpieces</p>
+            </div>
+          </div>
+          <Link
+            to="/explore?sort=top_rated"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-[#f5c542] hover:text-[#ffd875] hover:bg-[#c9a24b]/15 transition-colors"
+          >
+            <span>See all</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-2 py-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-white/[0.03]" />
+            ))}
+          </div>
+        ) : (
+          renderRankedList(hiddenGems, 'rgba(245,197,66,0.9)')
+        )}
+      </section>
+
+      {/* ── 5. Timeless Vault (Classic masterpieces) ── */}
+      <section className="rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-4 sm:p-5 shadow-lg">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] shadow-[0_0_12px_rgba(245,197,66,0.2)]">
+              <Crown className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-extrabold tracking-tight text-white">Timeless Vault</h2>
+              <p className="text-[11px] font-mono text-white/40">Legends that made film history</p>
+            </div>
+          </div>
+          <Link
+            to="/time-machine"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-[#f5c542] hover:text-[#ffd875] hover:bg-[#c9a24b]/15 transition-colors"
+          >
+            <span>See all</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-2 py-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-white/[0.03]" />
+            ))}
+          </div>
+        ) : (
+          renderRankedList(timelessVault, 'rgba(201,162,75,0.9)')
+        )}
+      </section>
+
+      {/* ── 6. Late-Night Thrills (High-pulse suspense & horror) ── */}
+      <section className="rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-4 sm:p-5 shadow-lg">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] shadow-[0_0_12px_rgba(245,197,66,0.2)]">
+              <Moon className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-extrabold tracking-tight text-white">Late-Night Thrills</h2>
+              <p className="text-[11px] font-mono text-white/40">Heart-pounding horror & suspense</p>
+            </div>
+          </div>
+          <Link
+            to="/genres"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-[#f5c542] hover:text-[#ffd875] hover:bg-[#c9a24b]/15 transition-colors"
+          >
+            <span>See all</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-2 py-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-white/[0.03]" />
+            ))}
+          </div>
+        ) : (
+          renderRankedList(lateNightThrills, 'rgba(245,197,66,0.9)')
+        )}
+      </section>
+
+      {/* ── 7. Binge Champions (Addictive series you can't stop) ── */}
+      <section className="rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-4 sm:p-5 shadow-lg">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] shadow-[0_0_12px_rgba(245,197,66,0.2)]">
+              <Clapperboard className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-extrabold tracking-tight text-white">Binge Champions</h2>
+              <p className="text-[11px] font-mono text-white/40">Series you watch in one sitting</p>
+            </div>
+          </div>
+          <Link
+            to="/tv"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-[#f5c542] hover:text-[#ffd875] hover:bg-[#c9a24b]/15 transition-colors"
+          >
+            <span>See all</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-2 py-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-white/[0.03]" />
+            ))}
+          </div>
+        ) : (
+          renderRankedList(bingeChampions, 'rgba(201,162,75,0.9)')
+        )}
+      </section>
+
+      {/* ── 8. Community Buzz & Hot Topics ── */}
       <section className="rounded-3xl border border-[#c9a24b]/20 bg-gradient-to-br from-[#140a0d] to-[#1a0f14] p-4 sm:p-5 shadow-lg">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -275,7 +480,7 @@ export const HomeSidebar = () => {
         </Link>
       </section>
 
-      {/* ── 5. Quick Genres & Explore ── */}
+      {/* ── 9. Quick Genres & Explore ── */}
       <section className="rounded-3xl border border-white/[0.07] bg-white/[0.02] p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">

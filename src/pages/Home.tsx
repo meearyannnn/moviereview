@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Hero } from '@/components/Hero';
+import { HomeTownSquare } from '@/components/home/HomeTownSquare';
 import { MovieRow } from '@/components/MovieRow';
 import { Navbar } from '@/components/Navbar';
 import { TraktAnticipatedShelf } from '@/components/TraktAnticipatedShelf';
@@ -96,10 +96,11 @@ const Home = () => {
       <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
       <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
-      <main className="relative z-10">
-        <Hero />
+      <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* ── Moctale-Inspired Cinema Frontline (Talk Of The Town + Twin Promo Cards) ── */}
+        <HomeTownSquare />
 
-        <div className="mx-auto max-w-7xl space-y-14 px-4 pb-28 pt-8 sm:px-6 md:pb-16 lg:px-8">
+        <div className="space-y-12 pb-28 pt-4 sm:pt-6 md:pb-16">
           <JumpBar />
 
           {fetchRecommended && lastTitle && (
@@ -124,14 +125,19 @@ const Home = () => {
       </main>
 
       <footer className="safe-bottom-content border-t border-[#c9a24b]/20 bg-[#0a0608] pb-28 md:pb-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-10 text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <div>
-            <span className="font-display font-extrabold text-white">
-              Movie<span className="text-[#f5c542]">Guy</span>
-            </span>
-            <span className="ml-3 font-mono text-xs text-white/40">Honest reviews for movies and TV</span>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Link to="/" className="inline-block group focus:outline-none">
+              <img
+                src="/assets/branding/movieguy-hero-tight.png"
+                alt="MovieGuy"
+                className="h-6 sm:h-7 w-auto object-contain transition-all group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+              />
+            </Link>
+            <span className="hidden sm:inline text-white/20">|</span>
+            <span className="font-mono text-xs text-white/40">Honest reviews for cinema &amp; television</span>
           </div>
-          <div className="font-mono text-xs text-white/40">© {new Date().getFullYear()} MovieGuy · Data from TMDB</div>
+          <div className="font-mono text-xs text-white/40">© {new Date().getFullYear()} MovieGuy · Data from TMDB &amp; Trakt</div>
         </div>
       </footer>
     </div>

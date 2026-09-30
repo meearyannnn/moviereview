@@ -47,10 +47,10 @@ export const HomeCuratedShelves: React.FC = () => {
 
   return (
     <div className="space-y-10 my-6">
-      {/* 1. Everyone's Watching */}
+      {/* 1. Trending Worldwide */}
       <CuratedShelfRow
-        title="Everyone's Watching"
-        subtitle="The films & shows taking over the internet"
+        title="Trending Worldwide"
+        subtitle="Global audience favorites & high-heat releases"
         icon={Flame}
         items={talkOfTheTown}
         loading={loading}

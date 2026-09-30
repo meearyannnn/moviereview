@@ -6,9 +6,6 @@ import {
   Star,
   Heart,
   Play,
-  Copy,
-  Check,
-  Ticket,
   ChevronRight,
   Sparkles,
   Flame,
@@ -30,7 +27,6 @@ export const HomeTownSquare: React.FC = () => {
 
   const [items, setItems] = useState<CuratedShelfItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedCode, setCopiedCode] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'movies' | 'shows'>('all');
 
@@ -53,16 +49,6 @@ export const HomeTownSquare: React.FC = () => {
     };
   }, []);
 
-  const handleCopyCode = () => {
-    soundEffects.playChime();
-    navigator.clipboard.writeText('MOVIEGUY100');
-    setCopiedCode(true);
-    toast.success('Promo Code "MOVIEGUY100" copied to clipboard!', {
-      description: 'Use it at checkout to claim Flat 100/- off on your movie bookings.',
-    });
-    setTimeout(() => setCopiedCode(false), 3000);
-  };
-
   const handleSentimentVote = (sentiment: string) => {
     soundEffects.playHoverTick();
     setSelectedSentiment(sentiment);
@@ -77,9 +63,6 @@ export const HomeTownSquare: React.FC = () => {
     if (activeTab === 'shows') return item.media_type === 'tv';
     return true;
   });
-
-  // Pull 3 posters for the promo card fan collage
-  const collagePosters = items.slice(0, 3);
 
   return (
     <section className="relative pt-24 sm:pt-28 pb-6">
@@ -262,109 +245,92 @@ export const HomeTownSquare: React.FC = () => {
 
         {/* ── RIGHT: The Two Moctale-Inspired Cinema Cards ── */}
         <div className="flex flex-col gap-5 shrink-0">
-          {/* ── CARD 1: District Cinemas x MovieGuy Promo Box (Moctale Inspired) ── */}
-          <div className="relative overflow-hidden rounded-3xl border border-[#c9a24b]/30 bg-gradient-to-br from-[#1a0f16] via-[#140a0f] to-[#0a0608] p-5 shadow-2xl shadow-black/80 flex flex-col justify-between group">
-            {/* Background Geometric Cinema Glow & Watermark */}
-            <div className="pointer-events-none absolute -top-10 -right-10 w-44 h-44 bg-[#f5c542]/10 rounded-full blur-3xl" />
-            <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px]" />
+          {/* ── CARD 1: Premiere Marquee Spotlight (Zero Ads, 100% Cinema Content) ── */}
+          {items.length > 0 && (
+            <div className="relative overflow-hidden rounded-3xl border border-[#c9a24b]/30 bg-gradient-to-br from-[#1a0f16] via-[#140a0f] to-[#0a0608] p-5 shadow-2xl shadow-black/80 flex flex-col justify-between group">
+              {/* Background Ambient Glow */}
+              <div className="pointer-events-none absolute -top-10 -right-10 w-44 h-44 bg-[#f5c542]/10 rounded-full blur-3xl" />
+              <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px]" />
 
-            {/* Top Brand Partnership Lockup */}
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="font-display font-black text-sm tracking-wider text-white">
-                    DISTRICT <span className="text-[#c9a24b] font-light">CINEMAS</span>
+              {/* Spotlight Header */}
+              <div className="relative z-10">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)] animate-ping" />
+                    <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#f5c542] uppercase">
+                      MARQUEE SPOTLIGHT
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#c9a24b] px-2 py-0.5 rounded-full bg-[#c9a24b]/15 border border-[#c9a24b]/30">
+                    #1 THIS WEEK
                   </span>
-                  <span className="text-white/40 font-mono text-xs">×</span>
-                  <img
-                    src="/assets/branding/movieguy-hero-tight.png"
-                    alt="MovieGuy"
-                    className="h-4.5 w-auto object-contain drop-shadow-[0_0_8px_rgba(245,197,66,0.4)]"
-                  />
                 </div>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#f5c542] px-2 py-0.5 rounded-full bg-[#f5c542]/15 border border-[#c9a24b]/30">
-                  EXCLUSIVE
-                </span>
-              </div>
 
-              {/* Big Promo Headline */}
-              <div className="my-2">
-                <h2 className="font-display font-black text-xl sm:text-2xl text-white tracking-tight leading-tight">
-                  FLAT 100/- OFF
-                </h2>
-                <p className="font-mono text-xs font-bold text-[#f5c542] tracking-wider uppercase mt-0.5">
-                  USE CODE: <span className="underline decoration-dashed">MOVIEGUY100</span>
-                </p>
-                <p className="text-[10px] font-mono text-white/45 mt-1">
-                  For MovieGuy CineClub Members · Min 2 Admissions
-                </p>
-              </div>
-
-              {/* Dynamic 3-Poster Fan Collage (like in reference screenshot) */}
-              <div className="relative h-32 my-4 flex items-center justify-center overflow-hidden">
-                {collagePosters.map((posterItem, pIdx) => {
-                  const pUrl = posterItem.poster_path
-                    ? tmdb.getImageUrl(posterItem.poster_path, 'w300')
-                    : '/placeholder.svg';
-
-                  let transformStyle = '';
-                  let zIndex = 1;
-                  if (pIdx === 0) {
-                    transformStyle = '-rotate-12 -translate-x-8 translate-y-1';
-                    zIndex = 1;
-                  } else if (pIdx === 1) {
-                    transformStyle = 'z-10 scale-105 shadow-2xl';
-                    zIndex = 10;
-                  } else {
-                    transformStyle = 'rotate-12 translate-x-8 translate-y-1';
-                    zIndex = 2;
-                  }
-
-                  return (
-                    <div
-                      key={`fan_${posterItem.id}_${pIdx}`}
-                      style={{ zIndex }}
-                      className={`absolute w-20 aspect-[2/3] rounded-xl overflow-hidden border border-[#c9a24b]/40 shadow-[0_12px_24px_rgba(0,0,0,0.8)] transition-transform duration-300 group-hover:scale-105 ${transformStyle}`}
-                    >
-                      <img src={pUrl} alt="" className="w-full h-full object-cover" />
+                {/* Spotlight Movie Preview */}
+                <div
+                  onClick={() => navigate(`/${items[0].media_type}/${items[0].id}`)}
+                  className="cursor-pointer group/spotlight block"
+                >
+                  <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden border border-[#c9a24b]/25 bg-black/60 shadow-lg mb-3">
+                    <img
+                      src={
+                        items[0].backdrop_path
+                          ? tmdb.getImageUrl(items[0].backdrop_path, 'w780')
+                          : items[0].poster_path
+                          ? tmdb.getImageUrl(items[0].poster_path, 'w500')
+                          : '/placeholder.svg'
+                      }
+                      alt={items[0].title}
+                      className="w-full h-full object-cover object-center transition-transform duration-500 group-hover/spotlight:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+                    
+                    {/* Floating Trailer Pill */}
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f5c542] text-[#1c120c] font-display font-black text-xs shadow-lg shadow-[#f5c542]/30">
+                        <Play className="w-3 h-3 fill-current" />
+                        Watch Trailer
+                      </span>
+                      {items[0].vote_average && Number(items[0].vote_average) > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-[#f5c542] bg-black/80 px-2 py-0.5 rounded-md border border-[#c9a24b]/30">
+                          <Star className="w-3 h-3 fill-current stroke-none" />
+                          {items[0].vote_average.toFixed(1)}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
 
-            {/* Action Buttons: Copy Code + Book Tickets */}
-            <div className="space-y-2 pt-2 border-t border-[#c9a24b]/20">
-              <div className="grid grid-cols-2 gap-2">
+                  <h3 className="font-display font-extrabold text-base sm:text-lg text-white group-hover/spotlight:text-[#f5c542] transition-colors leading-tight line-clamp-1">
+                    {items[0].title}
+                  </h3>
+                  <p className="mt-1 text-xs font-mono text-white/50">
+                    {items[0].media_type === 'tv' ? 'TV Series' : 'Feature Film'} · {items[0].year || '2026'} · Tonight's Top Choice
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-[#c9a24b]/20 relative z-10">
                 <button
                   type="button"
-                  onClick={handleCopyCode}
+                  onClick={() => navigate(`/${items[0].media_type}/${items[0].id}#reviews`)}
                   className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#c9a24b]/35 bg-black/60 hover:bg-[#c9a24b]/15 text-white text-xs font-mono font-bold tracking-wider uppercase transition-all"
                 >
-                  {copiedCode ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
-                      <span className="text-emerald-400">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-[#c9a24b]" />
-                      <span>MOVIEGUY100</span>
-                    </>
-                  )}
+                  <Star className="w-3.5 h-3.5 text-[#f5c542] fill-current" />
+                  <span>Rate Film</span>
                 </button>
 
-                <Link
-                  to="/explore"
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-lg shadow-[#c9a24b]/20 hover:brightness-110 active:scale-95 transition-all text-center"
+                <button
+                  type="button"
+                  onClick={() => navigate(`/${items[0].media_type}/${items[0].id}`)}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-lg shadow-[#c9a24b]/20 hover:brightness-110 active:scale-95 transition-all"
                 >
-                  <Ticket className="w-3.5 h-3.5" />
-                  <span>Book Tickets</span>
-                </Link>
+                  <span>Full Details</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <p className="text-[9px] font-mono text-right text-white/35">T&amp;C Apply</p>
             </div>
-          </div>
+          )}
 
           {/* ── CARD 2: "Rate with the MovieGuy Meter" (Moctale Inspired) ── */}
           <div className="relative overflow-hidden rounded-3xl border border-[#c9a24b]/25 bg-gradient-to-br from-[#1a120b] via-[#140a0e] to-[#0a0608] p-5 shadow-2xl shadow-black/80 flex flex-col justify-between">

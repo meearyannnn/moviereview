@@ -11,6 +11,9 @@ import {
   Sparkles,
   Play,
   Star,
+  Crown,
+  Moon,
+  Clapperboard,
 } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { WEB_CHANNELS, type WebChannel } from '@/services/webChannels';
@@ -138,6 +141,10 @@ export const ExploreSmartShelves: React.FC = () => {
   const [topMovies, setTopMovies] = useState<Movie[]>([]);
   const [trendingShows, setTrendingShows] = useState<Movie[]>([]);
   const [topRatedShows, setTopRatedShows] = useState<Movie[]>([]);
+  const [hiddenGems, setHiddenGems] = useState<Movie[]>([]);
+  const [timelessVault, setTimelessVault] = useState<Movie[]>([]);
+  const [lateNightThrills, setLateNightThrills] = useState<Movie[]>([]);
+  const [bingeChampions, setBingeChampions] = useState<Movie[]>([]);
 
   // Streaming platform state
   const [activeChannel, setActiveChannel] = useState<WebChannel>(WEB_CHANNELS[0]);
@@ -167,15 +174,54 @@ export const ExploreSmartShelves: React.FC = () => {
       tmdb.getTrending('movie', 'week'),
       tmdb.getTrending('tv', 'day'),
       tmdb.getTopRated('tv'),
+      tmdb.discover(
+        'movie',
+        'vote_average.gte=8.0&vote_count.gte=300&vote_count.lte=4000&sort_by=vote_average.desc'
+      ),
+      tmdb.discover(
+        'movie',
+        'primary_release_date.lte=2002-01-01&vote_average.gte=8.2&vote_count.gte=1000&sort_by=vote_average.desc'
+      ),
+      tmdb.discover('movie', 'with_genres=27|53&sort_by=popularity.desc'),
+      tmdb.discover('tv', 'vote_average.gte=8.2&vote_count.gte=500&sort_by=popularity.desc'),
     ])
-      .then(([allTrendingRes, moviesRes, tvTrendingRes, topTvRes]) => {
-        if (!live) return;
-        setTop10Items((allTrendingRes.results || []).slice(0, 10));
-        setTopMovies((moviesRes.results || []).slice(0, 18).map((m: any) => ({ ...m, media_type: 'movie' })));
-        setTrendingShows((tvTrendingRes.results || []).slice(0, 18).map((t: any) => ({ ...t, media_type: 'tv' })));
-        setTopRatedShows((topTvRes.results || []).slice(0, 18).map((t: any) => ({ ...t, media_type: 'tv' })));
-        setLoadingGeneral(false);
-      })
+      .then(
+        ([
+          allTrendingRes,
+          moviesRes,
+          tvTrendingRes,
+          topTvRes,
+          gemsRes,
+          vaultRes,
+          thrillsRes,
+          bingeRes,
+        ]) => {
+          if (!live) return;
+          setTop10Items((allTrendingRes.results || []).slice(0, 10));
+          setTopMovies(
+            (moviesRes.results || []).slice(0, 18).map((m: any) => ({ ...m, media_type: 'movie' }))
+          );
+          setTrendingShows(
+            (tvTrendingRes.results || []).slice(0, 18).map((t: any) => ({ ...t, media_type: 'tv' }))
+          );
+          setTopRatedShows(
+            (topTvRes.results || []).slice(0, 18).map((t: any) => ({ ...t, media_type: 'tv' }))
+          );
+          setHiddenGems(
+            (gemsRes.results || []).slice(0, 18).map((m: any) => ({ ...m, media_type: 'movie' }))
+          );
+          setTimelessVault(
+            (vaultRes.results || []).slice(0, 18).map((m: any) => ({ ...m, media_type: 'movie' }))
+          );
+          setLateNightThrills(
+            (thrillsRes.results || []).slice(0, 18).map((m: any) => ({ ...m, media_type: 'movie' }))
+          );
+          setBingeChampions(
+            (bingeRes.results || []).slice(0, 18).map((t: any) => ({ ...t, media_type: 'tv' }))
+          );
+          setLoadingGeneral(false);
+        }
+      )
       .catch((err) => {
         console.warn('ExploreSmartShelves load error:', err);
         if (live) setLoadingGeneral(false);
@@ -403,6 +449,50 @@ export const ExploreSmartShelves: React.FC = () => {
         icon={Trophy}
         typeOverride="tv"
         items={topRatedShows}
+        loading={loadingGeneral}
+      />
+
+      {/* ── 6. Hidden Gems (Under-the-radar masterpieces) ── */}
+      <ShelfRow
+        title="Hidden Gems"
+        subtitle="Under-the-radar cinematic masterworks"
+        icon={Sparkles}
+        badgeText="HIGH ACCLAIM"
+        typeOverride="movie"
+        items={hiddenGems}
+        loading={loadingGeneral}
+      />
+
+      {/* ── 7. Timeless Vault (Classic masterpieces) ── */}
+      <ShelfRow
+        title="Timeless Vault"
+        subtitle="Legendary classics that made film history"
+        icon={Crown}
+        badgeText="ALL-TIME"
+        typeOverride="movie"
+        items={timelessVault}
+        loading={loadingGeneral}
+      />
+
+      {/* ── 8. Late-Night Thrills (High-pulse suspense & horror) ── */}
+      <ShelfRow
+        title="Late-Night Thrills"
+        subtitle="Heart-pounding horror & suspense"
+        icon={Moon}
+        badgeText="ADRENALINE"
+        typeOverride="movie"
+        items={lateNightThrills}
+        loading={loadingGeneral}
+      />
+
+      {/* ── 9. Binge Champions (Addictive series you can't stop) ── */}
+      <ShelfRow
+        title="Binge Champions"
+        subtitle="Series you watch in one sitting"
+        icon={Clapperboard}
+        badgeText="ADDICTIVE"
+        typeOverride="tv"
+        items={bingeChampions}
         loading={loadingGeneral}
       />
     </div>

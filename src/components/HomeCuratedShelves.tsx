@@ -1,6 +1,7 @@
 // components/HomeCuratedShelves.tsx
 import React, { useEffect, useState } from 'react';
 import { CuratedShelfRow } from './CuratedShelfRow';
+import { MovieScheduleShelf } from './MovieScheduleShelf';
 import {
   curatedShelvesService,
   type CuratedShelfItem,
@@ -53,7 +54,11 @@ export const HomeCuratedShelves: React.FC = () => {
         icon={Flame}
         items={talkOfTheTown}
         loading={loading}
+        viewAllLink="/movies"
       />
+
+      {/* 2. Movie Release Schedule */}
+      <MovieScheduleShelf />
 
       {/* 2. Worth Watching on Prime */}
       <CuratedShelfRow
@@ -62,6 +67,7 @@ export const HomeCuratedShelves: React.FC = () => {
         logoSrc="/assets/logos/prime.png"
         items={prime}
         loading={loading}
+        viewAllLink="/explore"
       />
 
       {/* 3. Don't Miss These on Netflix */}
@@ -71,6 +77,7 @@ export const HomeCuratedShelves: React.FC = () => {
         logoSrc="/assets/logos/netflix.png"
         items={netflix}
         loading={loading}
+        viewAllLink="/explore"
       />
 
       {/* 4. Don't Miss These on JioHotstar */}
@@ -80,6 +87,7 @@ export const HomeCuratedShelves: React.FC = () => {
         logoSrc="/assets/logos/jiohotstar.svg"
         items={jiohotstar}
         loading={loading}
+        viewAllLink="/explore"
       />
 
       {/* 5. Watch It With District */}
@@ -89,6 +97,7 @@ export const HomeCuratedShelves: React.FC = () => {
         logoSrc="/assets/logos/district.svg"
         items={district}
         loading={loading}
+        viewAllLink="/community"
       />
     </div>
   );

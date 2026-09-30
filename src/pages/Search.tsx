@@ -42,7 +42,7 @@ const MEDIA_FILTERS = [
 ] as const;
 
 const ring =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07090f]';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140a0d]';
 
 // Lowercase, strip accents and punctuation so "Spider-Man: No Way Home" matches "spider man no way home"
 const normalize = (s: string) =>
@@ -233,35 +233,40 @@ export const SearchPage = () => {
 
   const chipClass = (active: boolean) =>
     `rounded-full border px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${ring} ${active
-      ? 'border-red-600 bg-red-600 text-white'
-      : 'border-white/10 bg-white/[0.03] text-white/65 hover:border-white/25 hover:text-white'
+      ? 'border-[#f5c542] bg-[#f5c542] text-[#1c120c] font-black shadow-[0_2px_10px_rgba(245,197,66,0.35)]'
+      : 'border-white/10 bg-white/[0.03] text-white/65 hover:border-[#c9a24b]/40 hover:text-white'
     }`;
 
   const segClass = (active: boolean) =>
-    `inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${ring} ${active ? 'bg-white text-black' : 'text-white/60 hover:bg-white/[0.07] hover:text-white'
+    `inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${ring} ${active ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-sm' : 'text-white/60 hover:bg-white/[0.07] hover:text-white'
     }`;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#07090f] text-slate-50 selection:bg-red-600 selection:text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
       <Navbar />
 
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(ellipse_at_top,rgba(220,38,38,0.16),transparent_65%)]"
-      />
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
-      <main className="relative mx-auto max-w-7xl px-4 pb-36 md:pb-28 safe-bottom-content pt-24 sm:px-6 sm:pt-32 lg:px-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-36 md:pb-28 safe-bottom-content pt-24 sm:px-6 sm:pt-32 lg:px-8">
         {/* Header + search box */}
         <header className="mx-auto mb-10 max-w-2xl text-center">
-          <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-2 flex items-center justify-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+            <span>BOX OFFICE SEARCH</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+          </p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl text-white">
             What do you want to watch?
           </h1>
-          <p className="mt-3 text-sm text-white/50 sm:text-base">
-            Type any movie or series name, or start from an idea below.
+          <p className="mt-2 text-sm text-white/50 sm:text-base font-mono">
+            Search titles across Screen 1 (Movies) and Screen 2 (Series).
           </p>
 
           <div className="relative mt-7">
-            <SearchIcon className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
+            <SearchIcon className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#c9a24b]/70" />
             <input
               ref={inputRef}
               type="text"
@@ -281,7 +286,7 @@ export const SearchPage = () => {
               }}
               placeholder="Search movies and series"
               aria-label="Search movies and series"
-              className="h-14 w-full rounded-full border border-white/10 bg-white/[0.05] pl-14 pr-14 text-base font-medium text-white placeholder-white/35 shadow-2xl shadow-black/40 transition-colors hover:bg-white/[0.07] focus:border-red-500/60 focus:bg-[#0e121c] focus:outline-none focus:ring-4 focus:ring-red-600/10"
+              className="h-14 w-full rounded-full border border-[#c9a24b]/20 bg-[#140a0d] pl-14 pr-14 text-base font-medium text-white placeholder-white/35 shadow-2xl shadow-black/40 transition-colors hover:bg-[#1a0f14] focus:border-[#f5c542] focus:bg-[#140a0d] focus:outline-none focus:ring-4 focus:ring-[#f5c542]/15"
             />
             {query ? (
               <button
@@ -350,17 +355,17 @@ export const SearchPage = () => {
                 ))}
               </div>
 
-              <label className="relative flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-3 pr-2 text-xs text-white/60 focus-within:ring-2 focus-within:ring-red-500/70">
-                <ArrowUpDown className="h-3.5 w-3.5" />
+              <label className="relative flex items-center gap-1.5 rounded-full border border-[#c9a24b]/20 bg-[#140a0d] py-1.5 pl-3 pr-2 text-xs text-white/70 focus-within:ring-2 focus-within:ring-[#f5c542]">
+                <ArrowUpDown className="h-3.5 w-3.5 text-[#c9a24b]" />
                 <span className="sr-only">Sort by</span>
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value as SortBy)}
                   className="cursor-pointer bg-transparent pr-1 font-semibold text-white/90 outline-none"
                 >
-                  <option value="best" className="bg-[#111520]">Best match</option>
-                  <option value="rating" className="bg-[#111520]">Highest rated</option>
-                  <option value="latest" className="bg-[#111520]">Newest</option>
+                  <option value="best" className="bg-[#140a0d] text-white">Best match</option>
+                  <option value="rating" className="bg-[#140a0d] text-white">Highest rated</option>
+                  <option value="latest" className="bg-[#140a0d] text-white">Newest</option>
                 </select>
               </label>
             </div>
@@ -391,14 +396,14 @@ export const SearchPage = () => {
 
         {/* Error */}
         {!isSearching && hasError && (
-          <div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-dashed border-red-500/30 py-16 text-center">
-            <AlertCircle className="h-8 w-8 text-red-400" />
+          <div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-dashed border-[#c9a24b]/30 bg-[#140a0d] py-16 text-center">
+            <AlertCircle className="h-8 w-8 text-[#f5c542]" />
             <h3 className="font-display text-lg font-bold">Search failed</h3>
             <p className="px-6 text-sm text-white/50">Check your connection and try again.</p>
             <button
               type="button"
               onClick={() => runSearch(query)}
-              className={`mt-1 rounded-full bg-red-600 px-5 py-2 text-xs font-semibold text-white hover:bg-red-500 ${ring}`}
+              className={`mt-1 rounded-full bg-[#f5c542] px-5 py-2 text-xs font-bold text-[#1c120c] hover:bg-[#c9a24b] ${ring}`}
             >
               Try again
             </button>

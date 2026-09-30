@@ -279,19 +279,19 @@ export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
             )}
 
             {/* Tabs (stay visible while scrolling the grid) */}
-            <div className="sticky top-0 z-10 border-y border-white/[0.08] bg-[#0c0f17]/95 px-4 py-3 backdrop-blur sm:px-8">
-              <div role="tablist" aria-label="Filter credits" className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-black/40 p-1">
+            <div className="sticky top-0 z-10 border-y border-[#c9a24b]/20 bg-[#140a0d]/95 px-4 py-3 backdrop-blur sm:px-8">
+              <div role="tablist" aria-label="Filter credits" className="grid grid-cols-3 gap-1 rounded-xl border border-[#c9a24b]/20 bg-black/40 p-1">
                 {tabs.map(({ key, label }) => (
                   <button
                     key={key}
                     role="tab"
                     aria-selected={filter === key}
                     onClick={() => setFilter(key)}
-                    className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 ${filter === key ? 'bg-red-600 text-white shadow-sm' : 'text-white/60 hover:text-white'
+                    className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 ${filter === key ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-sm' : 'text-white/60 hover:text-white'
                       }`}
                   >
                     {label}
-                    <span className={`text-xs ${filter === key ? 'text-white/80' : 'text-white/35'}`}>
+                    <span className={`text-xs ${filter === key ? 'text-[#1c120c]/70 font-bold' : 'text-white/35'}`}>
                       {counts[key]}
                     </span>
                   </button>
@@ -317,7 +317,7 @@ export const ActorFilmographyModal: React.FC<ActorFilmographyModalProps> = ({
                         onClick={() => handleSelectWork(credit)}
                         className="group min-w-0 text-left focus-visible:outline-none"
                       >
-                        <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-neutral-900 transition-colors group-hover:border-red-500/60 group-focus-visible:ring-2 group-focus-visible:ring-white/70">
+                        <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-neutral-900 transition-colors group-hover:border-[#f5c542]/60 group-focus-visible:ring-2 group-focus-visible:ring-[#f5c542]/70">
                           <img
                             src={`https://image.tmdb.org/t/p/w300${credit.poster_path}`}
                             alt=""

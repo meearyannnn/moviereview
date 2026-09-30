@@ -43,11 +43,7 @@ export const communityReviewsService = {
           review_text,
           spoiler,
           likes,
-          created_at,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
+          created_at
         `)
         .eq('media_id', mediaId)
         .eq('media_type', mediaType)
@@ -58,9 +54,31 @@ export const communityReviewsService = {
         return [];
       }
 
+      if (!data || data.length === 0) return [];
+
+      // 2-step profile fetch
+      const userIds = Array.from(new Set(data.map((r: any) => r.user_id).filter(Boolean)));
+      const profileMap = new Map<string, { username: string; avatar_url: string }>();
+
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (profs) {
+          profs.forEach((p) => {
+            profileMap.set(p.id, {
+              username: p.username || 'Cinephile',
+              avatar_url: p.avatar_url || '',
+            });
+          });
+        }
+      }
+
       // Check liked by current user if logged in
       let likedReviewIds = new Set<string>();
-      if (currentUserId && data && data.length > 0) {
+      if (currentUserId && data.length > 0) {
         const { data: likesData } = await supabase
           .from('review_likes')
           .select('review_id')
@@ -72,11 +90,11 @@ export const communityReviewsService = {
         }
       }
 
-      return (data || []).map((row: any) => ({
+      return data.map((row: any) => ({
         id: row.id,
         user_id: row.user_id,
-        username: row.profiles?.username || 'Cinephile',
-        avatar_url: row.profiles?.avatar_url || '',
+        username: profileMap.get(row.user_id)?.username || 'Cinephile',
+        avatar_url: profileMap.get(row.user_id)?.avatar_url || '',
         media_id: row.media_id,
         media_type: row.media_type,
         rating: Number(row.rating),

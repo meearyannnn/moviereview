@@ -6,40 +6,43 @@
 
 @layer base {
 
-  /* Dark cinema theme: cool near-black surfaces, crimson accent */
+  /* Dark cinema Box Office theme: obsidian velvet surfaces, warm popcorn yellow & brass gold accent */
   :root {
-    --background: 228 45% 4%;
-    /* #060810 */
-    --foreground: 0 0% 100%;
-    --card: 227 37% 7%;
-    /* #0c0f1a */
-    --card-foreground: 0 0% 100%;
-    --popover: 227 37% 7%;
-    --popover-foreground: 0 0% 100%;
-    --muted: 228 20% 12%;
-    --muted-foreground: 0 0% 68%;
-    --border: 228 15% 15%;
-    --input: 228 15% 15%;
-    --ring: 0 84% 50%;
+    --background: 340 33% 3%;
+    /* #0a0608 */
+    --foreground: 40 35% 95%;
+    --card: 340 28% 6%;
+    /* #140a0d */
+    --card-foreground: 40 35% 95%;
+    --popover: 340 28% 6%;
+    --popover-foreground: 40 35% 95%;
+    --muted: 340 20% 10%;
+    --muted-foreground: 40 10% 65%;
+    --border: 38 35% 18%;
+    --input: 38 30% 16%;
+    --ring: 45 90% 55%;
     --destructive: 0 85% 50%;
     --destructive-foreground: 0 0% 100%;
-    --sidebar-border: 228 15% 14%;
-    --sidebar-ring: 0 84% 50%;
+    --sidebar-border: 38 35% 16%;
+    --sidebar-ring: 45 90% 55%;
     --radius: 0.75rem;
 
-    /* ── MovieGuy design tokens ── */
-    --sc-bg: #060810;
-    --sc-surface: #0b0d13;
-    --sc-card: #111520;
-    --sc-card-hover: #171c2b;
-    --sc-border: rgba(255, 255, 255, 0.08);
-    --sc-border-glow: rgba(220, 38, 38, 0.50);
+    /* ── MovieGuy Cinema design tokens ── */
+    --sc-bg: #0a0608;
+    --sc-surface: #140a0d;
+    --sc-card: #1a0f14;
+    --sc-card-hover: #24151c;
+    --sc-border: rgba(201, 162, 75, 0.20);
+    --sc-border-glow: rgba(201, 162, 75, 0.50);
 
-    --sc-accent: #dc2626;
-    --sc-accent-2: #ef4444;
-    --sc-accent-glow: rgba(220, 38, 38, 0.30);
-    --sc-red-dark: #991b1b;
-    --sc-red-bold: #b91c1c;
+    --sc-accent: #f5c542;
+    --sc-accent-2: #c9a24b;
+    --sc-accent-glow: rgba(245, 197, 66, 0.35);
+    --sc-gold: #c9a24b;
+    --sc-paper: #f3e9d2;
+    --sc-ink: #2a1a14;
+    --sc-red-dark: #8c1c2b;
+    --sc-red-bold: #a82234;
 
     /* Verdict tiers (shared by Meter + Reviews) */
     --tier-hard-pass: #ef4444;
@@ -165,7 +168,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 38, 38, 0.55);
+    background: rgba(201, 162, 75, 0.6);
   }
 
   .scrollbar-hide {
@@ -229,13 +232,13 @@
 
   /* ── Primary button ── */
   .btn-cinema-gold {
-    background: var(--sc-accent);
-    color: #ffffff;
+    background: #f5c542;
+    color: #1c120c;
     font-family: var(--font-body);
-    font-weight: 700;
+    font-weight: 800;
     border-radius: 9999px;
     padding: 0.75rem 1.75rem;
-    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.28);
+    box-shadow: 0 6px 20px rgba(245, 197, 66, 0.35);
     transition: background-color 0.2s ease, transform 0.12s ease;
     display: inline-flex;
     align-items: center;
@@ -244,7 +247,7 @@
   }
 
   .btn-cinema-gold:hover {
-    background: var(--sc-accent-2);
+    background: #e6b738;
   }
 
   .btn-cinema-gold:active {
@@ -311,7 +314,7 @@
     font-family: var(--font-display);
     font-style: normal;
     font-weight: 700;
-    color: var(--sc-accent-2);
+    color: var(--sc-accent);
     padding-left: 0.12em;
   }
 
@@ -319,7 +322,7 @@
   .cinema-divider {
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, rgba(220, 38, 38, 0.5) 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+    background: linear-gradient(90deg, rgba(201, 162, 75, 0.7) 0%, rgba(245, 197, 66, 0.2) 50%, transparent 100%);
   }
 
   /* ── Rating ring ── */

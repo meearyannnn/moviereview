@@ -108,23 +108,23 @@ export const CineAiCopilot = () => {
             soundEffects.playSwoosh();
             setIsOpen(true);
           }}
-          className="fixed bottom-[76px] right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#111520]/85 hover:bg-[#111520] border border-white/15 hover:border-purple-400/50 backdrop-blur-xl shadow-xl shadow-black/80 flex items-center justify-center text-red-500 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 group touch-feedback"
+          className="fixed bottom-[76px] right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-[#c9a24b]/30 backdrop-blur-xl shadow-xl shadow-black/80 flex items-center justify-center text-[#f5c542] hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 group touch-feedback"
           aria-label="Open CineAI Copilot"
           title="Ask CineAI Copilot (Press C)"
         >
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 group-hover:rotate-12 transition-transform" />
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#f5c542] group-hover:rotate-12 transition-transform" />
         </button>
       )}
 
       {/* -- Chat Drawer Window -- */}
       {isOpen && (
-        <div className="fixed inset-x-2 bottom-16 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] max-h-[80vh] h-[80vh] rounded-3xl overflow-hidden bg-[#0d1017] border border-white/15 shadow-2xl shadow-black flex flex-col animate-in slide-in-from-bottom-6 zoom-in-95 duration-200 z-50">
+        <div className="fixed inset-x-2 bottom-16 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] max-h-[80vh] h-[80vh] rounded-3xl overflow-hidden bg-[#140a0d] border border-[#c9a24b]/25 shadow-2xl shadow-black flex flex-col animate-in slide-in-from-bottom-6 zoom-in-95 duration-200 z-50">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-gradient-to-r from-purple-900/30 via-black/40 to-transparent backdrop-blur-xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#c9a24b]/20 bg-gradient-to-r from-[#c9a24b]/20 via-black/40 to-transparent backdrop-blur-xl">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-amber-400 p-0.5 flex items-center justify-center shadow-md shadow-purple-500/20">
-                <div className="w-full h-full bg-[#0d1017] rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-red-500" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c9a24b] to-[#f5c542] p-0.5 flex items-center justify-center shadow-md shadow-[#c9a24b]/20">
+                <div className="w-full h-full bg-[#140a0d] rounded-[10px] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-[#f5c542]" />
                 </div>
               </div>
               <div>
@@ -134,7 +134,7 @@ export const CineAiCopilot = () => {
                     Online
                   </span>
                 </h3>
-                <p className="text-[10px] text-white/50">Personal Cinema Intelligence</p>
+                <p className="text-[10px] text-[#c9a24b]/70 font-mono">Personal Cinema Intelligence</p>
               </div>
             </div>
 
@@ -159,7 +159,7 @@ export const CineAiCopilot = () => {
                 <div
                   className={`max-w-[88%] p-3.5 rounded-2xl ${
                     msg.sender === 'user'
-                      ? 'bg-red-600 text-white font-extrabold font-medium shadow-md shadow-red-600/25 rounded-br-sm'
+                      ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/25 rounded-br-sm'
                       : 'bg-white/[0.05] border border-white/10 text-white/90 rounded-bl-sm leading-relaxed'
                   }`}
                 >
@@ -176,7 +176,7 @@ export const CineAiCopilot = () => {
                           soundEffects.playHoverTick();
                           navigate(`/movie/${movie.id}`);
                         }}
-                        className="group flex gap-3 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-red-500/40 transition-all cursor-pointer"
+                        className="group flex gap-3 p-2.5 rounded-xl bg-black/40 hover:bg-[#1a0f14] border border-[#c9a24b]/20 hover:border-[#f5c542]/50 transition-all cursor-pointer"
                       >
                         <img
                           src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : ''}
@@ -186,12 +186,12 @@ export const CineAiCopilot = () => {
                         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
-                              <h4 className="font-display font-bold text-xs text-white truncate group-hover:text-red-400 transition-colors">
+                              <h4 className="font-display font-bold text-xs text-white truncate group-hover:text-[#f5c542] transition-colors">
                                 {movie.title}
                               </h4>
                               {movie.vote_average > 0 && (
-                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-500">
-                                  <Star className="w-2.5 h-2.5 fill-red-500" />
+                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#f5c542]">
+                                  <Star className="w-2.5 h-2.5 fill-[#f5c542]" />
                                   {movie.vote_average.toFixed(1)}
                                 </span>
                               )}
@@ -203,11 +203,11 @@ export const CineAiCopilot = () => {
                           </div>
 
                           <div className="flex items-center justify-between pt-1 text-[10px]">
-                            <span className="text-purple-300 font-semibold truncate max-w-[140px]">
+                            <span className="text-[#f3e9d2] font-semibold truncate max-w-[140px]">
                               {movie.matchReason}
                             </span>
-                            <span className="flex items-center gap-1 text-red-500 font-extrabold group-hover:translate-x-0.5 transition-transform">
-                              <Play className="w-2.5 h-2.5 fill-red-500" />
+                            <span className="flex items-center gap-1 text-[#f5c542] font-bold group-hover:translate-x-0.5 transition-transform">
+                              <Play className="w-2.5 h-2.5 fill-[#f5c542]" />
                               Stream
                             </span>
                           </div>

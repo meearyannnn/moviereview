@@ -219,11 +219,11 @@ const FilmStrip: React.FC<{ dist: VerdictDist; leadKey: TierKey }> = ({ dist, le
 
           const boxShadow = isAC
             ? (isLead
-                ? '0 0 26px rgba(217,70,239,0.75), 0 0 50px rgba(168,85,247,0.45), inset 0 0 0 1px rgba(253,244,255,0.7)'
-                : '0 0 16px rgba(217,70,239,0.5), inset 0 0 0 1px rgba(245,208,254,0.4)')
+              ? '0 0 26px rgba(217,70,239,0.75), 0 0 50px rgba(168,85,247,0.45), inset 0 0 0 1px rgba(253,244,255,0.7)'
+              : '0 0 16px rgba(217,70,239,0.5), inset 0 0 0 1px rgba(245,208,254,0.4)')
             : (isLead
-                ? `0 0 18px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.25)`
-                : 'inset 0 0 0 1px rgba(255,255,255,0.08)');
+              ? `0 0 18px ${t.color}55, inset 0 0 0 1px rgba(255,255,255,0.25)`
+              : 'inset 0 0 0 1px rgba(255,255,255,0.08)');
 
           return (
             <div
@@ -325,25 +325,25 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
   };
 
   return (
-    <div className={`w-full rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0b0d13] ${className}`}>
+    <div className={`w-full rounded-2xl overflow-hidden border border-[#c9a24b]/25 bg-[#140c10] shadow-xl ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#c9a24b]/15">
         <div className="flex items-center gap-2.5">
-          <div className="w-5 h-5 rounded-md bg-[#dc2626]/20 border border-[#dc2626]/40 flex items-center justify-center">
-            <Flame className="w-3.5 h-3.5 text-[#dc2626]" />
+          <div className="w-5 h-5 rounded-md bg-[#c9a24b]/20 border border-[#c9a24b]/40 flex items-center justify-center">
+            <Flame className="w-3.5 h-3.5 text-[#c9a24b]" />
           </div>
-          <h3 className="font-display font-black text-sm tracking-wider uppercase text-white">MovieGuy Meter</h3>
-          
+          <h3 className="font-display font-extrabold text-sm tracking-wider uppercase text-white">MovieGuy Meter</h3>
+
           {communityData && communityData.total_reviews > 0 && (
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600/15 border border-red-500/30 text-[10px] font-mono text-red-400 font-semibold">
-              <Sparkles className="w-2.5 h-2.5 text-red-500" />
-              Community Influenced ({communityData.total_reviews})
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[10px] font-mono text-[#f5c542] font-semibold">
+              <Sparkles className="w-2.5 h-2.5 text-[#c9a24b]" />
+              Community Consensus ({communityData.total_reviews})
             </span>
           )}
         </div>
-        <span className="flex items-center gap-1.5 text-xs text-white/45">
-          <Users className="w-3.5 h-3.5" />
-          <span className="font-semibold text-white/80 tabular-nums">{votes.toLocaleString()}</span> votes
+        <span className="flex items-center gap-1.5 text-xs font-mono text-white/50">
+          <Users className="w-3.5 h-3.5 text-[#c9a24b]" />
+          <span className="font-bold text-[#f5c542] tabular-nums">{votes.toLocaleString()}</span> votes
         </span>
       </div>
 
@@ -351,11 +351,11 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
         {/* Score row */}
         <div className="flex items-end justify-between gap-4">
           <div className="flex items-baseline gap-2">
-            <span className="font-sans font-black text-5xl sm:text-6xl leading-none tracking-tight text-white tabular-nums">
+            <span className="font-display font-extrabold text-5xl sm:text-6xl leading-none tracking-tight text-[#f5c542] tabular-nums">
               {recommendPct}
-              <span className="text-2xl sm:text-3xl text-white/40">%</span>
+              <span className="text-2xl sm:text-3xl text-[#f5c542]/50 font-mono">%</span>
             </span>
-            <span className="text-sm text-white/45 font-medium">recommend</span>
+            <span className="text-xs font-mono uppercase tracking-wider text-white/50 font-medium">recommend</span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -405,11 +405,10 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
                   </span>
                 </div>
                 <div
-                  className={`mt-1 pl-3.5 text-xl font-black tabular-nums ${
-                    isAC
-                      ? 'bg-gradient-to-r from-pink-200 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(217,70,239,0.55)]'
-                      : ''
-                  }`}
+                  className={`mt-1 pl-3.5 text-xl font-black tabular-nums ${isAC
+                    ? 'bg-gradient-to-r from-pink-200 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(217,70,239,0.55)]'
+                    : ''
+                    }`}
                   style={!isAC ? { color: t.color } : {}}
                 >
                   {dist[t.key]}%

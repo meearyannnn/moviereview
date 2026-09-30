@@ -64,25 +64,26 @@ const GenresPage = () => {
   const accentColor = selectedGenre ? (GENRE_COLORS[selectedGenre.name] || '#ef4444') : '#ef4444';
 
   return (
-    <div className="min-h-screen bg-[#060810] text-white overflow-x-hidden selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen bg-[#0a0608] text-white overflow-x-hidden selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
       <Navbar />
 
-      {/* Ambient glow from selected genre */}
-      <div
-        className="pointer-events-none fixed top-0 left-0 w-full h-[40vh] opacity-[0.06] blur-[120px] transition-all duration-700"
-        style={{ background: `radial-gradient(ellipse at 30% 0%, ${accentColor}, transparent 70%)` }}
-      />
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
-      <div className="pt-24 sm:pt-28 pb-28 md:pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pt-24 sm:pt-28 pb-28 md:pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* ── Header ── */}
         <div className="mb-10">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-2">
-            Categories & Themes
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-2 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+            <span>CATEGORIES & THEMES</span>
           </p>
           <h1 className="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight leading-none">
             Browse by Genre
           </h1>
+          <div className="w-24 border-t border-[#c9a24b]/40 mt-3" />
         </div>
 
         {/* ── Genre pill grid ── */}

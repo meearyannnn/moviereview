@@ -1,43 +1,29 @@
-// CineVibeMeter.tsx — Prestigious Critic Consensus & Film Profile Console
-// Comprehensive multi-source agreement, attribute spectrum, and critical consensus.
-import React, { useEffect, useMemo, useState } from 'react';
-import { Award, CheckCircle2, TrendingUp, Sparkles, Layers, ShieldCheck } from 'lucide-react';
+// CineVibeMeter.tsx — the film's reception as a dark theatre ticket.
+// Main part: verdict, ratings by site, what it does well (all shown as theatre seats).
+// Stub (bottom on phones): the overall score. Gold on dark, so it sits with the rest of the page.
+import React, { useMemo } from 'react';
 import { type Movie } from '@/services/tmdb';
 import { type OmdbMovieData } from '@/services/omdb';
 import {
   calculateIntelligentScore,
-  calculateVibeChartData,
   type MultiSourceRatings,
 } from '@/lib/cineAiEngine';
 
-const reducedMotion = () =>
-  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const GOLD = '#f2c46d';
 
-const accentFor = (score: number) => {
-  if (score >= 85) return { color: '#d946ef', label: 'Masterpiece', bg: 'rgba(217, 70, 239, 0.15)', border: 'rgba(217, 70, 239, 0.4)' };
-  if (score >= 78) return { color: '#10b981', label: 'Universal Acclaim', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.4)' };
-  if (score >= 65) return { color: '#38bdf8', label: 'Strong Consensus', bg: 'rgba(56, 189, 248, 0.15)', border: 'rgba(56, 189, 248, 0.4)' };
-  if (score >= 50) return { color: '#f59e0b', label: 'Mixed Reception', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)' };
-  return { color: '#ef4444', label: 'Critical Pan', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.4)' };
-};
-
-const qualitativeLabel = (val: number) => {
-  if (val >= 88) return 'Exceptional';
-  if (val >= 78) return 'Superb';
-  if (val >= 68) return 'Polished';
-  if (val >= 55) return 'Solid';
-  return 'Mixed';
+const wordFor = (val: number) => {
+  if (val >= 88) return 'Excellent';
+  if (val >= 78) return 'Very good';
+  if (val >= 68) return 'Good';
+  if (val >= 55) return 'Okay';
+  return 'Weak';
 };
 
 interface Source {
   key: string;
   label: string;
-  value: number; // 0-100 scale
+  value: number; // 0-100
   display: string;
-  badge: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
 }
 
 interface CineVibeMeterProps {
@@ -45,8 +31,26 @@ interface CineVibeMeterProps {
   runtime?: number;
   imdbRating?: number | null;
   omdbData?: OmdbMovieData | null;
+  /** Set --page on this element to your page background so the ticket notches blend in. */
   className?: string;
 }
+
+// A row of theatre seats. Filled seats = the score.
+const Seats: React.FC<{ filled: number; total: number }> = ({ filled, total }) => (
+  <span aria-hidden="true" className="flex gap-[3px]">
+    {Array.from({ length: total }, (_, i) => (
+      <span
+        key={i}
+        className="h-3 w-2 rounded-t-[5px] rounded-b-[2px]"
+        style={{ backgroundColor: i < filled ? GOLD : 'rgba(255,255,255,0.12)' }}
+      />
+    ))}
+  </span>
+);
+
+const Notch: React.FC<{ className: string }> = ({ className }) => (
+  <span aria-hidden="true" className={`absolute h-5 w-5 rounded-full bg-[var(--page,#060811)] ${className}`} />
+);
 
 export const CineVibeMeter: React.FC<CineVibeMeterProps> = ({
   movie,
@@ -55,296 +59,137 @@ export const CineVibeMeter: React.FC<CineVibeMeterProps> = ({
   omdbData,
   className = '',
 }) => {
-  const [ready, setReady] = useState(reducedMotion());
-
-  useEffect(() => {
-    if (ready) return;
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setReady(true)));
-    return () => cancelAnimationFrame(id);
-  }, [ready]);
-
   const releaseDate = (movie as any).release_date || (movie as any).first_air_date;
   const isReleased = useMemo(() => !!releaseDate && new Date(releaseDate) <= new Date(), [releaseDate]);
 
-  const multiRatings: MultiSourceRatings = useMemo(() => ({
-    imdbRating: omdbData?.imdbRating ?? imdbRating,
-    rottenTomatoes: omdbData?.rottenTomatoesNum,
-    metascore: omdbData?.metascore,
-    tmdbRating: movie.vote_average,
-    tmdbVoteCount: movie.vote_count,
-    awards: omdbData?.awards,
-  }), [omdbData, imdbRating, movie.vote_average, movie.vote_count]);
+  const multiRatings: MultiSourceRatings = useMemo(
+    () => ({
+      imdbRating: omdbData?.imdbRating ?? imdbRating,
+      rottenTomatoes: omdbData?.rottenTomatoesNum,
+      metascore: omdbData?.metascore,
+      tmdbRating: movie.vote_average,
+      tmdbVoteCount: movie.vote_count,
+      awards: omdbData?.awards,
+    }),
+    [omdbData, imdbRating, movie.vote_average, movie.vote_count]
+  );
 
   const intel = useMemo(
     () => calculateIntelligentScore(movie, runtime, multiRatings),
     [movie, runtime, multiRatings]
   );
 
-  const vibeChart = useMemo(() => calculateVibeChartData(movie), [movie]);
-
   const sources: Source[] = useMemo(() => {
     const list: Source[] = [];
+    const valid = (n: unknown) => n != null && !isNaN(Number(n)) && Number(n) > 0;
+
     const imdb = omdbData?.imdbRating ?? imdbRating;
     const rt = omdbData?.rottenTomatoesNum;
     const meta = omdbData?.metascore;
 
-    if (imdb != null && !isNaN(Number(imdb)) && Number(imdb) > 0) {
-      list.push({
-        key: 'imdb',
-        label: 'IMDb Audience',
-        value: Number(imdb) * 10,
-        display: `${Number(imdb).toFixed(1)} / 10`,
-        badge: 'IMDb',
-        color: '#f5c518',
-        bgColor: 'rgba(245, 197, 24, 0.12)',
-        borderColor: 'rgba(245, 197, 24, 0.35)',
-      });
-    }
-
-    if (rt != null && !isNaN(Number(rt))) {
-      list.push({
-        key: 'rt',
-        label: 'Rotten Tomatoes',
-        value: Number(rt),
-        display: `${rt}% Fresh`,
-        badge: 'RT',
-        color: Number(rt) >= 60 ? '#ef4444' : '#6b7280',
-        bgColor: Number(rt) >= 60 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(107, 114, 128, 0.12)',
-        borderColor: Number(rt) >= 60 ? 'rgba(239, 68, 68, 0.35)' : 'rgba(107, 114, 128, 0.35)',
-      });
-    }
-
-    if (meta != null && !isNaN(Number(meta)) && Number(meta) > 0) {
-      list.push({
-        key: 'meta',
-        label: 'Metacritic',
-        value: Number(meta),
-        display: `${meta} Metascore`,
-        badge: 'META',
-        color: Number(meta) >= 61 ? '#10b981' : Number(meta) >= 40 ? '#f59e0b' : '#ef4444',
-        bgColor: Number(meta) >= 61 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-        borderColor: Number(meta) >= 61 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)',
-      });
-    }
-
-    if (movie.vote_average && movie.vote_average > 0) {
-      list.push({
-        key: 'tmdb',
-        label: 'TMDB Cinephiles',
-        value: movie.vote_average * 10,
-        display: `${movie.vote_average.toFixed(1)} / 10`,
-        badge: 'TMDB',
-        color: '#01b4e4',
-        bgColor: 'rgba(1, 180, 228, 0.12)',
-        borderColor: 'rgba(1, 180, 228, 0.35)',
-      });
-    }
+    if (valid(imdb)) list.push({ key: 'imdb', label: 'IMDb', value: Number(imdb) * 10, display: `${Number(imdb).toFixed(1)}/10` });
+    if (valid(rt)) list.push({ key: 'rt', label: 'Rotten Tomatoes', value: Number(rt), display: `${rt}%` });
+    if (valid(meta)) list.push({ key: 'meta', label: 'Metacritic', value: Number(meta), display: `${meta}/100` });
+    if (valid(movie.vote_average)) list.push({ key: 'tmdb', label: 'TMDB', value: movie.vote_average * 10, display: `${movie.vote_average.toFixed(1)}/10` });
 
     return list;
   }, [omdbData, imdbRating, movie.vote_average]);
 
   if (!isReleased) return null;
 
-  const accent = accentFor(intel.overallScore);
   const b = intel.breakdown;
-
-  const attributes = [
-    { key: 'story', label: 'Story & Craft', desc: 'Screenplay, direction & structural flow', val: b?.storyCraft ?? 80, color: '#38bdf8' },
-    { key: 'immersion', label: 'Immersion', desc: 'World-building, cinematography & sound', val: b?.immersion ?? 75, color: '#a855f7' },
-    { key: 'resonance', label: 'Resonance', desc: 'Thematic depth & emotional staying power', val: b?.resonance ?? 78, color: '#10b981' },
-    { key: 'rewatch', label: 'Pacing & Replay', desc: 'Rhythm, momentum & replay factor', val: b?.rewatchability ?? 72, color: '#f59e0b' },
+  const strengths = [
+    { key: 'story', label: 'Story', val: b?.storyCraft ?? 80 },
+    { key: 'immersion', label: 'Look and sound', val: b?.immersion ?? 75 },
+    { key: 'resonance', label: 'Emotional impact', val: b?.resonance ?? 78 },
+    { key: 'rewatch', label: 'Worth rewatching', val: b?.rewatchability ?? 72 },
   ];
 
   return (
-    <div className={`w-full rounded-2xl overflow-hidden border border-white/[0.08] bg-[#090b10] shadow-[0_20px_48px_rgba(0,0,0,0.6)] ${className}`}>
-      {/* ── Editorial Header ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.01]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-red-600/15 border border-red-500/30 flex items-center justify-center text-red-500">
-            <Award className="w-3.5 h-3.5" />
-          </div>
-          <div>
-            <h3 className="font-display font-bold text-xs uppercase tracking-wider text-white/90">
-              Critics Consensus & Film Profile
-            </h3>
-          </div>
+    <section
+      aria-label="How critics and audiences rated this film"
+      className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#101118] text-white sm:flex-row ${className}`}
+    >
+      {/* thin inner frame, like the printed border on a real ticket */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-2 rounded-xl border border-white/[0.05]" />
+
+      {/* ── Main ticket ── */}
+      <div className="relative min-w-0 flex-1 p-6 sm:p-8">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm font-semibold" style={{ color: GOLD }}>Admit one</p>
+          <p className="text-xs text-white/40">{sources.length} {sources.length === 1 ? 'site' : 'sites'} · {intel.confidence} confidence</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/[0.04] border border-white/[0.08] text-white/70">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>{intel.confidence} Confidence</span>
-            <span className="text-white/30">•</span>
-            <span className="text-white/50">{sources.length} Verified Sources</span>
-          </span>
-        </div>
-      </div>
+        <h3 className="mt-2 font-display text-2xl sm:text-3xl font-bold">{intel.verdict}</h3>
+        {intel.consensusDescription && (
+          <p className="mt-1.5 max-w-[60ch] text-sm text-white/50">{intel.consensusDescription}</p>
+        )}
 
-      <div className="p-5 sm:p-6 space-y-6">
-        {/* ── Top Hero: Master Score + Attribute Console ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.35fr] gap-6 items-center">
-          {/* Left Column: Overall Index */}
-          <div className="space-y-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-white/40 block mb-1">
-                Multi-Critic Weighted Index
-              </span>
-              <div className="flex items-baseline gap-3">
-                <span className="font-display font-black text-6xl sm:text-7xl text-white tracking-tight leading-none tabular-nums">
-                  {intel.overallScore}
-                </span>
-                <span className="text-2xl text-white/30 font-medium">/100</span>
-                <span
-                  className="px-2.5 py-1 rounded-lg text-sm font-black border uppercase tracking-wide ml-1"
-                  style={{ color: accent.color, backgroundColor: accent.bg, borderColor: accent.border }}
-                >
-                  Grade {intel.grade}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-bold text-white tracking-tight">
-                {intel.verdict}
-              </h4>
-              {intel.consensusDescription && (
-                <p className="mt-1.5 text-xs sm:text-sm text-white/50 leading-relaxed pl-3 border-l-2 border-red-500/50">
-                  {intel.consensusDescription}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Attribute Spectrum (4-Dimensions) */}
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-1 border-b border-white/[0.04]">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-                <Layers className="w-3 h-3 text-red-400" />
-                Film Profile Dimensions
-              </span>
-              <span className="text-[10px] text-white/40 font-mono">Calibrated Ratings</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {attributes.map((attr, idx) => {
-                const targetWidth = ready ? `${attr.val}%` : '0%';
-                const label = qualitativeLabel(attr.val);
-                return (
-                  <div key={attr.key} className="bg-black/30 border border-white/[0.04] rounded-lg p-2.5 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-white/80">{attr.label}</span>
-                      <span className="font-bold tabular-nums" style={{ color: attr.color }}>
-                        {attr.val}<span className="text-[10px] text-white/30">/100</span>
-                      </span>
-                    </div>
-
-                    {/* Progress track */}
-                    <div className="h-1.5 w-full bg-white/[0.06] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: targetWidth,
-                          backgroundColor: attr.color,
-                          boxShadow: `0 0 8px ${attr.color}88`,
-                          transition: reducedMotion() ? 'none' : `width 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 75}ms`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-white/40">
-                      <span className="truncate pr-1">{attr.desc.split(',')[0]}</span>
-                      <span className="font-medium shrink-0" style={{ color: `${attr.color}cc` }}>{label}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Mid Section: Multi-Platform Agreement Matrix ── */}
         {sources.length > 0 && (
-          <div className="border-t border-white/[0.06] pt-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-                Source Agreement Breakdown
-              </span>
-              <span className="text-[11px] text-white/40">
-                Consensus Target: <strong className="text-white font-bold">{intel.overallScore}/100</strong>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {sources.map((s, idx) => {
-                const diff = s.value - intel.overallScore;
-                const diffLabel = diff > 0 ? `+${diff.toFixed(0)} pts` : diff < 0 ? `${diff.toFixed(0)} pts` : 'Even';
-                const targetWidth = ready ? `${Math.min(100, Math.max(8, s.value))}%` : '0%';
-
-                return (
-                  <div
-                    key={s.key}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.05] transition-all"
-                  >
-                    {/* Source brand badge */}
-                    <span
-                      className="px-2 py-1 rounded text-[11px] font-black shrink-0 tracking-wide"
-                      style={{ color: s.color, backgroundColor: s.bgColor, border: `1px solid ${s.borderColor}` }}
-                    >
-                      {s.badge}
-                    </span>
-
-                    {/* Progress slider */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-semibold text-white/80 truncate">{s.label}</span>
-                        <span className="font-bold tabular-nums" style={{ color: s.color }}>
-                          {s.display}
-                        </span>
-                      </div>
-
-                      <div className="relative h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: targetWidth,
-                            backgroundColor: s.color,
-                            boxShadow: `0 0 6px ${s.color}66`,
-                            transition: reducedMotion() ? 'none' : `width 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 60}ms`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Variance vs consensus */}
-                    <span className="text-[10px] font-mono text-white/40 shrink-0 w-16 text-right">
-                      {diffLabel}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="mt-7">
+            <h4 className="text-sm font-semibold text-white/85">Ratings by site</h4>
+            <ul className="mt-3">
+              {sources.map((s) => (
+                <li
+                  key={s.key}
+                  className="grid grid-cols-[6.5rem_1fr_3.5rem] sm:grid-cols-[8rem_1fr_4rem] items-center gap-3 border-b border-dashed border-white/10 py-2.5"
+                >
+                  <span className="truncate text-sm text-white/70">{s.label}</span>
+                  <Seats filled={Math.round(Math.min(100, s.value) / 10)} total={10} />
+                  <span className="text-right text-sm font-semibold tabular-nums">{s.display}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-white/35">Each seat = 10 points.</p>
           </div>
         )}
 
-        {/* ── Bottom Section: Film Tasting Notes ── */}
-        {vibeChart.length > 0 && (
-          <div className="border-t border-white/[0.06] pt-4 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-white/40 mr-1">
-              Genre DNA:
-            </span>
-            {vibeChart.map((item) => (
-              <span
-                key={item.name}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/[0.03] border border-white/[0.07] text-white/75"
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span>{item.name}</span>
-                <span className="text-[11px] font-bold text-white/40">{item.percent}%</span>
-              </span>
+        <div className="mt-7">
+          <h4 className="text-sm font-semibold text-white/85">What it does well</h4>
+          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
+            {strengths.map((a) => (
+              <li key={a.key} className="flex items-center justify-between gap-3 border-b border-dashed border-white/10 py-2.5">
+                <span className="text-sm text-white/70">{a.label}</span>
+                <span className="flex items-center gap-2.5">
+                  <Seats filled={Math.max(1, Math.round(a.val / 20))} total={5} />
+                  <span className="w-[4.5rem] text-right text-sm font-semibold">{wordFor(a.val)}</span>
+                </span>
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </div>
       </div>
-    </div>
+
+      {/* ── Perforation + stub ── */}
+      <div
+        className="relative flex h-32 items-center justify-center gap-5 border-t-2 border-dashed border-white/20 sm:h-auto sm:w-48 sm:flex-col sm:gap-1 sm:border-l-2 sm:border-t-0"
+      >
+        <span
+          className="font-display text-6xl font-black leading-none tabular-nums sm:text-7xl"
+          style={{ color: GOLD, textShadow: `0 0 26px ${GOLD}55` }}
+        >
+          {intel.overallScore}
+        </span>
+        <div className="text-left sm:text-center">
+          <p className="text-sm font-semibold">out of 100</p>
+          <p className="text-sm text-white/50">Grade {intel.grade}</p>
+        </div>
+        {/* barcode */}
+        <span
+          aria-hidden="true"
+          className="mt-4 hidden h-8 w-24 opacity-30 sm:block"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 4px, #fff 4px 5px, transparent 5px 8px, #fff 8px 11px, transparent 11px 13px)',
+          }}
+        />
+      </div>
+
+      {/* ticket notches at the perforation */}
+      <Notch className="-left-2.5 bottom-32 translate-y-1/2 sm:hidden" />
+      <Notch className="-right-2.5 bottom-32 translate-y-1/2 sm:hidden" />
+      <Notch className="-top-2.5 right-48 hidden translate-x-1/2 sm:block" />
+      <Notch className="-bottom-2.5 right-48 hidden translate-x-1/2 sm:block" />
+    </section>
   );
 };

@@ -34,7 +34,7 @@ function getPlatformMeta(name: string) {
   for (const [key, val] of Object.entries(PLATFORM_META)) {
     if (lower.includes(key)) return val;
   }
-  return { color: 'text-red-400', glow: 'shadow-red-600/20', badge: 'bg-red-600/20 text-red-400 border-red-500/30' };
+  return { color: 'text-[#f5c542]', glow: 'shadow-[#f5c542]/20', badge: 'bg-[#c9a24b]/20 text-[#f5c542] border-[#c9a24b]/30' };
 }
 
 export const StreamingScheduleShelf: React.FC = () => {
@@ -130,18 +130,18 @@ export const StreamingScheduleShelf: React.FC = () => {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f5c542] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#f5c542]" />
             </span>
-            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-500/90 font-display">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#c9a24b]">
               Airing Today
             </span>
           </div>
           <h2 className="font-display font-black text-2xl sm:text-3xl tracking-tight leading-tight">
-            <span className="bg-gradient-to-r from-white via-white/90 to-red-400 bg-clip-text text-transparent">Streaming</span>{" "}
-            <span className="bg-gradient-to-r from-red-500 to-red-300 bg-clip-text text-transparent">Premieres</span>
+            <span className="text-white">Streaming</span>{" "}
+            <span className="bg-gradient-to-r from-[#f5c542] to-[#c9a24b] bg-clip-text text-transparent">Premieres</span>
           </h2>
-          <p className="text-white/40 text-xs font-sans mt-0.5">
+          <p className="text-[#c9a24b]/70 text-xs font-mono mt-0.5">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
@@ -157,8 +157,8 @@ export const StreamingScheduleShelf: React.FC = () => {
                   'px-3.5 py-1.5 rounded-full text-[11px] font-black font-display uppercase tracking-wide',
                   'whitespace-nowrap border transition-all duration-200',
                   activePlatform === p
-                    ? 'bg-red-600 text-white border-red-500 shadow-[0_0_12px_rgba(220,38,38,0.45)]'
-                    : 'bg-transparent text-white/50 hover:text-white border-white/10 hover:border-white/25 hover:bg-white/5',
+                    ? 'bg-[#f5c542] text-[#1c120c] border-[#f5c542] shadow-[0_0_12px_rgba(245,197,66,0.35)]'
+                    : 'bg-transparent text-white/50 hover:text-white border-white/10 hover:border-[#c9a24b]/30 hover:bg-white/5',
                 ].join(' ')}
               >
                 {p}
@@ -206,7 +206,7 @@ export const StreamingScheduleShelf: React.FC = () => {
           </p>
           <button
             onClick={() => setActivePlatform('All')}
-            className="mt-1 text-xs text-red-500 hover:text-red-400 font-bold font-display uppercase tracking-widest transition-colors"
+            className="mt-1 text-xs text-[#f5c542] hover:text-white font-bold font-display uppercase tracking-widest transition-colors"
           >
             Show All Platforms
           </button>
@@ -237,10 +237,10 @@ export const StreamingScheduleShelf: React.FC = () => {
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && handleShowClick(show?.name)}
                 className={[
-                  'group flex-none w-52 rounded-2xl bg-[#0f111a] border border-white/8',
-                  'hover:border-red-600/50 transition-all duration-300 cursor-pointer overflow-hidden',
-                  'hover:shadow-[0_8px_30px_rgba(220,38,38,0.18)]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70',
+                  'group flex-none w-52 rounded-2xl bg-[#140a0d] border border-[#c9a24b]/20',
+                  'hover:border-[#f5c542]/60 transition-all duration-300 cursor-pointer overflow-hidden',
+                  'hover:shadow-[0_8px_30px_rgba(245,197,66,0.2)]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]',
                   isDragging ? 'pointer-events-none' : '',
                 ].join(' ')}
                 style={{ animationDelay: `${idx * 40}ms` }}
@@ -254,7 +254,7 @@ export const StreamingScheduleShelf: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none select-none"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a] via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140a0d] via-black/20 to-transparent" />
 
                   {/* Platform badge */}
                   <span className={`absolute bottom-2 left-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-md border tracking-widest ${meta.badge}`}>
@@ -280,10 +280,10 @@ export const StreamingScheduleShelf: React.FC = () => {
 
                   <div className="flex items-center justify-between pt-2 mt-0.5 border-t border-white/[0.06]">
                     <span className="flex items-center gap-1 text-[10px] text-white/35 font-sans">
-                      <Clock className="w-3 h-3 text-red-500/70 flex-shrink-0" />
+                      <Clock className="w-3 h-3 text-[#f5c542]/80 flex-shrink-0" />
                       {ep.airtime ? ep.airtime : 'Streaming'}
                     </span>
-                    <span className="flex items-center gap-0.5 text-[10px] font-black font-display text-red-500 group-hover:translate-x-0.5 transition-transform uppercase tracking-wide">
+                    <span className="flex items-center gap-0.5 text-[10px] font-black font-display text-[#f5c542] group-hover:translate-x-0.5 transition-transform uppercase tracking-wide">
                       <Tv2 className="w-3 h-3" />
                       Watch
                       <ChevronRight className="w-3 h-3" />

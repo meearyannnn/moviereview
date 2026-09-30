@@ -75,8 +75,8 @@ export const QuickPeekModal = ({ movie, onClose, type = 'movie' }: QuickPeekModa
           </button>
 
           {/* Media Chip */}
-          <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white font-extrabold text-[10px] font-extrabold uppercase tracking-wider shadow-md">
-            <Clapperboard className="w-3 h-3" />
+          <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5c542] text-[#1c120c] font-black text-[10px] uppercase tracking-wider shadow-md">
+            <Clapperboard className="w-3 h-3 text-[#1c120c]" />
             Quick Preview
           </div>
         </div>
@@ -85,19 +85,19 @@ export const QuickPeekModal = ({ movie, onClose, type = 'movie' }: QuickPeekModa
         <div className="p-6 sm:p-8 -mt-6 relative z-10">
           {/* Metadata Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/10 text-white/80">
+            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#c9a24b]/20 text-[#f3e9d2] border border-[#c9a24b]/30">
               {mediaType === 'tv' ? 'TV Series' : 'Cinema Film'}
             </span>
             {rating && (
-              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-red-500 font-extrabold text-xs">
-                <span className="text-[9px] uppercase font-black px-1 rounded bg-red-600/20 text-red-500">TMDB</span>
-                <Star className="w-3 h-3 fill-red-500" />
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 border border-[#c9a24b]/30 text-[#f5c542] font-black text-xs">
+                <span className="text-[9px] uppercase font-mono font-black px-1 rounded bg-[#c9a24b]/20 text-[#f5c542]">TMDB</span>
+                <Star className="w-3 h-3 fill-[#f5c542] text-[#f5c542]" />
                 <span>{rating}</span>
               </div>
             )}
             {year && (
-              <div className="flex items-center gap-1 text-xs text-white/60">
-                <Calendar className="w-3 h-3 text-white/40" />
+              <div className="flex items-center gap-1 text-xs text-white/60 font-mono">
+                <Calendar className="w-3 h-3 text-[#c9a24b]" />
                 <span>{year}</span>
               </div>
             )}
@@ -114,12 +114,12 @@ export const QuickPeekModal = ({ movie, onClose, type = 'movie' }: QuickPeekModa
           </p>
 
           {/* Action Row */}
-          <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+          <div className="flex items-center gap-3 pt-4 border-t border-[#c9a24b]/20">
             <button
               onClick={handleWatch}
               className="btn-cinema-gold flex-1 text-xs sm:text-sm py-3 flex items-center justify-center gap-2"
             >
-              <Clapperboard className="w-4 h-4 text-black" />
+              <Clapperboard className="w-4 h-4 text-[#1c120c]" />
               <span>View & Review</span>
             </button>
 
@@ -127,7 +127,7 @@ export const QuickPeekModal = ({ movie, onClose, type = 'movie' }: QuickPeekModa
               onClick={handleToggle}
               className={`p-3 rounded-full border transition-all ${
                 inWatchlist
-                  ? 'bg-red-600/25 border-red-500 text-red-400'
+                  ? 'bg-[#f5c542]/20 border-[#f5c542] text-[#f5c542]'
                   : 'bg-white/5 border-white/15 text-white hover:bg-white/10'
               }`}
               title={inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}

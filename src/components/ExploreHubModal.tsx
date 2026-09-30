@@ -242,7 +242,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
         className="relative pointer-events-auto w-[94vw] sm:w-[360px] max-w-[370px] bg-[#080a10]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/95 animate-in fade-in zoom-in-95 duration-150 select-none overflow-hidden"
       >
         {/* Subtle Ambient Red Glow */}
-        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-red-600/70 to-transparent" />
+        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#f5c542]/70 to-transparent" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-1 pb-2.5 mb-1.5 border-b border-white/[0.08]">
@@ -254,16 +254,16 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
               }}
               className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors font-medium cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4 text-red-500" />
+              <ChevronLeft className="w-4 h-4 text-[#f5c542]" />
               <span>Back to Hub</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+              <div className="w-2 h-2 rounded-full bg-[#f5c542] animate-pulse shadow-[0_0_8px_rgba(245,197,66,0.8)]" />
               <span className="text-[11px] font-mono uppercase tracking-widest text-white/70 font-bold">
                 Cinema Hub
               </span>
-              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#c9a24b]/15 text-[#f5c542] border border-[#c9a24b]/20">
                 PRO
               </span>
             </div>
@@ -287,13 +287,13 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
         {subView === 'personalization' && (
           <div className="py-1 space-y-3 max-h-[460px] overflow-y-auto scrollbar-hide">
             {/* Header info */}
-            <div className="p-3 rounded-xl bg-gradient-to-br from-red-950/40 via-[#10131d] to-[#0c0e15] border border-red-500/30">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-[#c9a24b]/20 via-[#140a0d] to-[#0a0608] border border-[#c9a24b]/30">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-                  <Sparkles className="w-3.5 h-3.5 text-red-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#f5c542]" />
                   Your Smart Cinema DNA
                 </span>
-                <span className="text-[10px] font-mono text-red-400 font-bold px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20">
+                <span className="text-[10px] font-mono text-[#f5c542] font-bold px-1.5 py-0.5 rounded bg-[#c9a24b]/15 border border-[#c9a24b]/20">
                   {watchlist.length > 0 ? 'LIVE SYNC' : 'TASTE ENGINE'}
                 </span>
               </div>
@@ -315,7 +315,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                         onClick={() => handleSelectGenreTaste(g.id)}
                         className={`px-2 py-0.5 rounded-lg text-[10px] font-medium transition-all cursor-pointer ${
                           active
-                            ? 'bg-red-600 text-white font-bold shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                            ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-[0_0_8px_rgba(245,197,66,0.5)]'
                             : 'bg-white/5 hover:bg-white/10 text-white/70 border border-white/5'
                         }`}
                       >
@@ -332,9 +332,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
               <button
                 onClick={handleSmartSurprise}
                 disabled={smartPicks.length === 0}
-                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 hover:border-red-500/40 text-xs font-semibold text-white transition-all cursor-pointer"
+                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 hover:border-[#c9a24b]/40 text-xs font-semibold text-white transition-all cursor-pointer"
               >
-                <Shuffle className="w-3.5 h-3.5 text-red-500" />
+                <Shuffle className="w-3.5 h-3.5 text-[#f5c542]" />
                 <span>Smart Surprise</span>
               </button>
 
@@ -344,7 +344,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                   onClose();
                   navigate(`/explore?genre=${selectedGenreId}&sort=vote_average.desc`);
                 }}
-                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-semibold text-white transition-all shadow-[0_0_12px_rgba(220,38,38,0.3)] cursor-pointer"
+                className="flex items-center justify-center gap-2 p-2 rounded-xl bg-[#f5c542] hover:bg-[#c9a24b] text-xs font-black text-[#1c120c] transition-all shadow-[0_0_12px_rgba(245,197,66,0.3)] cursor-pointer"
               >
                 <Compass className="w-3.5 h-3.5" />
                 <span>Explore Taste Feed</span>
@@ -364,7 +364,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
 
               {isLoadingPicks ? (
                 <div className="py-8 text-center text-xs text-white/40 flex items-center justify-center gap-2">
-                  <div className="w-3 h-3 rounded-full border border-red-500 border-t-transparent animate-spin" />
+                  <div className="w-3 h-3 rounded-full border border-[#f5c542] border-t-transparent animate-spin" />
                   <span>Computing taste synergy...</span>
                 </div>
               ) : smartPicks.length === 0 ? (
@@ -381,7 +381,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                         onClose();
                         navigate(`/movie/${item.id}`);
                       }}
-                      className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-red-500/40 transition-all cursor-pointer group"
+                      className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#c9a24b]/40 transition-all cursor-pointer group"
                     >
                       <div className="relative w-12 aspect-[2/3] rounded-lg overflow-hidden bg-neutral-900 flex-shrink-0">
                         <img
@@ -390,16 +390,16 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Play className="w-4 h-4 fill-red-500 text-red-500" />
+                          <Play className="w-4 h-4 fill-[#f5c542] text-[#f5c542]" />
                         </div>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
+                          <p className="text-xs font-semibold text-white group-hover:text-[#f5c542] truncate">
                             {item.title}
                           </p>
-                          <span className="text-[10px] font-mono font-bold text-red-400 bg-red-500/10 px-1 py-0.5 rounded border border-red-500/20 flex-shrink-0">
+                          <span className="text-[10px] font-mono font-bold text-[#f5c542] bg-[#c9a24b]/15 px-1 py-0.5 rounded border border-[#c9a24b]/20 flex-shrink-0">
                             {item.matchScore}%
                           </span>
                         </div>
@@ -457,11 +457,11 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="w-4 h-4 fill-red-500 text-red-500" />
+                        <Play className="w-4 h-4 fill-[#f5c542] text-[#f5c542]" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
+                      <p className="text-xs font-semibold text-white group-hover:text-[#f5c542] truncate">
                         {item.title}
                       </p>
                       <p className="text-[10px] text-white/50 capitalize mt-0.5">
@@ -488,10 +488,10 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white group-hover:text-red-400 truncate">
+                      <p className="text-xs font-semibold text-white group-hover:text-[#f5c542] truncate">
                         {item.title}
                       </p>
-                      <p className="text-[10px] text-red-500 font-bold mt-0.5">
+                      <p className="text-[10px] text-[#f5c542] font-bold mt-0.5">
                         In Watchlist
                       </p>
                     </div>
@@ -526,9 +526,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                     onClose();
                     navigate(`/search?q=${encodeURIComponent(lang.query)}`);
                   }}
-                  className="p-2.5 rounded-xl bg-[#111520]/80 hover:bg-[#1e2436] border border-white/[0.06] hover:border-red-500/40 text-center transition-all group cursor-pointer"
+                  className="p-2.5 rounded-xl bg-[#140a0d]/80 hover:bg-[#1a0f14] border border-white/[0.06] hover:border-[#c9a24b]/40 text-center transition-all group cursor-pointer"
                 >
-                  <span className="text-xs text-white/80 group-hover:text-red-500 font-bold">
+                  <span className="text-xs text-white/80 group-hover:text-[#f5c542] font-bold">
                     {lang.name}
                   </span>
                 </button>
@@ -545,18 +545,18 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
             {/* -- 1. HERO FEATURE: Smart Personalization (For You) -- */}
             <button
               onClick={() => handleTileClick(() => setSubView('personalization'))}
-              className="w-full relative group overflow-hidden rounded-xl p-3 flex items-center justify-between transition-all duration-300 cursor-pointer border border-red-500/40 bg-gradient-to-r from-red-950/50 via-[#131622] to-[#0a0d14] hover:border-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.25)] text-left"
+              className="w-full relative group overflow-hidden rounded-xl p-3 flex items-center justify-between transition-all duration-300 cursor-pointer border border-[#c9a24b]/40 bg-gradient-to-r from-[#c9a24b]/25 via-[#140a0d] to-[#0a0608] hover:border-[#f5c542] hover:shadow-[0_0_20px_rgba(245,197,66,0.25)] text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-red-600/20 border border-red-500/30 flex items-center justify-center flex-shrink-0 group-hover:scale-105 group-hover:bg-red-600 transition-all">
-                  <Sparkles className="w-5 h-5 text-red-500 group-hover:text-white transition-colors" />
+                <div className="w-9 h-9 rounded-lg bg-[#c9a24b]/20 border border-[#c9a24b]/30 flex items-center justify-center flex-shrink-0 group-hover:scale-105 group-hover:bg-[#f5c542] transition-all">
+                  <Sparkles className="w-5 h-5 text-[#f5c542] group-hover:text-white transition-colors" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-white tracking-tight">
                       Personalized For You
                     </span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-600 text-white shadow-[0_0_6px_rgba(220,38,38,0.6)]">
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-[#f5c542] text-[#1c120c] shadow-[0_0_6px_rgba(245,197,66,0.6)]">
                       SMART
                     </span>
                   </div>
@@ -567,7 +567,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                   </p>
                 </div>
               </div>
-              <ChevronLeft className="w-4 h-4 text-white/40 rotate-180 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              <ChevronLeft className="w-4 h-4 text-white/40 rotate-180 group-hover:text-[#f5c542] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
             </button>
 
             {/* -- 2. 3x3 Discovery Grid (Category, Franchise, Country removed) -- */}
@@ -575,9 +575,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
               {/* Row 1: Following Activity | Monthly Ranking | Top 100 */}
               <button
                 onClick={() => handleTileClick(() => setSubView('activity'))}
-                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90"
+                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90"
               >
-                <PulseActivityIcon className="w-5 h-5 text-white/80 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+                <PulseActivityIcon className="w-5 h-5 text-white/80 group-hover:text-[#f5c542] group-hover:scale-110 transition-all" />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
                   Following
                 </span>
@@ -589,15 +589,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isMonthlyRankingActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <MonthlyRankingIcon
                   className={`w-5 h-5 transition-all ${
                     isMonthlyRankingActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
@@ -611,15 +611,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isTop100Active
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <CrownIcon
                   className={`w-5 h-5 transition-all ${
                     isTop100Active
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
@@ -636,15 +636,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }}
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isGenreActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <DramaMasksIcon
                   className={`w-5 h-5 transition-all ${
                     isGenreActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
@@ -658,15 +658,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isAwardWinnerActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <StatuetteAwardIcon
                   className={`w-5 h-5 transition-all ${
                     isAwardWinnerActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[11px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
@@ -679,9 +679,9 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                   soundEffects.playHoverTick();
                   setSubView('language');
                 }}
-                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90"
+                className="group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90"
               >
-                <LanguageTranslateIcon className="w-5 h-5 text-white/80 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+                <LanguageTranslateIcon className="w-5 h-5 text-white/80 group-hover:text-[#f5c542] group-hover:scale-110 transition-all" />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
                   Language
                 </span>
@@ -694,15 +694,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isSelectActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <CertifiedSelectIcon
                   className={`w-5 h-5 transition-all ${
                     isSelectActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[10.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">
@@ -716,15 +716,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isAnimeActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <AnimeFaceIcon
                   className={`w-5 h-5 transition-all ${
                     isAnimeActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[11.5px] font-medium text-white/90 group-hover:text-white tracking-tight">
@@ -738,15 +738,15 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 }
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isFamilyFriendlyActive
-                    ? 'bg-[#181216] border border-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.25)]'
-                    : 'bg-[#111520]/90 hover:bg-[#1a2030] border border-white/[0.08] hover:border-red-500/40 text-white/90'
+                    ? 'bg-[#140a0d] border border-[#f5c542] text-white shadow-[0_0_12px_rgba(245,197,66,0.25)]'
+                    : 'bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-white/[0.08] hover:border-[#c9a24b]/40 text-white/90'
                 }`}
               >
                 <FamilyFriendlyIcon
                   className={`w-5 h-5 transition-all ${
                     isFamilyFriendlyActive
-                      ? 'text-red-500 scale-105'
-                      : 'text-white/80 group-hover:text-red-500 group-hover:scale-110'
+                      ? 'text-[#f5c542] scale-105'
+                      : 'text-white/80 group-hover:text-[#f5c542] group-hover:scale-110'
                   }`}
                 />
                 <span className="text-[10.5px] font-medium text-white/90 group-hover:text-white tracking-tight text-center leading-tight">

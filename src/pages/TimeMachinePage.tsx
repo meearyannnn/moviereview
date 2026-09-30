@@ -148,12 +148,15 @@ export const TimeMachinePage = () => {
   const sliderPercent = yearToPercent(year);
 
   return (
-    <div className="relative min-h-screen bg-[#060810] text-white overflow-x-hidden selection:bg-[#dc2626] selection:text-white">
-      <div className="fixed top-10 left-1/2 -translate-x-1/2 w-[480px] h-[360px] bg-[#dc2626]/[0.06] rounded-full blur-[150px] pointer-events-none -z-10" />
+    <div className="relative min-h-screen bg-[#0a0608] text-[#f8fafc] overflow-x-hidden selection:bg-[#c9a24b] selection:text-[#1c120c]">
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-24">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-24">
 
         {/* ── Hero: countdown-leader year ring ── */}
         <div className="flex flex-col items-center text-center mb-10 sm:mb-14">
@@ -162,22 +165,22 @@ export const TimeMachinePage = () => {
               onClick={() => handleYearChange(year - 1)}
               disabled={year <= MIN_YEAR}
               aria-label="Previous year"
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.08] active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none border border-white/[0.08]"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.08] active:scale-95 transition-all disabled:opacity-20 disabled:pointer-events-none border border-[#c9a24b]/20"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-[#c9a24b]" />
             </button>
 
             <div className="relative w-44 h-44 sm:w-56 sm:h-56 shrink-0">
               <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full">
-                <circle cx="100" cy="100" r="94" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                <circle cx="100" cy="100" r="94" fill="none" stroke="rgba(201,162,75,0.15)" strokeWidth="1" />
                 {RING_TICKS.map((t, i) => (
                   <line
                     key={i}
                     x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-                    stroke={i % 3 === 0 ? '#dc2626' : 'rgba(255,255,255,0.15)'}
+                    stroke={i % 3 === 0 ? '#c9a24b' : 'rgba(255,255,255,0.15)'}
                     strokeWidth={i % 3 === 0 ? 2.5 : 1}
                     strokeLinecap="round"
-                    style={i % 3 === 0 ? { filter: 'drop-shadow(0 0 4px rgba(220,38,38,0.7))' } : undefined}
+                    style={i % 3 === 0 ? { filter: 'drop-shadow(0 0 6px rgba(201,162,75,0.8))' } : undefined}
                   />
                 ))}
               </svg>

@@ -1,4 +1,4 @@
-﻿// components/WebChannelsSection.tsx
+// components/WebChannelsSection.tsx
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
@@ -85,11 +85,11 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
 
       {/* ── Section eyebrow ── */}
       <div className="mb-6">
-        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-1.5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a24b] font-mono mb-1.5">
           Streaming Networks
         </p>
         <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-          Browse by <span className="text-red-500">Network</span>
+          Browse by <span className="bg-gradient-to-r from-[#f5c542] to-[#c9a24b] bg-clip-text text-transparent">Network</span>
         </h2>
       </div>
 
@@ -104,7 +104,7 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
               className={[
                 'group flex-none flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 border whitespace-nowrap',
                 active
-                  ? 'border-red-500/60 text-white shadow-[0_0_18px_rgba(220,38,38,0.3)]'
+                  ? 'border-[#f5c542]/60 text-white shadow-[0_0_18px_rgba(245,197,66,0.3)]'
                   : 'bg-transparent border-white/[0.08] text-white/50 hover:text-white hover:border-white/20',
               ].join(' ')}
               style={active ? { backgroundColor: `${ch.color}18`, boxShadow: `0 0 18px ${ch.color}28` } : undefined}
@@ -151,7 +151,7 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
           </div>
 
           {/* Right: tab switcher */}
-          <div className="flex items-center gap-0.5 p-1 rounded-xl border border-white/[0.06] bg-black/30 flex-shrink-0 backdrop-blur-sm">
+          <div className="flex items-center gap-0.5 p-1 rounded-xl border border-[#c9a24b]/20 bg-black/40 flex-shrink-0 backdrop-blur-sm">
             {([
               { key: 'popular',    label: 'Popular'  },
               { key: 'thisSeason', label: 'New'      },
@@ -163,7 +163,7 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
                 className={[
                   'px-4 py-1.5 rounded-lg text-[11px] font-black font-display uppercase tracking-wider transition-all duration-200',
                   activeTab === key
-                    ? 'bg-red-600 text-white shadow-[0_2px_10px_rgba(220,38,38,0.45)]'
+                    ? 'bg-[#f5c542] text-[#1c120c] shadow-[0_2px_10px_rgba(245,197,66,0.35)]'
                     : 'text-white/40 hover:text-white',
                 ].join(' ')}
               >
@@ -182,8 +182,8 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
               className={[
                 'flex-none px-3.5 py-1 rounded-full text-[11px] font-bold font-sans whitespace-nowrap border transition-all duration-200',
                 activeGenre === g.id
-                  ? 'bg-white/12 text-white border-white/30'
-                  : 'bg-transparent text-white/35 border-white/[0.06] hover:text-white/60 hover:border-white/15',
+                  ? 'bg-[#c9a24b]/20 text-[#f5c542] border-[#c9a24b]/50'
+                  : 'bg-transparent text-white/35 border-white/[0.06] hover:text-white/60 hover:border-[#c9a24b]/25',
               ].join(' ')}
             >
               {g.label}
@@ -226,7 +226,7 @@ export const WebChannelsSection: React.FC<WebChannelsSectionProps> = ({ initialT
                 <div className="mt-10 flex flex-col items-center gap-2">
                   <button
                     onClick={() => setVisibleCount((p) => p + 12)}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/[0.1] bg-white/[0.03] hover:bg-red-600/80 hover:border-red-500/60 text-white/60 hover:text-white text-xs font-black font-display uppercase tracking-widest transition-all duration-300"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#c9a24b]/30 bg-[#140a0d] hover:bg-[#f5c542] hover:border-[#f5c542] text-[#f5c542] hover:text-[#1c120c] text-xs font-black font-display uppercase tracking-widest transition-all duration-300 shadow-md"
                   >
                     <ChevronDown className="w-3.5 h-3.5" />
                     Load More

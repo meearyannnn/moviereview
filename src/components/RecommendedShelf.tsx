@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
+import { MovieCard } from './MovieCard';
 
 interface RecommendedShelfProps {
   mediaId: number;
@@ -90,9 +91,9 @@ export const RecommendedShelf = ({
       <div className="flex items-center justify-between mb-4 px-1 min-w-0">
         <div className="min-w-0">
           <h3 className="font-display font-bold text-xl md:text-2xl text-white tracking-tight flex items-center gap-2 truncate">
-            <Sparkles className="w-5 h-5 text-red-500 shrink-0" />
+            <Sparkles className="w-5 h-5 text-[#f5c542] shrink-0" />
             <span>More Like </span>
-            <span className="bg-gradient-to-r from-red-500 via-white to-red-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#f5c542] via-[#f3e9d2] to-[#c9a24b] bg-clip-text text-transparent">
               This
             </span>
           </h3>
@@ -139,56 +140,16 @@ export const RecommendedShelf = ({
                   className="flex-none w-[140px] sm:w-[170px] md:w-[190px] aspect-[2/3] rounded-xl bg-white/5 animate-pulse border border-white/10"
                 />
               ))
-            : items.map((item, index) => {
-                const title = item.title || item.name || 'Untitled';
-                const date = item.release_date || item.first_air_date;
-                const year = date ? new Date(date).getFullYear() : null;
-                const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
-                const matchScore = 90 + Math.floor(((item.vote_average || 7) / 10) * 9) + (index % 3);
-
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => handleCardClick(item.id)}
-                    className={`group flex-none w-[140px] sm:w-[170px] md:w-[190px] cursor-pointer ${
-                      isDragging ? 'pointer-events-none' : ''
-                    }`}
-                  >
-                    <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-white/[0.06] group-hover:border-white/25 shadow-lg bg-neutral-900 transition-colors duration-200">
-                      <img
-                        src={tmdb.getImageUrl(item.poster_path, 'w500')}
-                        alt={title}
-                        draggable={false}
-                        className="w-full h-full object-cover pointer-events-none select-none"
-                        loading="lazy"
-                      />
-
-                      {/* Top Badges */}
-                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/90 text-white shadow-md backdrop-blur-md">
-                          {matchScore}%
-                        </span>
-                        {rating ? (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-black/75 text-white border border-white/10 backdrop-blur-sm flex items-center gap-0.5 font-display">
-                            <Star className="w-2.5 h-2.5 fill-red-500 text-red-500" />
-                            {rating}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="mt-2 px-0.5">
-                      <h4 className="line-clamp-1 font-display font-bold text-xs sm:text-sm text-white/85 group-hover:text-white transition-colors">
-                        {title}
-                      </h4>
-                      <p className="mt-0.5 flex items-center justify-between text-[11px] text-white/35 font-sans">
-                        <span>{year ? year : 'TBA'}</span>
-                        <span>{mediaType === 'tv' ? 'Series' : 'Movie'}</span>
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+            : items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`flex-none w-[140px] sm:w-[170px] md:w-[190px] ${
+                    isDragging ? 'pointer-events-none' : ''
+                  }`}
+                >
+                  <MovieCard movie={item} type={mediaType} />
+                </div>
+              ))}
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ const PERIODS: { id: Period; label: string }[] = [
 ];
 
 const ring =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07090f]';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0608]';
 
 /* ---------- Poster card ---------- */
 const ShelfCard: React.FC<{ movie: Movie; rank?: number; isDragging?: boolean }> = ({ movie, rank, isDragging }) => {
@@ -36,7 +36,7 @@ const ShelfCard: React.FC<{ movie: Movie; rank?: number; isDragging?: boolean }>
         isDragging ? 'pointer-events-none' : ''
       }`}
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 group-hover:ring-white/30 motion-safe:group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-black/60">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#140a0d] ring-1 ring-[#c9a24b]/20 transition duration-300 group-hover:ring-[#f5c542]/60 motion-safe:group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-black/60">
         <img
           src={poster}
           alt=""
@@ -54,7 +54,7 @@ const ShelfCard: React.FC<{ movie: Movie; rank?: number; isDragging?: boolean }>
         )}
         {movie.vote_average > 0 && (
           <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-md">
-            <Star className="h-3 w-3 fill-red-500 text-red-500" />
+            <Star className="h-3 w-3 fill-[#f5c542] text-[#f5c542]" />
             {movie.vote_average.toFixed(1)}
           </span>
         )}
@@ -124,7 +124,7 @@ const Shelf: React.FC<{ loading: boolean; empty: string; children: (isDragging: 
           type="button"
           onClick={() => scrollToDirection('left')}
           aria-label="Scroll left"
-          className={`absolute top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/85 text-white backdrop-blur-md transition-all hover:bg-red-600 hover:scale-105 active:scale-95 lg:flex -left-3 ${ring}`}
+          className={`absolute top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/85 text-white backdrop-blur-md transition-all hover:bg-[#f5c542] hover:text-[#1c120c] hover:scale-105 active:scale-95 lg:flex -left-3 ${ring}`}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -134,7 +134,7 @@ const Shelf: React.FC<{ loading: boolean; empty: string; children: (isDragging: 
           type="button"
           onClick={() => scrollToDirection('right')}
           aria-label="Scroll right"
-          className={`absolute top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/85 text-white backdrop-blur-md transition-all hover:bg-red-600 hover:scale-105 active:scale-95 lg:flex -right-3 ${ring}`}
+          className={`absolute top-[38%] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/85 text-white backdrop-blur-md transition-all hover:bg-[#f5c542] hover:text-[#1c120c] hover:scale-105 active:scale-95 lg:flex -right-3 ${ring}`}
         >
           <ChevronRight className="h-5 w-5" />
         </button>
@@ -155,13 +155,13 @@ const ShelfHeader: React.FC<{ icon?: React.ComponentType<{ className?: string }>
     <div>
       <h2 className="font-display text-xl font-extrabold tracking-tight text-white sm:text-2xl flex items-center gap-2.5">
         {Icon && (
-          <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.15)] flex-shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center shadow-[0_0_12px_rgba(245,197,66,0.15)] flex-shrink-0">
             <Icon className="w-3.5 h-3.5" />
           </div>
         )}
         <span>{title} </span>
         {highlightWord && (
-          <span className="bg-gradient-to-r from-red-500 via-white to-red-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#f5c542] via-white to-[#c9a24b] bg-clip-text text-transparent">
             {highlightWord}
           </span>
         )}

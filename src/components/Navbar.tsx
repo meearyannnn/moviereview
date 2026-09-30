@@ -1,735 +1,358 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Search,
-  Menu,
-  X,
-  Home,
-  Clapperboard,
-  Tv,
-  Sparkles,
-  Bookmark,
-  Film,
-  Hourglass,
-  Flame,
-  Calendar,
-  LayoutGrid,
-  Bell,
-  User,
-  LogIn,
-  LogOut,
+  Search, Clapperboard, Home, Film, Tv, Bookmark, Calendar,
+  Bell, User, LogIn, LogOut, X, Users, Settings, PenSquare, Trophy, Compass,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { useAuth } from '@/contexts/AuthContext';
 import { soundEffects } from '@/lib/soundEffects';
 import { toast } from 'sonner';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MidnightVaultModal } from './MidnightVaultModal';
-import { ExploreHubModal } from './ExploreHubModal';
 import { AuthModal } from './AuthModal';
 
-export const Navbar = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
-  const [showVaultModal, setShowVaultModal] = useState(false);
-  const [showExploreHub, setShowExploreHub] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const { user, profile, signOut } = useAuth();
-  const keySequenceRef = useRef<string>('');
+const NAV = [
+  { path: '/', label: 'Home' },
+  { path: '/explore', label: 'Explore' },
+  { path: '/community', label: 'Community' },
+  { path: '/schedule', label: 'Schedule' },
+  { path: '/genres', label: 'Genres' },
+  { path: '/time-machine', label: 'Time Machine' },
+];
 
+const tick = () => soundEffects.playHoverTick();
+
+// One quiet icon button used everywhere in the bar: no borders, just a soft hover.
+const IconBtn = ({ label, onClick, active, children }: {
+  label: string; onClick: () => void; active?: boolean; children: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    aria-label={label}
+    title={label}
+    className={`relative grid h-9 w-9 place-items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/40 ${active ? 'bg-white/10 text-white' : 'text-white/65 hover:bg-white/[0.07] hover:text-white'
+      }`}
+  >
+    {children}
+  </button>
+);
+
+export const Navbar = () => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   const { watchlist, removeFromWatchlist } = useWatchlist();
 
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
-  const isSearchPage = location.pathname === '/search';
+  const [scrolled, setScrolled] = useState(false);
+  const [showWatchlist, setShowWatchlist] = useState(false);
+  const [showVault, setShowVault] = useState(false);
+  const [showBell, setShowBell] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const keys = useRef('');
+
+  const isActive = (p: string) => pathname === p;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Global Keyboard Shortcuts Listener
+  // Shortcuts: Esc closes things, "/" opens search, typing "vault" opens the vault.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-      const isInput =
-        activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
-
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setShowWatchlistModal(false);
-        setShowVaultModal(false);
-        setShowExploreHub(false);
-        setShowNotificationModal(false);
-        setIsOpen(false);
+        setShowWatchlist(false); setShowVault(false); setShowHub(false); setShowBell(false);
         return;
       }
-
-      if (isInput) return;
-
-      keySequenceRef.current = (keySequenceRef.current + e.key.toLowerCase()).slice(-5);
-      if (keySequenceRef.current === 'vault' || keySequenceRef.current.endsWith('cult')) {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      keys.current = (keys.current + e.key.toLowerCase()).slice(-5);
+      if (keys.current === 'vault' || keys.current.endsWith('cult')) {
         soundEffects.playSlide();
-        setShowVaultModal(true);
-        keySequenceRef.current = '';
+        setShowVault(true);
+        keys.current = '';
         return;
       }
-
-      if (e.key === '/') {
-        e.preventDefault();
-        soundEffects.playHoverTick();
-        navigate('/search');
-      }
+      if (e.key === '/') { e.preventDefault(); tick(); navigate('/search'); }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [navigate]);
 
-
-  // Original PC navigation links
-  const navItems = useMemo(
-    () => [
-      { path: '/', label: 'Home' },
-      { path: '/movies', label: 'Movies' },
-      { path: '/tv', label: 'TV Shows' },
-      { path: '/schedule', label: 'Schedule' },
-      { path: '/genres', label: 'Genres' },
-      { path: '/recommendations', label: 'AI Vibes' },
-      { path: '/time-machine', label: 'Time Machine' },
-    ],
-    []
-  );
+  const initials = (profile?.username || user?.email || 'U').slice(0, 2).toUpperCase();
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? 'glass-header py-2.5 shadow-2xl shadow-black/60'
-          : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent py-3'
+        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${scrolled
+            ? 'border-b border-[#c9a24b]/20 bg-[#0a0608]/90 backdrop-blur-2xl shadow-lg shadow-black/80'
+            : 'bg-gradient-to-b from-[#0a0608]/95 via-[#0a0608]/60 to-transparent'
           }`}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* -- Brand Logo (Same on PC, compact on Phone) -- */}
-          <Link
-            to="/"
-            onClick={() => soundEffects.playHoverTick()}
-            className="flex items-center gap-2 sm:gap-2.5 group focus:outline-none shrink-0"
-          >
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-red-400 shadow-md p-0.5 transition-transform duration-300 group-hover:scale-105">
-              <div className="w-full h-full bg-[#060810] rounded-[9px] flex items-center justify-center">
-                <Clapperboard className="w-4 h-4 text-[#dc2626]" />
-              </div>
-            </div>
-            <span className="font-display font-extrabold text-lg tracking-tight text-white leading-none">
-              Movie<span className="text-[#dc2626]">Guy</span>
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          {/* Logo */}
+          <Link to="/" onClick={tick} className="flex shrink-0 items-center gap-2 focus:outline-none group">
+            <Clapperboard className="h-5 w-5 text-[#c9a24b] group-hover:scale-110 transition-transform" />
+            <span className="font-display text-lg font-extrabold leading-none tracking-tight text-white">
+              Movie<span className="text-[#f5c542]">Guy</span>
             </span>
           </Link>
 
-          {/* -- Desktop Navigation Links (EXACT SAME AS BEFORE FOR PC) -- */}
-          <nav className="hidden md:flex items-center gap-0.5 lg:gap-1 bg-white/[0.04] p-1 rounded-full border border-white/[0.08] backdrop-blur-xl">
-            {navItems.map(({ path, label }) => {
-              const active = isActive(path);
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  onClick={() => soundEffects.playHoverTick()}
-                  className={`px-3 lg:px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all whitespace-nowrap ${active
-                    ? 'bg-[#dc2626] text-white font-bold shadow-sm'
-                    : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
-                    }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+          {/* Links: plain text with warm brass line marking active state */}
+          <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+            {NAV.map(({ path, label }) => (
+              <Link
+                key={path}
+                to={path}
+                onClick={tick}
+                aria-current={isActive(path) ? 'page' : undefined}
+                className={`relative whitespace-nowrap py-1 text-[13px] font-medium transition-colors ${isActive(path)
+                    ? 'text-[#f5c542] font-semibold after:absolute after:inset-x-0 after:-bottom-[17px] after:h-[2px] after:rounded-full after:bg-gradient-to-r after:from-[#c9a24b] after:to-[#f5c542] after:shadow-[0_0_8px_rgba(201,162,75,0.7)]'
+                    : 'text-white/60 hover:text-white'
+                  }`}
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
 
-          {/* -- Desktop Right Actions Suite (EXACT SAME AS BEFORE FOR PC) -- */}
-          <div className="hidden md:flex items-center gap-1 sm:gap-1.5 md:gap-2">
-            {/* 1. Calendar (Schedule) */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                navigate('/schedule');
-              }}
-              className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${location.pathname === '/schedule'
-                ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/30'
-                : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white/70 hover:text-white'
-                }`}
-              title="Release Schedule"
-              aria-label="Release Schedule"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
+          {/* Actions */}
+          <div className="flex items-center gap-0.5">
+            <IconBtn label="Search (/)" active={isActive('/search')} onClick={() => { tick(); navigate('/search'); }}>
+              <Search className="h-[18px] w-[18px]" />
+            </IconBtn>
+
+            <span className="hidden md:block">
+              <IconBtn label="Watchlist" onClick={() => { tick(); setShowWatchlist(true); }}>
+                <Bookmark className="h-[18px] w-[18px]" />
+                {watchlist.length > 0 && (
+                  <span className="absolute right-0.5 top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[#f5c542] px-1 text-[10px] font-black leading-4 text-[#1c120c] shadow-sm">
+                    {watchlist.length}
+                  </span>
+                )}
+              </IconBtn>
+            </span>
 
 
-
-            {/* 3. Bookmark (Watchlist) */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                setShowWatchlistModal(true);
-              }}
-              className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white/80 hover:text-white transition-all"
-              aria-label="Watchlist"
-              title="My Watchlist"
-            >
-              <Bookmark className="w-4 h-4" />
-              {watchlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[17px] h-[17px] px-1 text-[10px] font-bold rounded-full bg-[#dc2626] text-white">
-                  {watchlist.length}
-                </span>
-              )}
-            </button>
-
-            {/* 4. 2x2 Grid Hub (?) matching screenshot */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                setShowExploreHub((prev) => !prev);
-              }}
-              className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${showExploreHub
-                ? 'bg-white text-white font-extrabold shadow-lg shadow-white/30 border border-white scale-105'
-                : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white/85 hover:text-white'
-                }`}
-              aria-label="Explore Cinema Hub"
-              title="Explore Cinema Hub"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-
-            {/* 5. Notification Bell */}
             <div className="relative">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setShowNotificationModal((prev) => !prev);
-                }}
-                className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${showNotificationModal
-                  ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20'
-                  : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white/70 hover:text-white'
-                  }`}
-                title="Notifications"
-                aria-label="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#dc2626]" />
-              </button>
-
-              {/* Notification Popover */}
-              {showNotificationModal && (
-                <div className="absolute right-0 top-11 w-72 bg-[#060810]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/80 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
-                    <span className="text-[11px] font-mono font-bold text-white/80 uppercase tracking-wider">
-                      Cinema Updates
-                    </span>
-                    <button
-                      onClick={() => setShowNotificationModal(false)}
-                      className="text-white/40 hover:text-white text-xs px-1"
-                    >
-                      ?
-                    </button>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:border-[#dc2626]/30 transition-all">
-                      <p className="font-semibold text-white">Reacher Season 3</p>
-                      <p className="text-[11px] text-white/50">Streaming on Prime Video</p>
+              <IconBtn label="Notifications" active={showBell} onClick={() => { tick(); setShowBell((v) => !v); }}>
+                <Bell className="h-[18px] w-[18px]" />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
+              </IconBtn>
+              {showBell && (
+                <div className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-2 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                  <p className="px-2.5 pb-1.5 pt-1 text-sm font-bold text-white font-display">What's new</p>
+                  {[
+                    ['Reacher Season 3', 'Streaming on Prime Video'],
+                    ['Lanterns Season 1', 'New episode 5 is out'],
+                  ].map(([t, s]) => (
+                    <div key={t} className="rounded-xl px-2.5 py-2 hover:bg-white/[0.05]">
+                      <p className="text-sm font-medium text-white">{t}</p>
+                      <p className="text-xs text-white/50">{s}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:border-[#dc2626]/30 transition-all">
-                      <p className="font-semibold text-white">Lanterns Season 1</p>
-                      <p className="text-[11px] text-white/50">New Episode 5 now available</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* 6. Quick Search */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                navigate('/search');
-              }}
-              className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${isSearchPage
-                ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20'
-                : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-white/70 hover:text-white'
-                }`}
-              aria-label="Search"
-              title="Search (/)"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-
-            {/* 7. User Avatar & Auth (DNA / Cloud Profile) */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    onClick={() => soundEffects.playHoverTick()}
-                    className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-red-600 to-red-500 border border-red-400/40 text-white font-extrabold hover:scale-105 transition-all shadow-md shadow-red-600/30 text-xs"
-                    title={`Signed in as ${profile?.username || user.email}`}
-                  >
-                    {profile?.username ? profile.username.slice(0, 2).toUpperCase() : (user.email ? user.email.slice(0, 2).toUpperCase() : 'U')}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-[#0a0d14]/95 backdrop-blur-xl border border-white/10 text-white rounded-xl shadow-2xl p-1.5 z-50">
-                  <DropdownMenuLabel className="px-3 py-2">
-                    <p className="text-xs font-bold text-white leading-none">{profile?.username || 'Cinephile'}</p>
-                    <p className="text-[10px] text-white/50 truncate mt-1">{user.email}</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-white/10 my-1" />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      soundEffects.playHoverTick();
-                      setShowWatchlistModal(true);
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-white/10 cursor-pointer"
-                  >
-                    <Bookmark className="w-4 h-4 text-white" />
-                    <span>Cloud Watchlist ({watchlist.length})</span>
+            {/* Account menu. On phones it also holds the links the bottom bar doesn't have. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={tick}
+                  aria-label="Account and menu"
+                  className={`ml-1 grid h-9 w-9 place-items-center rounded-full transition-colors ${user ? 'bg-[#f5c542] text-xs font-black text-[#1c120c] hover:bg-[#c9a24b]' : 'text-white/65 hover:bg-white/[0.07] hover:text-white'
+                    }`}
+                >
+                  {user ? initials : <User className="h-[18px] w-[18px]" />}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-50 w-60 rounded-xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-1.5 text-white backdrop-blur-xl">
+                {user && (
+                  <>
+                    {/* Profile info header */}
+                    <DropdownMenuLabel className="px-3 py-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5c542] text-xs font-black text-[#1c120c]">
+                          {profile?.username?.slice(0, 1).toUpperCase() ?? 'C'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold leading-none">{profile?.username || 'Cinephile'}</p>
+                          <p className="mt-1 truncate text-xs font-normal text-white/40">{user.email}</p>
+                        </div>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/[0.07]" />
+                    {/* My Profile */}
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                      <Link to={`/community/user/${user.id}`}>
+                        <User className="h-4 w-4 text-white/50" /> My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {/* My Reviews */}
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                      <Link to="/community/reviews">
+                        <PenSquare className="h-4 w-4 text-white/50" /> My Reviews
+                      </Link>
+                    </DropdownMenuItem>
+                    {/* My Contributions */}
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                      <Link to="/community">
+                        <Trophy className="h-4 w-4 text-white/50" /> My Contributions
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/[0.07]" />
+                  </>
+                )}
+                {/* Mobile-only nav items */}
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                  <Link to="/genres">Genres</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                  <Link to="/time-machine">Time Machine</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                  <Link to="/schedule">Schedule</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowWatchlist(true)} className="cursor-pointer rounded-lg px-3 py-2 text-sm">
+                  <Bookmark className="h-4 w-4 text-white/50" /> Watchlist ({watchlist.length})
+                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <Link to="/settings">
+                      <Settings className="h-4 w-4 text-white/50" /> Settings
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/10 my-1" />
+                )}
+                <DropdownMenuSeparator className="bg-white/[0.07]" />
+                {user ? (
                   <DropdownMenuItem
-                    onClick={async () => {
-                      soundEffects.playHoverTick();
-                      await signOut();
-                      toast.info('Signed out of MovieGuy');
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer"
+                    onClick={async () => { await signOut(); toast.info('Signed out of MovieGuy'); }}
+                    className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm text-[#f5c542] focus:text-white"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <LogOut className="h-4 w-4" /> Logout
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setShowAuthModal(true);
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#dc2626] hover:bg-[#ef4444] text-white text-xs font-bold transition-all shadow-md shadow-[#dc2626]/30 hover:scale-105"
-                title="Sign In / Join CineClub"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sign In</span>
-              </button>
-            )}
-          </div>
-
-          {/* -- MOBILE ONLY HEADER ACTIONS (OPTIMIZED FOR PHONE: 4 CLEAN BUTTONS) -- */}
-          {/* Calendar, 2x2 Hub, Bell, Menu Drawer Toggle */}
-          <div className="flex md:hidden items-center gap-1.5 shrink-0">
-            {/* 1. Calendar (glowing amber when on /schedule) */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                navigate('/schedule');
-              }}
-              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 touch-feedback ${isActive('/schedule')
-                ? 'bg-[#dc2626] text-white font-bold border border-[#dc2626] shadow-[0_0_16px_rgba(251,191,36,0.65)] ring-2 ring-[#dc2626]/40'
-                : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/80 hover:text-white'
-                }`}
-              title="Schedule"
-              aria-label="Schedule"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
-
-            {/* 2. 2x2 Cinema Hub (?) */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                setShowExploreHub((prev) => !prev);
-              }}
-              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 touch-feedback ${showExploreHub
-                ? 'bg-[#dc2626] text-white border border-[#dc2626] shadow-[0_0_16px_rgba(251,191,36,0.5)]'
-                : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/85 hover:text-white'
-                }`}
-              aria-label="Explore Cinema Hub"
-              title="Explore Cinema Hub"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-
-            {/* 3. Bell Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setShowNotificationModal((prev) => !prev);
-                }}
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 touch-feedback ${showNotificationModal
-                  ? 'bg-[#dc2626] text-white border border-[#dc2626] shadow-[0_0_16px_rgba(251,191,36,0.5)]'
-                  : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/80 hover:text-white'
-                  }`}
-                title="Notifications"
-                aria-label="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#dc2626]" />
-              </button>
-
-              {/* Mobile Notification Popover */}
-              {showNotificationModal && (
-                <div className="absolute right-0 top-10 w-72 max-w-[calc(100vw-2rem)] bg-[#060810]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/90 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
-                    <span className="text-[11px] font-mono font-bold text-white/80 uppercase tracking-wider">
-                      Cinema Updates
-                    </span>
-                    <button
-                      onClick={() => setShowNotificationModal(false)}
-                      className="text-white/40 hover:text-white text-xs px-1"
-                    >
-                      ?
-                    </button>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                      <p className="font-semibold text-white">Reacher Season 3</p>
-                      <p className="text-[11px] text-white/50">Streaming on Prime Video</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                      <p className="font-semibold text-white">Lanterns Season 1</p>
-                      <p className="text-[11px] text-white/50">New Episode 5 available</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 4. Drawer Menu Toggle (?) */}
-            <button
-              onClick={() => {
-                soundEffects.playHoverTick();
-                setIsOpen((prev) => !prev);
-              }}
-              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 touch-feedback ${isOpen
-                ? 'bg-[#dc2626] text-white font-bold border border-[#dc2626]'
-                : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white/90 hover:text-white'
-                }`}
-              aria-label="Toggle Menu"
-              title="Menu"
-            >
-              {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
+                ) : (
+                  <DropdownMenuItem onClick={() => setShowAuth(true)} className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <LogIn className="h-4 w-4" /> Sign in
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-
-        {/* -- Slide-Down Menu Drawer (Mobile & Tablet) -- */}
-        {isOpen && (
-          <div className="glass-header border-t border-white/[0.08] px-4 py-5 mt-2 max-h-[75vh] overflow-y-auto overscroll-contain animate-in fade-in slide-in-from-top-4 duration-200">
-            <div className="max-w-7xl mx-auto space-y-4">
-              {/* Mobile Profile Banner */}
-              {user ? (
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-red-600 to-red-500 flex items-center justify-center text-white font-extrabold text-xs shadow-sm">
-                      {profile?.username ? profile.username.slice(0, 2).toUpperCase() : 'U'}
-                    </div>
-                    <div>
-                      <h4 className="font-display font-bold text-sm text-white">
-                        {profile?.username || 'Cinephile'}
-                      </h4>
-                      <p className="text-[10px] text-white/50 truncate max-w-[160px]">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      soundEffects.playHoverTick();
-                      setIsOpen(false);
-                      await signOut();
-                      toast.info('Signed out');
-                    }}
-                    className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => {
-                    setIsOpen(false);
-                    setShowAuthModal(true);
-                  }}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-red-600/15 via-red-600/10 to-transparent border border-red-500/30 hover:border-red-500/60 cursor-pointer transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#dc2626] flex items-center justify-center text-white font-extrabold shadow-sm">
-                      <LogIn className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="font-display font-bold text-sm text-white">
-                        Join MovieGuy CineClub
-                      </h4>
-                      <p className="text-[11px] text-white/50">
-                        Sync cloud watchlist & reviews
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#dc2626] text-white">
-                    Sign In
-                  </span>
-                </div>
-              )}
-
-              {/* Mobile primary nav links */}
-              <div className="flex flex-col gap-1.5">
-                {navItems.map(({ path, label }) => {
-                  const active = isActive(path);
-                  return (
-                    <Link
-                      key={path}
-                      to={path}
-                      onClick={() => {
-                        soundEffects.playHoverTick();
-                        setIsOpen(false);
-                      }}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all touch-feedback ${active
-                        ? 'bg-[#dc2626] text-white font-bold'
-                        : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
-                        }`}
-                    >
-                      {label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* -- Fixed Mobile Bottom Navigation Bar (Android & iOS Optimized) -- */}
+      {/* Phone bottom bar */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#060810]/95 backdrop-blur-2xl border-t border-white/[0.08] shadow-[0_-8px_32px_rgba(0,0,0,0.85)] safe-bottom-nav"
-        aria-label="Mobile Navigation"
+        aria-label="Mobile"
+        className="safe-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#c9a24b]/20 bg-[#0a0608]/95 backdrop-blur-2xl md:hidden"
       >
-        <div className="grid grid-cols-5 h-[56px] items-center px-1">
-          {/* 1. Home */}
-          <Link
-            to="/"
-            onClick={() => soundEffects.playHoverTick()}
-            className={`flex flex-col items-center justify-center h-full gap-1 touch-feedback ${isActive('/')
-              ? 'text-[#dc2626] font-bold'
-              : 'text-white/50 hover:text-white/80'
-              }`}
-          >
-            <Home
-              className={`w-5 h-5 transition-transform ${isActive('/') ? 'scale-110 stroke-[2.5]' : 'stroke-[1.75]'
-                }`}
-            />
-            <span className="text-[10px] tracking-tight">Home</span>
-          </Link>
-
-          {/* 2. Movies */}
-          <Link
-            to="/movies"
-            onClick={() => soundEffects.playHoverTick()}
-            className={`flex flex-col items-center justify-center h-full gap-1 touch-feedback ${isActive('/movies')
-              ? 'text-[#dc2626] font-bold'
-              : 'text-white/50 hover:text-white/80'
-              }`}
-          >
-            <Film
-              className={`w-5 h-5 transition-transform ${isActive('/movies') ? 'scale-110 stroke-[2.5]' : 'stroke-[1.75]'
-                }`}
-            />
-            <span className="text-[10px] tracking-tight">Movies</span>
-          </Link>
-
-          {/* 3. Series */}
-          <Link
-            to="/tv"
-            onClick={() => soundEffects.playHoverTick()}
-            className={`flex flex-col items-center justify-center h-full gap-1 touch-feedback ${isActive('/tv')
-              ? 'text-[#dc2626] font-bold'
-              : 'text-white/50 hover:text-white/80'
-              }`}
-          >
-            <Tv
-              className={`w-5 h-5 transition-transform ${isActive('/tv') ? 'scale-110 stroke-[2.5]' : 'stroke-[1.75]'
-                }`}
-            />
-            <span className="text-[10px] tracking-tight">Series</span>
-          </Link>
-
-          {/* 4. Search */}
-          <Link
-            to="/search"
-            onClick={() => soundEffects.playHoverTick()}
-            className={`flex flex-col items-center justify-center h-full gap-1 touch-feedback ${isActive('/search')
-              ? 'text-[#dc2626] font-bold'
-              : 'text-white/50 hover:text-white/80'
-              }`}
-          >
-            <Search
-              className={`w-5 h-5 transition-transform ${isActive('/search') ? 'scale-110 stroke-[2.5]' : 'stroke-[1.75]'
-                }`}
-            />
-            <span className="text-[10px] tracking-tight">Search</span>
-          </Link>
-
-          {/* 5. Saved (Watchlist) */}
+        <div className="grid h-14 grid-cols-5">
+          {[
+            { to: '/', label: 'Home', Icon: Home },
+            { to: '/explore', label: 'Explore', Icon: Compass },
+            { to: '/community', label: 'Community', Icon: Users },
+            { to: '/schedule', label: 'Schedule', Icon: Calendar },
+          ].map(({ to, label, Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={tick}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive(to) ? 'text-[#f5c542]' : 'text-white/50'}`}
+            >
+              <Icon className="h-5 w-5" strokeWidth={isActive(to) ? 2.4 : 1.75} />
+              {label}
+            </Link>
+          ))}
           <button
-            onClick={() => {
-              soundEffects.playHoverTick();
-              setShowWatchlistModal(true);
-            }}
-            className={`relative flex flex-col items-center justify-center h-full gap-1 touch-feedback ${showWatchlistModal
-              ? 'text-[#dc2626] font-bold'
-              : 'text-white/50 hover:text-white/80'
-              }`}
+            onClick={() => { tick(); setShowWatchlist(true); }}
+            className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${showWatchlist ? 'text-[#f5c542]' : 'text-white/50'}`}
           >
-            <div className="relative">
-              <Bookmark
-                className={`w-5 h-5 ${showWatchlistModal ? 'stroke-[2.5]' : 'stroke-[1.75]'
-                  }`}
-              />
+            <span className="relative">
+              <Bookmark className="h-5 w-5" strokeWidth={1.75} />
               {watchlist.length > 0 && (
-                <span className="absolute -top-1 -right-2 flex items-center justify-center min-w-[15px] h-[15px] px-1 text-[9px] font-black rounded-full bg-[#dc2626] text-white shadow-sm">
+                <span className="absolute -right-2 -top-1 grid min-w-[15px] place-items-center rounded-full bg-[#8c1c2b] border border-[#c9a24b]/40 px-1 text-[9px] font-bold text-[#f3e9d2]">
                   {watchlist.length}
                 </span>
               )}
-            </div>
-            <span className="text-[10px] tracking-tight">Saved</span>
+            </span>
+            Saved
           </button>
         </div>
       </nav>
 
-
-
-      {/* -- Watchlist Modal -- */}
-      {showWatchlistModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl max-h-[85vh] flex flex-col rounded-3xl bg-[#111520] border border-white/10 shadow-2xl shadow-black overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
-              <div className="flex items-center gap-2">
-                <Bookmark className="w-5 h-5 text-[#dc2626]" />
-                <h3 className="font-display font-bold text-lg text-white">
-                  My Watchlist
-                </h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[#dc2626]/20 text-[#dc2626] font-semibold">
-                  {watchlist.length}
-                </span>
-              </div>
-              <button
-                onClick={() => setShowWatchlistModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Watchlist */}
+      {showWatchlist && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+          onClick={() => setShowWatchlist(false)}
+        >
+          <div
+            role="dialog"
+            aria-label="My watchlist"
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d13]"
+          >
+            <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
+              <h3 className="font-display text-lg font-bold">
+                My Watchlist <span className="ml-1 text-sm font-medium text-white/40">{watchlist.length}</span>
+              </h3>
+              <IconBtn label="Close" onClick={() => setShowWatchlist(false)}><X className="h-4 w-4" /></IconBtn>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-5">
               {watchlist.length === 0 ? (
-                <div className="text-center py-12 flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 text-white/30 border border-white/10">
-                    <Bookmark className="w-7 h-7" />
-                  </div>
-                  <h4 className="font-display font-semibold text-white text-base mb-1">
-                    Your Watchlist is Empty
-                  </h4>
-                  <p className="text-sm text-white/50 max-w-xs">
-                    Bookmark your favorite movies and shows to easily pick up
-                    where you left off.
+                <div className="py-12 text-center">
+                  <Bookmark className="mx-auto mb-3 h-7 w-7 text-white/25" />
+                  <p className="font-semibold">Nothing saved yet</p>
+                  <p className="mx-auto mt-1 max-w-xs text-sm text-white/50">
+                    Tap the bookmark on any movie or show and it will wait for you here.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {watchlist.map((item) => (
-                    <div
+                    <li
                       key={item.id}
-                      className="group flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-[#dc2626]/30 transition-all cursor-pointer"
-                      onClick={() => {
-                        setShowWatchlistModal(false);
-                        navigate(`/${item.media_type || 'movie'}/${item.id}`);
-                      }}
+                      onClick={() => { setShowWatchlist(false); navigate(`/${item.media_type || 'movie'}/${item.id}`); }}
+                      className="group flex cursor-pointer items-center gap-3 rounded-xl p-2 hover:bg-white/[0.05]"
                     >
                       <img
-                        src={
-                          item.poster_path
-                            ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
-                            : ''
-                        }
-                        alt={item.title}
-                        className="w-14 h-20 object-cover rounded-lg flex-shrink-0 bg-neutral-900 border border-white/10"
+                        src={item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : ''}
+                        alt=""
+                        className="h-20 w-14 shrink-0 rounded-lg bg-neutral-900 object-cover"
                       />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-display font-semibold text-sm text-white truncate group-hover:text-[#dc2626] transition-colors">
-                          {item.title}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-white/10 text-white/70">
-                            {item.media_type === 'tv' ? 'TV' : 'Movie'}
-                          </span>
-                          {item.vote_average && (
-                            <span className="text-[11px] text-[#dc2626] font-semibold">
-                              ? {item.vote_average.toFixed(1)}
-                            </span>
-                          )}
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{item.title}</p>
+                        <p className="mt-0.5 text-xs text-white/50">
+                          {item.media_type === 'tv' ? 'TV' : 'Movie'}
+                          {item.vote_average ? ` · ★ ${item.vote_average.toFixed(1)}` : ''}
+                        </p>
                       </div>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          soundEffects.playHoverTick();
-                          removeFromWatchlist(item.id);
-                        }}
-                        className="p-2 text-white/30 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5"
-                        title="Remove from watchlist"
+                        aria-label={`Remove ${item.title}`}
+                        onClick={(e) => { e.stopPropagation(); tick(); removeFromWatchlist(item.id); }}
+                        className="rounded-lg p-2 text-white/30 hover:bg-white/5 hover:text-[#f5c542]"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </button>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
           </div>
         </div>
       )}
 
-
-
-
-
-      {/* -- Midnight Cult Vault Modal -- */}
-      <MidnightVaultModal
-        isOpen={showVaultModal}
-        onClose={() => setShowVaultModal(false)}
-      />
-
-      {/* -- Explore Cinema Hub (?) Modal matching screenshot -- */}
-      <ExploreHubModal
-        isOpen={showExploreHub}
-        onClose={() => setShowExploreHub(false)}
-      />
-
-      {/* -- CineClub Supabase Auth Modal -- */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
+      <MidnightVaultModal isOpen={showVault} onClose={() => setShowVault(false)} />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </>
   );
 };

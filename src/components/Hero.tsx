@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback, type TouchEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Info, Star, Plus, Check, X, Flame, PenLine } from 'lucide-react';
+import { Play, Info, Star, Plus, Check, X, PenLine } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { TitleLogo } from './TitleLogo';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -16,7 +16,7 @@ interface VideoTrailer {
 
 const SLIDE_MS = 7000;
 
-// Thin progress line that fills over one slide's duration
+// Thin line that fills over one slide's duration (sits on the active poster)
 const AutoFill = () => {
   const [full, setFull] = useState(false);
   useEffect(() => {
@@ -25,7 +25,7 @@ const AutoFill = () => {
   }, []);
   return (
     <div
-      className="h-full rounded-full bg-white"
+      className="h-full bg-[#f5c542] shadow-[0_0_8px_#f5c542]"
       style={{ width: full ? '100%' : '0%', transition: full ? `width ${SLIDE_MS}ms linear` : 'none' }}
     />
   );
@@ -125,7 +125,7 @@ export const Hero = () => {
 
   if (movies.length === 0) {
     return (
-      <div className="flex h-[75vh] w-full items-center justify-center bg-[#060810] md:h-[88vh]">
+      <div className="flex h-[70vh] w-full items-center justify-center bg-[#060810]">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
       </div>
     );
@@ -145,9 +145,9 @@ export const Hero = () => {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         aria-roledescription="carousel"
-        className="relative flex h-[85vh] max-h-[920px] min-h-[600px] w-full select-none flex-col justify-end overflow-hidden bg-[#060810]"
+        className="relative flex h-[78vh] max-h-[820px] min-h-[600px] w-full select-none flex-col justify-end overflow-hidden bg-[#0a0608]"
       >
-        {/* Backdrops — stacked, crossfaded by opacity */}
+        {/* Backdrops: stacked, crossfaded */}
         <div className="absolute inset-0">
           {movies.map((m, i) => (
             <img
@@ -159,43 +159,38 @@ export const Hero = () => {
                 }`}
             />
           ))}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#060810] via-[#060810]/45 to-transparent" />
-          <div className="absolute inset-y-0 left-0 w-full max-w-3xl bg-gradient-to-r from-[#060810]/90 via-[#060810]/50 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#060810]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/40 to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-full max-w-2xl bg-gradient-to-r from-[#0a0608]/80 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0a0608]/70 to-transparent" />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 md:pb-14 lg:px-8">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-8 sm:px-6 md:pb-12 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+          {/* Featured film */}
           <div key={featured.id} className="max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-700">
-            {/* Meta */}
-            <div className="mb-4 flex items-center gap-4 text-xs font-semibold text-white/70">
-              <span className="flex items-center gap-1.5">
-                <Flame className="h-3.5 w-3.5 text-red-500" />
-                #{currentIndex + 1} trending this week
-              </span>
+            <p className="mb-4 flex items-center gap-3 text-sm text-white/70">
+              <span className="font-mono font-bold text-[#c9a24b]">#{currentIndex + 1} THIS WEEK</span>
               {rating && (
-                <span className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  <span className="text-white">{rating}</span>
+                <span className="flex items-center gap-1 font-mono font-bold text-[#f5c542]">
+                  <Star className="h-3.5 w-3.5 fill-[#f5c542] text-[#f5c542]" />
+                  {rating}
                 </span>
               )}
-              {year && <span>{year}</span>}
-            </div>
+              {year && <span className="font-mono text-white/50">{year}</span>}
+            </p>
 
             <TitleLogo id={featured.id} type="movie" title={featured.title} size="hero" />
 
-            <p className="mb-7 mt-4 line-clamp-3 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
+            <p className="mb-6 mt-4 line-clamp-3 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
               {featured.overview}
             </p>
 
-            {/* Actions */}
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <button
                 onClick={() => {
                   soundEffects.playHoverTick();
                   navigate(`/movie/${featured.id}#reviews`);
                 }}
-                className="flex h-11 items-center gap-2 rounded-full bg-red-600 px-6 text-sm font-bold text-white shadow-lg shadow-red-600/25 transition-colors hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+                className="flex h-11 items-center gap-2 rounded-full bg-[#f5c542] hover:bg-[#e6b738] px-6 text-sm font-extrabold text-[#1c120c] transition-all shadow-lg shadow-[#f5c542]/25 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a24b]"
               >
                 <PenLine className="h-4 w-4" />
                 Rate &amp; Review
@@ -204,9 +199,9 @@ export const Hero = () => {
               <button
                 onClick={() => handleWatchTrailer(featured.id)}
                 disabled={loadingTrailer}
-                className="flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-5 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/[0.16] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
+                className="flex h-11 items-center gap-2 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/80 px-5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-[#c9a24b]/15 hover:border-[#c9a24b]/60 disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
               >
-                <Play className="h-4 w-4 fill-white" />
+                <Play className="h-4 w-4 fill-[#f5c542] text-[#f5c542]" />
                 {loadingTrailer ? 'Loading' : 'Trailer'}
               </button>
 
@@ -223,11 +218,11 @@ export const Hero = () => {
                     media_type: 'movie',
                   });
                 }}
-                className={`${roundBtn} ${inWatchlist ? '!border-red-500/70 !bg-red-600/25 text-red-300' : ''}`}
+                className={`${roundBtn} ${inWatchlist ? '!border-[#c9a24b] !bg-[#c9a24b]/25 text-[#f5c542] shadow-[0_0_12px_rgba(201,162,75,0.4)]' : 'border-[#c9a24b]/30 bg-[#140c10]/80'}`}
                 aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
                 aria-pressed={inWatchlist}
               >
-                {inWatchlist ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {inWatchlist ? <Check className="h-4 w-4 text-[#f5c542]" /> : <Plus className="h-4 w-4 text-[#c9a24b]" />}
               </button>
 
               <button
@@ -235,7 +230,7 @@ export const Hero = () => {
                   soundEffects.playHoverTick();
                   navigate(`/movie/${featured.id}`);
                 }}
-                className={roundBtn}
+                className={`${roundBtn} border-[#c9a24b]/30 bg-[#140c10]/80 hover:bg-[#c9a24b]/15`}
                 aria-label="View details"
               >
                 <Info className="h-4 w-4" />
@@ -243,24 +238,39 @@ export const Hero = () => {
             </div>
           </div>
 
-          {/* Slide progress */}
-          <div className="mt-9 flex max-w-xs gap-2 sm:max-w-sm">
-            {movies.map((m, i) => (
-              <button
-                key={m.id}
-                onClick={() => goToSlide(i)}
-                aria-label={`Show ${m.title}`}
-                aria-current={i === currentIndex}
-                className="group flex h-5 flex-1 items-center"
-              >
-                <span className="block h-[3px] w-full overflow-hidden rounded-full bg-white/20 transition-all group-hover:h-1">
-                  {i < currentIndex && <span className="block h-full w-full rounded-full bg-white/70" />}
-                  {i === currentIndex &&
-                    (isAutoPlay ? <AutoFill key={currentIndex} /> : <span className="block h-full w-full rounded-full bg-white" />)}
-                </span>
-              </button>
-            ))}
-          </div>
+          {/* Poster picker: the five films, tap one to feature it */}
+          <ol className="flex gap-2.5 sm:gap-3" aria-label="Pick a film">
+            {movies.map((m, i) => {
+              const active = i === currentIndex;
+              return (
+                <li key={m.id} className="w-[4.25rem] sm:w-20 lg:w-24">
+                  <button
+                    onClick={() => goToSlide(i)}
+                    aria-label={`Show ${m.title}`}
+                    aria-current={active}
+                    className={`relative block aspect-[2/3] w-full overflow-hidden rounded-lg bg-neutral-900 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 ${active
+                        ? 'ring-2 ring-[#c9a24b] shadow-[0_0_15px_rgba(201,162,75,0.5)]'
+                        : 'opacity-55 hover:opacity-90'
+                      }`}
+                  >
+                    {m.poster_path && (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${m.poster_path}`}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    {active && isAutoPlay && (
+                      <span className="absolute inset-x-0 bottom-0 block h-[3px] bg-black/50">
+                        <AutoFill key={currentIndex} />
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </section>
 

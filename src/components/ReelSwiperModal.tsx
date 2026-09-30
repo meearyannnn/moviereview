@@ -162,12 +162,12 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
         {/* Top Header */}
         <div className="flex items-center justify-between px-2 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-red-600/20 border border-red-500/30 flex items-center justify-center">
-              <Flame className="w-5 h-5 text-red-500 animate-pulse" />
+            <div className="w-9 h-9 rounded-2xl bg-[#c9a24b]/15 border border-[#c9a24b]/30 flex items-center justify-center">
+              <Flame className="w-5 h-5 text-[#f5c542] animate-pulse" />
             </div>
             <div>
               <h2 className="text-lg font-display font-bold text-white tracking-wide">Reel Swiper</h2>
-              <p className="text-[11px] text-white/50 font-mono">
+              <p className="text-[11px] text-[#c9a24b]/70 font-mono">
                 {savedCount > 0 ? `Saved ${savedCount} films to Watchlist` : 'Swipe to match your mood'}
               </p>
             </div>
@@ -187,19 +187,19 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
         <div className="relative flex-1 my-2 flex items-center justify-center select-none overflow-hidden touch-none">
           {loading ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-red-500/20 border-t-red-500 animate-spin" />
+              <div className="w-12 h-12 rounded-full border-2 border-[#c9a24b]/20 border-t-[#f5c542] animate-spin" />
               <span className="text-xs text-white/40 font-mono">Shuffling Reel Deck...</span>
             </div>
           ) : !currentMovie ? (
-            <div className="text-center p-8 bg-[#0e1017] border border-white/10 rounded-3xl">
-              <Sparkles className="w-10 h-10 text-red-500 mx-auto mb-3 animate-pulse" />
+            <div className="text-center p-8 bg-[#140a0d] border border-[#c9a24b]/20 rounded-3xl">
+              <Sparkles className="w-10 h-10 text-[#f5c542] mx-auto mb-3 animate-pulse" />
               <h3 className="text-xl font-display font-bold text-white mb-2">Reel Deck Cleared!</h3>
               <p className="text-xs text-white/60 mb-6">
                 You've reviewed this batch. Ready to deal another stack of cinema gems?
               </p>
               <button
                 onClick={loadDeck}
-                className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-amber-300 text-black font-bold text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-red-600/25"
+                className="px-6 py-2.5 rounded-2xl bg-[#f5c542] hover:bg-[#c9a24b] text-[#1c120c] font-black text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-[#f5c542]/25"
               >
                 <RotateCcw className="w-4 h-4" />
                 Shuffle New Batch
@@ -249,7 +249,7 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                 />
 
                 {/* Deep Cinema Vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#060810] via-[#060810]/50 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/50 to-transparent pointer-events-none" />
 
                 {/* Feedback Badges (Like / Pass / Stream) */}
                 {dragOffset.x > 50 && (
@@ -263,7 +263,7 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                   </div>
                 )}
                 {dragOffset.y < -50 && Math.abs(dragOffset.x) < 50 && (
-                  <div className="absolute top-8 left-1/2 -translate-x-1/2 border-4 border-red-600 bg-amber-500/20 backdrop-blur-md text-red-400 font-display font-black text-xl px-4 py-1 rounded-2xl shadow-lg animate-in zoom-in-75">
+                  <div className="absolute top-8 left-1/2 -translate-x-1/2 border-4 border-[#f5c542] bg-[#f5c542]/20 backdrop-blur-md text-[#f5c542] font-display font-black text-xl px-4 py-1 rounded-2xl shadow-lg animate-in zoom-in-75">
                     EXPLORE
                   </div>
                 )}
@@ -271,8 +271,8 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                 {/* Card Content Overlay */}
                 <div className="absolute bottom-0 inset-x-0 p-6 pointer-events-none">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="flex items-center gap-1 bg-red-600/20 border border-red-500/30 text-red-400 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
-                      <Star className="w-3 h-3 fill-red-500 text-red-500" />
+                    <span className="flex items-center gap-1 bg-[#c9a24b]/20 border border-[#c9a24b]/30 text-[#f5c542] text-xs font-mono font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
+                      <Star className="w-3 h-3 fill-[#f5c542] text-[#f5c542]" />
                       {currentMovie.vote_average?.toFixed(1)}
                     </span>
                     {(currentMovie.release_date || currentMovie.first_air_date) && (
@@ -332,9 +332,9 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
         {/* Keyboard shortcut legend */}
         <div className="pb-1 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-3">
           <span>? Pass</span>
-          <span>•</span>
+          <span>ï¿½</span>
           <span>? Explore & Review</span>
-          <span>•</span>
+          <span>ï¿½</span>
           <span>? Save to Watchlist</span>
         </div>
 

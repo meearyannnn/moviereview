@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import MovieDetail from "./pages/MovieDetail";
 import TVDetail from "./pages/TVDetail";
@@ -12,8 +12,13 @@ import Movies from "./pages/Movies";
 import TV from "./pages/TV";
 import Genres from "./pages/Genres";
 import NotFound from "./pages/NotFound";
-import RecommendationsPage from '@/pages/RecommendationsPage';
 import TimeMachinePage from '@/pages/TimeMachinePage';
+import CommunityPage from '@/pages/CommunityPage';
+import UserProfilePage from '@/pages/UserProfilePage';
+import DiscussionsPage from '@/pages/community/DiscussionsPage';
+import ReviewsPage from '@/pages/community/ReviewsPage';
+import CollectionsPage from '@/pages/community/CollectionsPage';
+import SettingsPage from '@/pages/SettingsPage';
 import SchedulePage from '@/pages/SchedulePage';
 import ExplorePage from '@/pages/ExplorePage';
 import LanguagesPage from '@/pages/LanguagesPage';
@@ -61,16 +66,22 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/movies" element={<Movies />} />
-            <Route path="/tv" element={<TV />} />
+            <Route path="/movies" element={<Navigate to="/explore?type=movie" replace />} />
+            <Route path="/tv" element={<Navigate to="/explore?type=tv" replace />} />
+            <Route path="/explore" element={<ExplorePage />} />
             <Route path="/genres" element={<Genres />} />
             <Route path="/search" element={<Search />} />
             <Route path="/movie/:id" element={<MovieDetail />} />
             <Route path="/tv/:id" element={<TVDetail />} />
-            <Route path="/recommendations" element={<RecommendationsPage />} />
+            <Route path="/recommendations" element={<Navigate to="/" replace />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/discussions" element={<DiscussionsPage />} />
+            <Route path="/community/reviews" element={<ReviewsPage />} />
+            <Route path="/community/collections" element={<CollectionsPage />} />
+            <Route path="/community/user/:userId" element={<UserProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/time-machine" element={<TimeMachinePage />} />
             <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
             <Route path="/languages" element={<LanguagesPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/countries" element={<CountriesPage />} />

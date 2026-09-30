@@ -1,6 +1,6 @@
-// components/CuratedShelfRow.tsx
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { MovieCard } from './MovieCard';
 import type { CuratedShelfItem } from '@/services/curatedShelves';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
@@ -12,6 +12,7 @@ interface CuratedShelfRowProps {
   icon?: React.ComponentType<{ className?: string }>;
   items: CuratedShelfItem[];
   loading?: boolean;
+  viewAllLink?: string;
 }
 
 export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
@@ -21,6 +22,7 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
   icon: Icon,
   items,
   loading = false,
+  viewAllLink,
 }) => {
   const {
     containerRef,
@@ -69,38 +71,49 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
             </div>
           )}
           {Icon && (
-            <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.15)] flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center shadow-[0_0_12px_rgba(245,197,66,0.15)] flex-shrink-0">
               <Icon className="w-3.5 h-3.5" />
             </div>
           )}
           <div>
-            <h2 className="font-display font-bold text-lg sm:text-xl tracking-tight text-white">
+            <h2 className="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-[11px] text-white/35 font-sans mt-0.5">{subtitle}</p>
+              <p className="text-[11px] text-white/40 font-mono mt-0.5">{subtitle}</p>
             )}
           </div>
         </div>
 
-        {/* Nav arrows */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => scrollToDirection('left')}
-            disabled={!canScrollLeft}
-            aria-label="Scroll left"
-            className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scrollToDirection('right')}
-            disabled={!canScrollRight}
-            aria-label="Scroll right"
-            className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        {/* Nav arrows and See all */}
+        <div className="flex items-center gap-2">
+          {viewAllLink && (
+            <Link
+              to={viewAllLink}
+              className="text-xs font-mono font-bold text-[#f5c542] hover:text-[#ffd875] transition-colors flex items-center gap-1 px-2.5 py-1 rounded-full hover:bg-[#c9a24b]/15 mr-1"
+            >
+              <span>See all</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => scrollToDirection('left')}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => scrollToDirection('right')}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

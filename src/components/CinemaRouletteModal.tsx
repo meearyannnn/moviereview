@@ -314,7 +314,7 @@ export const CinemaRouletteModal = ({ isOpen, onClose }: CinemaRouletteModalProp
           <X className="w-4 h-4" />
         </button>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/20 text-red-500 text-xs font-bold tracking-wider uppercase mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] text-xs font-mono font-bold tracking-wider uppercase mb-3">
           <Dices className="w-3.5 h-3.5" />
           Cinema Roulette
         </div>
@@ -326,7 +326,7 @@ export const CinemaRouletteModal = ({ isOpen, onClose }: CinemaRouletteModalProp
           Let the reels spin — this one's weighted toward what's actually good, not just loud.
         </p>
 
-        <div className="relative mx-auto w-48 aspect-[2/3] rounded-2xl overflow-hidden border-2 border-red-600/40 shadow-2xl shadow-black bg-black mb-4" aria-live="polite">
+        <div className="relative mx-auto w-48 aspect-[2/3] rounded-2xl overflow-hidden border-2 border-[#f5c542]/50 shadow-2xl shadow-black bg-black mb-4" aria-live="polite">
           {displayMovie ? (
             <img
               src={tmdb.getImageUrl(displayMovie.poster_path, 'w500')}
@@ -341,7 +341,7 @@ export const CinemaRouletteModal = ({ isOpen, onClose }: CinemaRouletteModalProp
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/20">
-              <Film className="w-12 h-12 animate-pulse" />
+              <Film className="w-12 h-12 animate-pulse text-[#c9a24b]" />
             </div>
           )}
 
@@ -367,8 +367,8 @@ export const CinemaRouletteModal = ({ isOpen, onClose }: CinemaRouletteModalProp
         {selectedMovie && (
           <div className="mb-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
-              <span className="flex items-center gap-1 text-xs font-bold text-red-500 px-2.5 py-0.5 rounded-full bg-red-600/10 border border-red-500/20">
-                <Star className="w-3 h-3 fill-red-500" />
+              <span className="flex items-center gap-1 text-xs font-bold text-[#f5c542] px-2.5 py-0.5 rounded-full bg-[#c9a24b]/15 border border-[#c9a24b]/30">
+                <Star className="w-3 h-3 fill-[#f5c542]" />
                 {selectedMovie.movie.vote_average?.toFixed(1)}
               </span>
               <span className="text-[10px] font-bold uppercase tracking-wide text-purple-300 px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">

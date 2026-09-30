@@ -1,4 +1,4 @@
-﻿// pages/SchedulePage.tsx
+// pages/SchedulePage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
@@ -97,8 +97,8 @@ const SchedulePage: React.FC = () => {
 
   const chip = (active: boolean) =>
     `rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors border ${ring} ${active
-      ? 'bg-red-600 border-red-600 text-white'
-      : 'border-white/10 text-white/60 hover:text-white hover:border-white/25'
+      ? 'bg-[#f5c542] border-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/20'
+      : 'border-white/10 text-white/60 hover:text-white hover:border-[#c9a24b]/30'
     }`;
 
   const renderCard = (item: ScheduleItem) => {
@@ -127,7 +127,7 @@ const SchedulePage: React.FC = () => {
             title="Hype score"
             className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-md"
           >
-            <Flame className="h-3 w-3 fill-red-500 text-red-500" />
+            <Flame className="h-3 w-3 fill-[#f5c542] text-[#f5c542]" />
             {item.hypeScore}
           </span>
         </div>
@@ -157,28 +157,32 @@ const SchedulePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#07090f] text-slate-50 selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
       <Navbar />
 
-      {/* Soft ambient glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,rgba(220,38,38,0.14),transparent_65%)]"
-      />
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pt-28 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Heading */}
         <header className="mb-8 max-w-2xl">
-          <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-            Release schedule
-          </h1>
-          <p className="mt-3 text-sm text-white/50 sm:text-base">
-            See what's out now, what's arriving next, and what's been announced.
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-1.5 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+            <span>CINEMA TIMETABLE</span>
           </p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl text-white">
+            Release Schedule
+          </h1>
+          <p className="mt-2 text-sm text-white/50 sm:text-base font-mono">
+            Upcoming premieres, curtain calls, and box office release dates.
+          </p>
+          <div className="w-24 border-t border-[#c9a24b]/40 mt-3" />
         </header>
 
         {/* Sticky filters */}
-        <div className="sticky top-16 z-20 -mx-4 mb-10 border-y border-white/[0.06] bg-[#07090f]/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:px-4">
+        <div className="sticky top-16 z-20 -mx-4 mb-10 border-y border-[#c9a24b]/20 bg-[#140a0d]/90 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:px-4">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div role="tablist" aria-label="Schedule view" className="flex gap-1 overflow-x-auto scrollbar-hide rounded-full bg-white/[0.04] p-1">
@@ -292,18 +296,18 @@ const SchedulePage: React.FC = () => {
               >
                 {/* Date marker */}
                 <div className="flex items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0 sm:pt-1">
-                  <span className={`text-xs font-medium ${group.isToday ? 'text-red-400' : 'text-white/40'}`}>
+                  <span className={`text-xs font-medium ${group.isToday ? 'text-[#f5c542] font-bold' : 'text-white/40'}`}>
                     {group.dayName}
                   </span>
                   <span
-                    className={`font-display text-3xl font-extrabold leading-none sm:mt-1 sm:text-4xl ${group.isToday ? 'text-red-500' : 'text-white'
+                    className={`font-display text-3xl font-extrabold leading-none sm:mt-1 sm:text-4xl ${group.isToday ? 'text-[#f5c542]' : 'text-white'
                       }`}
                   >
                     {group.dayNumber}
                   </span>
                   <span className="text-xs font-medium text-white/50 sm:mt-1">{group.monthName}</span>
                   {group.isToday && (
-                    <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white sm:mt-2">
+                    <span className="rounded-full bg-[#f5c542] px-2 py-0.5 text-[10px] font-black text-[#1c120c] sm:mt-2 shadow-sm">
                       Today
                     </span>
                   )}
@@ -313,7 +317,7 @@ const SchedulePage: React.FC = () => {
                 <div className="relative min-w-0 sm:border-l sm:border-white/10 sm:pl-6">
                   <span
                     aria-hidden
-                    className={`absolute -left-[5px] top-3 hidden h-2.5 w-2.5 rounded-full sm:block ${group.isToday ? 'bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.2)]' : 'bg-white/30'
+                    className={`absolute -left-[5px] top-3 hidden h-2.5 w-2.5 rounded-full sm:block ${group.isToday ? 'bg-[#f5c542] shadow-[0_0_0_4px_rgba(245,197,66,0.3)]' : 'bg-white/30'
                       }`}
                   />
                   <div className="-mx-1 flex snap-x gap-3 overflow-x-auto scrollbar-hide px-1 pb-3 pt-1 touch-pan-x sm:gap-4 [mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)]">

@@ -111,6 +111,12 @@ export const tmdb = {
   discover: (type: 'movie' | 'tv' = 'movie', queryString: string = '') =>
     tmdbFetch(`/discover/${type}?${queryString}`),
 
+  discoverMovies: (queryString: string = '') =>
+    tmdbFetch(`/discover/movie?${queryString}`),
+
+  discoverTV: (queryString: string = '') =>
+    tmdbFetch(`/discover/tv?${queryString}`),
+
   getRecommendations: (id: number, type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/${id}/recommendations`),
 

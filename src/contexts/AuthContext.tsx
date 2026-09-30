@@ -45,12 +45,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data) {
         setProfile(data);
       } else {
-        // Fallback default profile if trigger hasn't completed yet
+        const defaultUsername = userEmail?.split('@')[0] || 'Cinephile';
         setProfile({
           id: userId,
           email: userEmail ?? null,
-          username: userEmail?.split('@')[0] || 'Cinephile',
+          username: defaultUsername,
         });
+        // Ensure profile row exists in Supabase profiles table
+        supabase
+          .from('profiles')
+          .upsert({ id: userId, username: defaultUsername }, { onConflict: 'id' })
+          .then(({ error: upsertErr }) => {
+            if (upsertErr) console.warn('Could not auto-create profile:', upsertErr.message);
+          });
       }
     } catch (err) {
       console.error('Error fetching profile:', err);

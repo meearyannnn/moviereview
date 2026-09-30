@@ -107,20 +107,20 @@ const MovieDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#060810]">
-        <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0608]">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#c9a24b]/20 border-t-[#f5c542]" />
       </div>
     );
   }
 
   if (!movie) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#060810] p-4 text-center">
-        <h2 className="mb-2 text-2xl font-bold text-white">Movie not found</h2>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0608] p-4 text-center">
+        <h2 className="mb-2 text-2xl font-bold text-white font-display">Movie not found</h2>
         <p className="mb-6 text-sm text-white/50">It may have been removed, or the link is wrong.</p>
         <button
           onClick={() => navigate('/')}
-          className="flex h-11 items-center rounded-full bg-red-600 px-6 text-sm font-bold text-white transition-colors hover:bg-red-500"
+          className="flex h-11 items-center rounded-full bg-[#f5c542] px-6 text-sm font-black text-[#1c120c] transition-colors hover:bg-[#c9a24b] shadow-lg shadow-[#f5c542]/25"
         >
           Return home
         </button>
@@ -172,8 +172,13 @@ const MovieDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#060810] text-[#f8fafc] selection:bg-[#dc2626] selection:text-white">
+    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
       <Navbar />
+
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
       <DetailLayout
         backdropSrc={tmdb.getImageUrl(movie.backdrop_path, 'original')}

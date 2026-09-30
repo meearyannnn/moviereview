@@ -64,15 +64,15 @@ const TraktShelfRow: React.FC<{
                 loading="lazy"
               />
               {show.vote_average > 0 && (
-                <span className="absolute top-2 right-2 flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-red-500 border border-white/10">
-                  <Star className="w-3 h-3 fill-red-500" />
+                <span className="absolute top-2 right-2 flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[#f5c542] border border-[#c9a24b]/20">
+                  <Star className="w-3 h-3 fill-[#f5c542]" />
                   {show.vote_average.toFixed(1)}
                 </span>
               )}
             </div>
 
             <div className="mt-2.5 px-0.5">
-              <h3 className="font-display font-bold text-sm text-white group-hover:text-red-400 transition-colors truncate">
+              <h3 className="font-display font-bold text-sm text-white group-hover:text-[#f5c542] transition-colors truncate">
                 {show.name || show.title}
               </h3>
               {year && (
@@ -165,17 +165,17 @@ export const TraktShowsShelves: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-600 text-white font-extrabold">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#c9a24b]/15 text-[#f5c542] border border-[#c9a24b]/30 font-mono">
                 Upcoming Hype
               </span>
-              <span className="text-xs text-red-500 font-bold flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 fill-red-500" />
+              <span className="text-xs text-[#f5c542] font-bold flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 fill-[#f5c542] text-[#f5c542]" />
                 Most Anticipated
               </span>
             </div>
             <h2 className="font-display font-black text-xl sm:text-2xl text-white tracking-tight">
               <span>Most Anticipated </span>
-              <span className="bg-gradient-to-r from-red-500 via-white to-red-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#f5c542] via-white to-[#c9a24b] bg-clip-text text-transparent">
                 TV Series
               </span>
             </h2>
@@ -219,17 +219,17 @@ export const TraktShowsShelves: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-600 text-white font-extrabold">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#c9a24b]/15 text-[#f5c542] border border-[#c9a24b]/30 font-mono">
                 Top Charts
               </span>
-              <span className="text-xs text-red-500 font-bold flex items-center gap-1">
+              <span className="text-xs text-[#f5c542] font-bold flex items-center gap-1">
                 <Eye className="w-3.5 h-3.5" />
                 Most Watched Series
               </span>
             </div>
             <h2 className="font-display font-black text-xl sm:text-2xl text-white tracking-tight">
               <span>Most Watched </span>
-              <span className="bg-gradient-to-r from-red-500 via-white to-red-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#f5c542] via-white to-[#c9a24b] bg-clip-text text-transparent">
                 Shows
               </span>
             </h2>
@@ -237,14 +237,14 @@ export const TraktShowsShelves: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Period Selector Tabs */}
-            <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
+            <div className="flex items-center gap-1.5 bg-[#140a0d] p-1 rounded-xl border border-[#c9a24b]/20">
               {(['daily', 'weekly', 'monthly'] as const).map((period) => (
                 <button
                   key={period}
                   onClick={() => setWatchedPeriod(period)}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all uppercase ${
                     watchedPeriod === period
-                      ? 'bg-red-600 text-white font-extrabold shadow-sm'
+                      ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-sm'
                       : 'text-white/60 hover:text-white'
                   }`}
                 >

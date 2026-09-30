@@ -8,12 +8,12 @@ const RatedPill = ({ rated }: { rated: string }) => {
   const colors: Record<string, string> = {
     'G':       'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
     'PG':      'bg-sky-500/15 border-sky-500/35 text-sky-400',
-    'PG-13':   'bg-amber-500/15 border-amber-500/35 text-red-500',
+    'PG-13':   'bg-amber-500/15 border-amber-500/35 text-amber-400',
     'R':       'bg-orange-500/15 border-orange-500/35 text-orange-400',
     'NC-17':   'bg-red-500/15 border-red-500/35 text-red-400',
     'TV-G':    'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
     'TV-PG':   'bg-sky-500/15 border-sky-500/35 text-sky-400',
-    'TV-14':   'bg-amber-500/15 border-amber-500/35 text-red-500',
+    'TV-14':   'bg-amber-500/15 border-amber-500/35 text-amber-400',
     'TV-MA':   'bg-red-500/15 border-red-500/35 text-red-400',
   };
   const cls = colors[rated] || 'bg-white/8 border-white/15 text-white/80';
@@ -210,10 +210,10 @@ export const RatingsDisplay: React.FC<RatingsDisplayProps> = ({
     if (!awards) return null;
     return (
       <div
-        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#f8536f]/[0.06] border border-[#f8536f]/20 text-[#f8536f]/90 text-xs font-medium max-w-full min-w-0 ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#c9a24b]/10 border border-[#c9a24b]/30 text-[#f5c542] text-xs font-mono max-w-full min-w-0 shadow-sm ${className}`}
         title={awards}
       >
-        <Trophy className="w-3.5 h-3.5 text-[#f8536f] shrink-0" />
+        <Trophy className="w-3.5 h-3.5 text-[#c9a24b] shrink-0" />
         <span className="truncate">{awards}</span>
       </div>
     );

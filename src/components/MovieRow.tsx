@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { MovieCard } from './MovieCard';
 import { type Movie } from '@/services/tmdb';
@@ -12,6 +13,7 @@ interface MovieRowProps {
   fetchData: () => Promise<{ results: Movie[] }>;
   type?: 'movie' | 'tv';
   onViewMore?: () => void;
+  viewAllLink?: string;
 }
 
 export const MovieRow = ({
@@ -22,6 +24,7 @@ export const MovieRow = ({
   fetchData,
   type = 'movie',
   onViewMore,
+  viewAllLink,
 }: MovieRowProps) => {
   const [movies, setMovies] = useState<Movie[]>([]);
 
@@ -70,21 +73,21 @@ export const MovieRow = ({
         <div className="flex items-center justify-between mb-4 px-0.5">
           <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
-              <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.15)] flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center shadow-[0_0_12px_rgba(245,197,66,0.15)] flex-shrink-0">
                 <Icon className="w-3.5 h-3.5" />
               </div>
             )}
             <div className="flex items-baseline gap-2.5 truncate">
-              <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
+              <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-baseline gap-1.5">
                 <span>{title}</span>
                 {accent && (
-                  <span className="text-white/60 font-semibold text-lg sm:text-xl">
+                  <span className="text-[#f5c542] font-semibold text-lg sm:text-xl">
                     {accent}
                   </span>
                 )}
               </h2>
               {subtitle && (
-                <span className="hidden sm:inline text-xs sm:text-sm text-white/40 truncate">
+                <span className="hidden sm:inline text-xs sm:text-sm font-mono text-white/40 truncate">
                   • {subtitle}
                 </span>
               )}
@@ -92,15 +95,23 @@ export const MovieRow = ({
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {onViewMore && (
+            {viewAllLink ? (
+              <Link
+                to={viewAllLink}
+                className="text-xs font-mono font-bold text-[#f5c542] hover:text-[#ffd875] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#c9a24b]/15"
+              >
+                <span>See all</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            ) : onViewMore ? (
               <button
                 onClick={onViewMore}
-                className="text-xs font-semibold text-red-500/80 hover:text-red-400 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-red-600/10"
+                className="text-xs font-mono font-bold text-[#f5c542] hover:text-[#ffd875] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#c9a24b]/15"
               >
-                <span>View all</span>
+                <span>See all</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            )}
+            ) : null}
 
             {/* Header Arrow Controls */}
             <div className="flex items-center gap-1.5">

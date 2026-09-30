@@ -23,7 +23,7 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden bg-[#111520] border border-white/15 shadow-2xl p-6 sm:p-8"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden bg-[#140a0d] border border-[#c9a24b]/25 shadow-2xl p-6 sm:p-8"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -33,13 +33,13 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2 mb-2 text-red-500">
+        <div className="flex items-center gap-2 mb-2 text-[#f5c542]">
           <Command className="w-5 h-5" />
           <h3 className="font-display font-bold text-lg text-white">
             Cinema Console Shortcuts
           </h3>
         </div>
-        <p className="text-xs text-white/50 mb-6 font-light">
+        <p className="text-xs text-[#f3e9d2]/60 mb-6 font-light">
           Navigate and control MovieGuy with your keyboard like a cinema console.
         </p>
 
@@ -49,13 +49,13 @@ export const KeyboardShortcutsModal = ({ isOpen, onClose }: KeyboardShortcutsMod
             return (
               <div
                 key={item.key}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5"
+                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-[#c9a24b]/15"
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 text-white/50" />
+                  <Icon className="w-4 h-4 text-[#c9a24b]" />
                   <span className="text-sm font-medium text-white/80">{item.desc}</span>
                 </div>
-                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-red-500 shadow-sm">
+                <kbd className="px-2.5 py-1 rounded-lg bg-[#f5c542]/10 border border-[#c9a24b]/30 text-xs font-mono font-bold text-[#f5c542] shadow-sm">
                   {item.key}
                 </kbd>
               </div>

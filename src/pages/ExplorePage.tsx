@@ -1,411 +1,628 @@
-// pages/ExplorePage.tsx
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// src/pages/ExplorePage.tsx — "The Box Office" Unified Explore Catalog
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Navbar } from '@/components/Navbar';
-import { MovieCard } from '@/components/MovieCard';
-import { tmdb, type Movie } from '@/services/tmdb';
 import {
-  SlidersHorizontal, X, ChevronDown, Check, Clapperboard,
+  SlidersHorizontal,
+  X,
+  ArrowUp,
+  Search,
+  RotateCcw,
+  Ticket,
+  Film,
+  Armchair,
 } from 'lucide-react';
-import { soundEffects } from '@/lib/soundEffects';
-
-interface GenreOption { id: number; name: string; color: string; }
-
-const GENRE_LIST: GenreOption[] = [
-  { id: 28,    name: 'Action',      color: '#ef4444' },
-  { id: 35,    name: 'Comedy',      color: '#eab308' },
-  { id: 18,    name: 'Drama',       color: '#ec4899' },
-  { id: 27,    name: 'Horror',      color: '#6b7280' },
-  { id: 99,    name: 'Documentary', color: '#22c55e' },
-  { id: 9648,  name: 'Mystery',     color: '#a855f7' },
-  { id: 10749, name: 'Romance',     color: '#f43f5e' },
-  { id: 878,   name: 'Sci-Fi',      color: '#38bdf8' },
-  { id: 10770, name: 'Sports',      color: '#f97316' },
-  { id: 53,    name: 'Thriller',    color: '#64748b' },
-];
-
-const SORT_OPTIONS = [
-  { value: 'release_date.desc',  label: 'Newest Releases' },
-  { value: 'popularity.desc',    label: 'Most Popular' },
-  { value: 'vote_average.desc',  label: 'Highest Rated' },
-];
+import { Navbar } from '@/components/Navbar';
+import { ExploreSmartShelves } from '@/components/explore/ExploreSmartShelves';
+import { FeatureCard } from '@/components/explore/FeatureCard';
+import {
+  FilterRail,
+  EXPLORE_GENRES,
+  SHOWTIME_ITEMS,
+  type ExploreType,
+  type ExploreSort,
+} from '@/components/explore/FilterRail';
+import { PosterCard } from '@/components/explore/PosterCard';
+import { ActiveFilterChips } from '@/components/explore/ActiveFilterChips';
+import { tmdb, type Movie } from '@/services/tmdb';
+import { WEB_CHANNELS } from '@/services/webChannels';
 
 export const ExplorePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const initialFilter = searchParams.get('filter') || '';
-  const initialAnime  = searchParams.get('anime')  || '';
-  const initialSort   = searchParams.get('sort')   || 'release_date.desc';
-  const initialType   = (searchParams.get('type') as 'all' | 'movie' | 'tv') || 'all';
-  const initialGenre  = searchParams.get('genre') ? Number(searchParams.get('genre')) : null;
+  // URL state
+  const typeParam = searchParams.get('type') as ExploreType | null;
+  const sortParam = searchParams.get('sort') as ExploreSort | null;
+  const networksParam = searchParams.get('networks');
+  const genresParam = searchParams.get('genres');
+  const searchParam = searchParams.get('q') || '';
 
-  const [activeHeroFilter, setActiveHeroFilter] = useState<'none'|'select'|'family_friendly'|'award_winner'>(
-    initialFilter === 'family_friendly' ? 'family_friendly'
-    : initialFilter === 'award_winner'  ? 'award_winner'
-    : initialFilter === 'select'        ? 'select'
-    : 'none'
+  const [type, setType] = useState<ExploreType>(
+    typeParam === 'movie' || typeParam === 'tv' ? typeParam : 'all'
   );
-  const [animeFilter, setAnimeFilter] = useState<'all'|'hide'|'only'>(
-    initialAnime === 'only' ? 'only' : initialAnime === 'hide' ? 'hide' : 'all'
+  const [sort, setSort] = useState<ExploreSort>(
+    sortParam === 'popular' || sortParam === 'top_rated' || sortParam === 'latest'
+      ? sortParam
+      : 'trending'
   );
-  const [contentType, setContentType] = useState<'all'|'movie'|'tv'>(initialType);
-  const [sortBy, setSortBy] = useState<string>(
-    initialSort === 'monthly' ? 'popularity.desc'
-    : initialSort === 'top_100' ? 'vote_average.desc'
-    : initialSort || 'release_date.desc'
+  const [selectedNetworks, setSelectedNetworks] = useState<string[]>(
+    networksParam ? networksParam.split(',').filter(Boolean) : []
   );
-  const [selectedGenre, setSelectedGenre] = useState<number|null>(initialGenre);
-  const [items, setItems]   = useState<Movie[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(
+    genresParam ? genresParam.split(',').filter(Boolean) : []
+  );
+  const [searchQuery, setSearchQuery] = useState(searchParam);
+
+  const [items, setItems] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [page, setPage]     = useState(1);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Sync from URL
+  // Mobile drawer & back-to-top state
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // Scroll listener for back-to-top
   useEffect(() => {
-    const f = searchParams.get('filter') || '';
-    setActiveHeroFilter(f === 'family_friendly' ? 'family_friendly' : f === 'award_winner' ? 'award_winner' : f === 'select' ? 'select' : 'none');
-    const a = searchParams.get('anime') || '';
-    setAnimeFilter(a === 'only' ? 'only' : a === 'hide' ? 'hide' : 'all');
-    const t = (searchParams.get('type') as 'all'|'movie'|'tv') || 'all';
-    setContentType(t);
-    const s = searchParams.get('sort') || '';
-    setSortBy(s === 'monthly' ? 'popularity.desc' : s === 'top_100' ? 'vote_average.desc' : s || 'release_date.desc');
-    const g = searchParams.get('genre') ? Number(searchParams.get('genre')) : null;
-    setSelectedGenre(g);
-  }, [searchParams]);
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const currentLanguageName  = searchParams.get('language')     || '';
-  const currentLanguageCode  = searchParams.get('lang')         || '';
-  const currentCategory      = searchParams.get('category')     || '';
-  const currentCountryName   = searchParams.get('country')      || '';
-  const currentCountryCode   = searchParams.get('country_code') || '';
+  // Sync state with URL params
+  const updateUrlParams = useCallback(
+    (
+      newType: ExploreType,
+      newSort: ExploreSort,
+      newNetworks: string[],
+      newGenres: string[],
+      newQ?: string
+    ) => {
+      const params = new URLSearchParams();
+      if (newType !== 'all') params.set('type', newType);
+      if (newSort !== 'trending') params.set('sort', newSort);
+      if (newNetworks.length > 0) params.set('networks', newNetworks.join(','));
+      if (newGenres.length > 0) params.set('genres', newGenres.join(','));
+      if (newQ && newQ.trim()) params.set('q', newQ.trim());
+      setSearchParams(params, { replace: true });
+    },
+    [setSearchParams]
+  );
 
-  const activeFiltersCount = useMemo(() => {
-    let c = 0;
-    if (activeHeroFilter !== 'none')                  c++;
-    if (animeFilter !== 'all')                        c++;
-    if (contentType !== 'all')                        c++;
-    if (selectedGenre !== null)                       c++;
-    if (sortBy !== 'release_date.desc')               c++;
-    if (currentLanguageName || currentLanguageCode)   c++;
-    if (currentCategory)                              c++;
-    if (currentCountryName || currentCountryCode)     c++;
-    return c;
-  }, [activeHeroFilter, animeFilter, contentType, selectedGenre, sortBy, currentLanguageName, currentLanguageCode, currentCategory, currentCountryName, currentCountryCode]);
-
-  const updateFilterParam = (key: string, val: string | null) => {
-    const p = new URLSearchParams(searchParams);
-    if (!val || val === 'all' || val === 'none') p.delete(key); else p.set(key, val);
-    setSearchParams(p);
+  // Filter handlers
+  const handleTypeChange = (newType: ExploreType) => {
+    setType(newType);
+    updateUrlParams(newType, sort, selectedNetworks, selectedGenres, searchQuery);
   };
 
-  const handleClearFilters = useCallback(() => {
-    soundEffects.playHoverTick();
-    setActiveHeroFilter('none'); setAnimeFilter('all'); setContentType('all');
-    setSelectedGenre(null); setSortBy('release_date.desc');
-    setSearchParams(new URLSearchParams());
-  }, [setSearchParams]);
+  const handleSortChange = (newSort: ExploreSort) => {
+    setSort(newSort);
+    updateUrlParams(type, newSort, selectedNetworks, selectedGenres, searchQuery);
+  };
 
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    async function loadData() {
+  const handleToggleNetwork = (netId: string) => {
+    const updated = selectedNetworks.includes(netId)
+      ? selectedNetworks.filter((id) => id !== netId)
+      : [...selectedNetworks, netId];
+    setSelectedNetworks(updated);
+    updateUrlParams(type, sort, updated, selectedGenres, searchQuery);
+  };
+
+  const handleToggleGenre = (gId: string) => {
+    const updated = selectedGenres.includes(gId)
+      ? selectedGenres.filter((id) => id !== gId)
+      : [...selectedGenres, gId];
+    setSelectedGenres(updated);
+    updateUrlParams(type, sort, selectedNetworks, updated, searchQuery);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateUrlParams(type, sort, selectedNetworks, selectedGenres, searchQuery);
+  };
+
+  const handleClearAll = () => {
+    setType('all');
+    setSort('trending');
+    setSelectedNetworks([]);
+    setSelectedGenres([]);
+    setSearchQuery('');
+    updateUrlParams('all', 'trending', [], [], '');
+  };
+
+  const hasActiveFilters =
+    type !== 'all' ||
+    sort !== 'trending' ||
+    selectedNetworks.length > 0 ||
+    selectedGenres.length > 0 ||
+    Boolean(searchQuery.trim());
+
+  const activeFiltersCount =
+    (type !== 'all' ? 1 : 0) +
+    (sort !== 'trending' ? 1 : 0) +
+    selectedNetworks.length +
+    selectedGenres.length +
+    (searchQuery.trim() ? 1 : 0);
+
+  // Fetch explore feed items
+  const fetchExploreItems = useCallback(
+    async (currentPage: number, append: boolean = false) => {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
       try {
-        const q: string[] = [];
-        if (sortBy === 'vote_average.desc')      q.push('sort_by=vote_average.desc&vote_count.gte=300');
-        else if (sortBy === 'popularity.desc')   q.push('sort_by=popularity.desc');
-        else                                     q.push('sort_by=primary_release_date.desc&primary_release_date.lte=2026-12-31');
-        if (activeHeroFilter === 'family_friendly') q.push('with_genres=10751');
-        else if (activeHeroFilter === 'award_winner') q.push('vote_average.gte=7.6&vote_count.gte=200');
-        else if (activeHeroFilter === 'select')   q.push('vote_average.gte=7.4&vote_count.gte=150');
-        if (animeFilter === 'only')               q.push('with_genres=16&with_original_language=ja');
-        else if (animeFilter === 'hide')          q.push('without_genres=16');
-        if (selectedGenre)                        q.push(`with_genres=${selectedGenre}`);
-        if (currentLanguageCode)                  q.push(`with_original_language=${currentLanguageCode}`);
-        if (currentCountryCode)                   q.push(`with_origin_country=${currentCountryCode}`);
-        if (currentCategory) {
-          const m = GENRE_LIST.find(g => g.name.toLowerCase() === currentCategory.toLowerCase());
-          if (m) q.push(`with_genres=${m.id}`);
+        if (searchQuery.trim()) {
+          const res = await tmdb.search(searchQuery.trim(), type === 'all' ? 'multi' : type);
+          const results: Movie[] = (res.results || []).filter(
+            (item: any) => item.poster_path && item.media_type !== 'person'
+          );
+          setItems(results);
+          setHasMore(false);
+          setLoading(false);
+          setLoadingMore(false);
+          return;
         }
-        q.push(`page=${page}`);
-        const qs = q.join('&');
-        let res: any;
-        if (contentType === 'tv') {
-          res = await tmdb.discover('tv', qs.replace('primary_release_date', 'first_air_date'));
-        } else if (contentType === 'movie') {
-          res = await tmdb.discover('movie', qs);
-        } else {
-          const [mRes, tvRes] = await Promise.all([tmdb.discover('movie', qs), tmdb.discover('tv', qs.replace('primary_release_date', 'first_air_date'))]);
-          const mList = (mRes.results||[]).map((x: any) => ({ ...x, media_type: 'movie' as const }));
-          const tList = (tvRes.results||[]).map((x: any) => ({ ...x, media_type: 'tv' as const }));
-          const combined: Movie[] = [];
-          for (let i = 0; i < Math.max(mList.length, tList.length); i++) {
-            if (mList[i]) combined.push(mList[i]);
-            if (tList[i]) combined.push(tList[i]);
-          }
-          res = { results: combined };
-        }
-        if (isMounted) {
-          const valid = (res.results||[]).filter((x: Movie) => x.poster_path);
-          setItems(valid); setHasMore(valid.length >= 10); setLoading(false);
-        }
-      } catch { if (isMounted) setLoading(false); }
-    }
-    loadData();
-    return () => { isMounted = false; };
-  }, [activeHeroFilter, animeFilter, contentType, sortBy, selectedGenre, page, currentLanguageCode, currentCountryCode, currentCategory]);
 
-  // ────────────────── Sidebar filter button helpers ──────────────────
-  const ActiveBtn = 'bg-white/10 text-white border-white/30 font-black';
-  const InactiveBtn = 'bg-transparent text-white/45 border-white/[0.07] hover:text-white hover:border-white/20';
+        // ── Movie Query Builder ───────────────────────────────────────────
+        const movieQueryParts: string[] = [`page=${currentPage}`];
+        if (sort === 'trending' || sort === 'popular') {
+          movieQueryParts.push('sort_by=popularity.desc');
+        } else if (sort === 'top_rated') {
+          movieQueryParts.push('sort_by=vote_average.desc&vote_count.gte=100');
+        } else if (sort === 'latest') {
+          movieQueryParts.push('sort_by=primary_release_date.desc');
+        }
+
+        if (selectedNetworks.length > 0) {
+          const providerIds = selectedNetworks
+            .map((id) => WEB_CHANNELS.find((ch) => ch.id === id)?.providerId)
+            .filter(Boolean);
+          if (providerIds.length > 0) {
+            movieQueryParts.push(`with_watch_providers=${providerIds.join('|')}&watch_region=US`);
+          }
+        }
+
+        if (selectedGenres.length > 0) {
+          const movieGenreIds = selectedGenres
+            .map((id) => EXPLORE_GENRES.find((g) => g.id === id)?.movieGenreId)
+            .filter(Boolean);
+          if (movieGenreIds.length > 0) {
+            movieQueryParts.push(`with_genres=${movieGenreIds.join('|')}`);
+          }
+        }
+
+        // ── TV Query Builder ──────────────────────────────────────────────
+        const tvQueryParts: string[] = [`page=${currentPage}`];
+        if (sort === 'trending' || sort === 'popular') {
+          tvQueryParts.push('sort_by=popularity.desc');
+        } else if (sort === 'top_rated') {
+          tvQueryParts.push('sort_by=vote_average.desc&vote_count.gte=100');
+        } else if (sort === 'latest') {
+          tvQueryParts.push('sort_by=first_air_date.desc');
+        }
+
+        if (selectedNetworks.length > 0) {
+          const networkIds = selectedNetworks
+            .map((id) => WEB_CHANNELS.find((ch) => ch.id === id)?.networkId)
+            .filter(Boolean);
+          if (networkIds.length > 0) {
+            tvQueryParts.push(`with_networks=${networkIds.join('|')}`);
+          }
+        }
+
+        if (selectedGenres.length > 0) {
+          const tvGenreIds = selectedGenres
+            .map((id) => EXPLORE_GENRES.find((g) => g.id === id)?.tvGenreId)
+            .filter(Boolean);
+          if (tvGenreIds.length > 0) {
+            tvQueryParts.push(`with_genres=${tvGenreIds.join('|')}`);
+          }
+        }
+
+        const movieQueryString = movieQueryParts.join('&');
+        const tvQueryString = tvQueryParts.join('&');
+        let rawResults: Movie[] = [];
+        let totalPages = 1;
+
+        if (type === 'all') {
+          const [movieRes, tvRes] = await Promise.all([
+            tmdb.discover('movie', movieQueryString),
+            tmdb.discover('tv', tvQueryString),
+          ]);
+
+          const movies = (movieRes.results || []).map((m: any) => ({ ...m, media_type: 'movie' as const }));
+          const tvs = (tvRes.results || []).map((t: any) => ({ ...t, media_type: 'tv' as const }));
+
+          const interleaved: Movie[] = [];
+          const maxLen = Math.max(movies.length, tvs.length);
+          for (let i = 0; i < maxLen; i++) {
+            if (movies[i]) interleaved.push(movies[i]);
+            if (tvs[i]) interleaved.push(tvs[i]);
+          }
+
+          rawResults = interleaved.filter((item) => Boolean(item.poster_path));
+          totalPages = Math.max(movieRes.total_pages || 1, tvRes.total_pages || 1);
+        } else if (type === 'movie') {
+          const movieRes = await tmdb.discover('movie', movieQueryString);
+          rawResults = (movieRes.results || []).map((m: any) => ({ ...m, media_type: 'movie' as const })).filter((item: any) => Boolean(item.poster_path));
+          totalPages = movieRes.total_pages || 1;
+        } else {
+          const tvRes = await tmdb.discover('tv', tvQueryString);
+          rawResults = (tvRes.results || []).map((t: any) => ({ ...t, media_type: 'tv' as const })).filter((item: any) => Boolean(item.poster_path));
+          totalPages = tvRes.total_pages || 1;
+        }
+
+        if (append) {
+          setItems((prev) => {
+            const seen = new Set(prev.map((p) => `${p.media_type || 'm'}_${p.id}`));
+            const deduplicated = rawResults.filter((item) => !seen.has(`${item.media_type || 'm'}_${item.id}`));
+            return [...prev, ...deduplicated];
+          });
+        } else {
+          setItems(rawResults);
+        }
+
+        setHasMore(rawResults.length > 0 && currentPage < totalPages);
+      } catch (err) {
+        console.error('Failed to load explore feed:', err);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [type, sort, selectedNetworks, selectedGenres, searchQuery]
+  );
+
+  // Trigger query fetch
+  useEffect(() => {
+    setPage(1);
+    fetchExploreItems(1, false);
+  }, [fetchExploreItems]);
+
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchExploreItems(nextPage, true);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <div className="min-h-screen bg-[#060810] text-white selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative overflow-x-hidden font-sans">
       <Navbar />
 
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-36 md:pb-28 safe-bottom-content">
+      {/* ── 1. The Cinema Lobby Ambient Elements ── */}
+      {/* Soft Radial Projector Light from top center */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.08)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
 
-        {/* ── Page header ── */}
-        <div className="mb-8">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500/70 font-display mb-1.5">
-            Discover
-          </p>
-          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white tracking-tight leading-none">
-            Explore Cinema
-          </h1>
-        </div>
+      {/* Faint Velvet Curtain-Fold Gradients at left & right edges */}
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
-        {/* ── Mobile filter toggle ── */}
-        <div className="md:hidden w-full flex items-center justify-between mb-4">
-          <button
-            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-xs font-black font-display uppercase tracking-wide text-white"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-red-500" />
-            Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
-          </button>
-          {activeFiltersCount > 0 && (
-            <button onClick={handleClearFilters} className="text-xs text-white/40 hover:text-red-400 flex items-center gap-1 transition-colors">
-              <X className="w-3 h-3" /> Clear
-            </button>
-          )}
-        </div>
+      {/* Faint Film Grain Texture */}
+      <div className="pointer-events-none fixed inset-0 opacity-[0.035] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] z-0" />
 
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-32">
+        {/* ── 2. The Box Office Marquee Header ── */}
+        <header className="pt-4 pb-6 mb-8 relative">
+          {/* Subtle Twinkling Marquee Bulbs Row */}
+          <div className="flex items-center justify-center gap-3 mb-4 opacity-35 overflow-hidden">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <span
+                key={i}
+                className="w-1 h-1 rounded-full bg-[#f5c542] shrink-0 animate-pulse"
+                style={{
+                  animationDelay: `${(i % 6) * 250}ms`,
+                  animationDuration: '2.5s',
+                }}
+              />
+            ))}
+          </div>
 
-          {/* ── Sidebar ── */}
-          <aside className={`w-full md:w-56 lg:w-64 flex-shrink-0 space-y-7 ${mobileFilterOpen ? 'block' : 'hidden md:block'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              {/* Eyebrow: NOW SHOWING flanked by brass marquee-bulb dots */}
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+                <span>NOW SHOWING</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+              </p>
 
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-white/40" />
-                <span className="font-display font-black text-sm text-white tracking-wide">Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className="text-[10px] font-black w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center">
-                    {activeFiltersCount}
+              {/* Title in project's font-display */}
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none">
+                Explore
+              </h1>
+            </div>
+
+            {/* Right: Box Office Window Search & Live Tonight Count */}
+            <div className="flex items-center gap-3">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#c9a24b]/70" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Box Office window…"
+                  className="pl-9 pr-4 py-2 rounded-xl bg-black/40 border border-[#c9a24b]/25 hover:border-[#c9a24b]/50 focus:border-[#f5c542] text-xs text-white placeholder-white/40 focus:outline-none transition-all w-52 sm:w-64"
+                />
+              </form>
+
+              {!loading && (
+                <div className="hidden sm:flex flex-col items-end pl-3 border-l border-[#c9a24b]/20">
+                  <span className="text-[11px] font-mono font-bold text-[#f5c542] tracking-wider uppercase">
+                    {items.length} SHOWS TONIGHT
                   </span>
-                )}
-              </div>
-              {activeFiltersCount > 0 && (
-                <button onClick={handleClearFilters} className="text-[11px] text-white/35 hover:text-red-400 flex items-center gap-1 transition-colors font-medium">
-                  <X className="w-3 h-3" /> Clear
-                </button>
+                  <span className="text-[9px] font-mono text-white/40 uppercase">
+                    ADMISSION READY
+                  </span>
+                </div>
               )}
             </div>
+          </div>
 
-            {/* Sort */}
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/30 font-display">Sort By</p>
-              <div className="space-y-1.5">
-                {SORT_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => { soundEffects.playHoverTick(); setSortBy(opt.value); updateFilterParam('sort', opt.value === 'release_date.desc' ? null : opt.value); }}
-                    className={[
-                      'w-full text-left px-3 py-2 rounded-lg border text-xs font-bold font-sans transition-all duration-200',
-                      sortBy === opt.value ? 'bg-red-600/15 text-red-400 border-red-500/40' : InactiveBtn,
-                    ].join(' ')}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Thin Brass Double-Line Divider beneath Header */}
+          <div className="w-full mt-4 flex flex-col gap-[3px]">
+            <div className="w-full border-t border-[#c9a24b]/35" />
+            <div className="w-full border-t border-[#c9a24b]/15" />
+          </div>
+        </header>
 
-            {/* Content Type */}
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/30 font-display">Type</p>
-              <div className="flex gap-1.5">
-                {(['movie', 'tv'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => { soundEffects.playHoverTick(); const next = contentType === type ? 'all' : type; setContentType(next); updateFilterParam('type', next === 'all' ? null : next); }}
-                    className={[
-                      'flex-1 py-2 rounded-lg border text-xs font-black font-display uppercase tracking-wide transition-all duration-200',
-                      contentType === type ? ActiveBtn : InactiveBtn,
-                    ].join(' ')}
-                  >
-                    {type === 'movie' ? 'Movies' : 'Shows'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Anime */}
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/30 font-display">Anime</p>
-              <div className="flex gap-1.5">
-                {(['hide', 'only'] as const).map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => { soundEffects.playHoverTick(); const next = animeFilter === a ? 'all' : a; setAnimeFilter(next); updateFilterParam('anime', next === 'all' ? null : next); }}
-                    className={[
-                      'flex-1 py-2 rounded-lg border text-xs font-black font-display uppercase tracking-wide transition-all duration-200',
-                      animeFilter === a ? ActiveBtn : InactiveBtn,
-                    ].join(' ')}
-                  >
-                    {a === 'hide' ? 'Hide' : 'Only'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Genres */}
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/30 font-display">Genre</p>
-              <div className="space-y-1">
-                {GENRE_LIST.map((g) => {
-                  const on = selectedGenre === g.id;
-                  return (
-                    <button
-                      key={g.id}
-                      onClick={() => { soundEffects.playHoverTick(); const next = on ? null : g.id; setSelectedGenre(next); updateFilterParam('genre', next ? String(next) : null); }}
-                      className={[
-                        'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs font-bold font-sans text-left transition-all duration-200',
-                        on ? 'bg-white/[0.06] text-white border-white/20' : InactiveBtn,
-                      ].join(' ')}
-                    >
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.color }} />
-                      <span>{g.name}</span>
-                      {on && <Check className="w-3 h-3 ml-auto text-white/60 flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+        {/* ── 3. Two-Column Layout: Ticket Booth (Left) + The Screens (Right) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] xl:grid-cols-[260px_1fr] gap-8 items-start">
+          {/* Left Column: Sticky Ticket Booth on Desktop */}
+          <aside className="hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7rem)] flex flex-col">
+            <FilterRail
+              type={type}
+              onTypeChange={handleTypeChange}
+              sort={sort}
+              onSortChange={handleSortChange}
+              selectedNetworks={selectedNetworks}
+              onToggleNetwork={handleToggleNetwork}
+              selectedGenres={selectedGenres}
+              onToggleGenre={handleToggleGenre}
+              onClearAll={handleClearAll}
+              hasActiveFilters={hasActiveFilters}
+              className="max-h-[calc(100vh-7rem)]"
+            />
           </aside>
 
-          {/* ── Main content ── */}
-          <section className="flex-1 w-full min-w-0 space-y-6">
+          {/* Right Column: Main Cinema Showcase Grid */}
+          <main className="min-w-0">
+            {/* ── Smart Movies Shelves (Top 10 Numbered Row, Streaming Platforms, Top Movies, Trending Shows, Top Rated TV) ── */}
+            {!hasActiveFilters && !searchQuery.trim() && (
+              <ExploreSmartShelves />
+            )}
 
-            {/* Active tag badges */}
-            {(currentLanguageName || currentCountryName || activeHeroFilter !== 'none') && (
-              <div className="flex flex-wrap gap-2">
-                {currentLanguageName && (
+            {/* Active Ticket Stubs Filter Bar when filtering */}
+            {hasActiveFilters && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.8)]" />
+                    <h2 className="font-display font-extrabold text-xl text-white">
+                      Filtered Box Office Releases
+                    </h2>
+                  </div>
                   <button
-                    onClick={() => { const p = new URLSearchParams(searchParams); p.delete('language'); p.delete('lang'); setSearchParams(p); }}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] text-xs text-white/70 hover:text-white transition-colors"
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-mono text-[#c9a24b] hover:text-[#f5c542] underline flex items-center gap-1.5 transition-colors"
                   >
-                    {currentLanguageName} <X className="w-3 h-3 ml-0.5" />
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Back to Curated Shelves</span>
                   </button>
-                )}
-                {currentCountryName && (
-                  <button
-                    onClick={() => { const p = new URLSearchParams(searchParams); p.delete('country'); p.delete('country_code'); setSearchParams(p); }}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] text-xs text-white/70 hover:text-white transition-colors"
-                  >
-                    {currentCountryName} <X className="w-3 h-3 ml-0.5" />
-                  </button>
-                )}
-                {activeHeroFilter !== 'none' && (
-                  <button
-                    onClick={() => { setActiveHeroFilter('none'); updateFilterParam('filter', null); }}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-500/30 bg-red-600/10 text-xs text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    {activeHeroFilter === 'select' ? 'MovieGuy Select' : activeHeroFilter === 'family_friendly' ? 'Family Friendly' : 'Award Winner'}
-                    <X className="w-3 h-3 ml-0.5" />
-                  </button>
-                )}
+                </div>
+                <ActiveFilterChips
+                  type={type}
+                  onClearType={() => handleTypeChange('all')}
+                  sort={sort}
+                  onResetSort={() => handleSortChange('trending')}
+                  selectedNetworks={selectedNetworks}
+                  onRemoveNetwork={handleToggleNetwork}
+                  selectedGenres={selectedGenres}
+                  onRemoveGenre={handleToggleGenre}
+                  onClearAll={handleClearAll}
+                />
               </div>
             )}
 
-            {/* Quick badges row */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'select' as const,          label: '★ MovieGuy Select',  cls: 'border-red-500/30 text-red-400 hover:bg-red-600/10' },
-                { key: 'family_friendly' as const, label: '✦ Family Friendly',  cls: 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/10' },
-                { key: 'award_winner' as const,    label: '◆ Award Winner',     cls: 'border-sky-500/30 text-sky-400 hover:bg-sky-600/10' },
-              ].map(({ key, label, cls }) => {
-                const on = activeHeroFilter === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => { soundEffects.playHoverTick(); const next = on ? 'none' : key; setActiveHeroFilter(next); updateFilterParam('filter', next === 'none' ? null : next); }}
-                    className={[
-                      'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold font-sans transition-all duration-200',
-                      on ? cls.replace('hover:', '') + ' bg-opacity-15' : `bg-transparent ${cls} border-opacity-30`,
-                    ].join(' ')}
-                  >
-                    {on && <Check className="w-3 h-3" />}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Catalog Section Header when browsing without active filters */}
+            {!hasActiveFilters && !searchQuery.trim() && (
+              <div className="flex items-center justify-between pt-8 pb-5 mb-6 border-t border-[#c9a24b]/20">
+                <div className="flex items-center gap-2.5">
+                  <Ticket className="w-5 h-5 text-[#f5c542]" />
+                  <div>
+                    <h2 className="font-display font-extrabold text-xl sm:text-2xl text-white tracking-tight">
+                      All Box Office Admissions
+                    </h2>
+                    <p className="text-xs font-mono text-[#f3e9d2]/50 mt-0.5">
+                      Explore the complete multi-screen theater catalog
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-[#f5c542] tracking-wider uppercase bg-[#c9a24b]/15 px-3 py-1 rounded-full border border-[#c9a24b]/30">
+                  {items.length} SHOWS
+                </span>
+              </div>
+            )}
 
-            {/* Grid */}
+            {/* Main Admission Ticket Grid */}
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
-                {[...Array(15)].map((_, i) => (
-                  <div key={i} className="flex flex-col gap-2">
-                    <div className="aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse" style={{ animationDelay: `${i * 40}ms` }} />
-                    <div className="h-3.5 w-3/4 bg-white/[0.04] rounded animate-pulse" />
-                    <div className="h-3 w-1/2 bg-white/[0.04] rounded animate-pulse" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col rounded-2xl overflow-hidden border border-[#c9a24b]/15 bg-[#140c10] animate-pulse"
+                  >
+                    <div className="aspect-[2/3] bg-white/[0.04]" />
+                    <div className="h-3 bg-[#f3e9d2]/15 border-t border-dashed border-[#c9a24b]/20" />
+                    <div className="p-3 bg-[#f3e9d2]/10 space-y-2">
+                      <div className="h-3 w-3/4 rounded bg-white/[0.06]" />
+                      <div className="h-2.5 w-1/2 rounded bg-white/[0.04]" />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : items.length === 0 ? (
-              <div className="py-24 text-center rounded-2xl border border-white/[0.06] space-y-3">
-                <Clapperboard className="w-10 h-10 text-white/15 mx-auto" />
-                <h3 className="font-display font-black text-lg text-white/50">No Titles Found</h3>
-                <p className="text-xs text-white/30 max-w-xs mx-auto">Try adjusting or clearing your filters.</p>
-                <button onClick={handleClearFilters} className="px-5 py-2 rounded-full bg-red-600 text-white text-xs font-black font-display uppercase tracking-wide transition-all hover:bg-red-500">
-                  Reset Filters
-                </button>
+              /* Empty State: House Lights On */
+              <div className="py-24 px-4 text-center rounded-2xl border border-[#c9a24b]/20 bg-[#0c090e]/80 backdrop-blur-md max-w-lg mx-auto">
+                <div className="w-14 h-14 rounded-full bg-[#c9a24b]/10 text-[#f5c542] flex items-center justify-center mx-auto mb-4 border border-[#c9a24b]/25">
+                  <Armchair className="w-7 h-7 stroke-[1.5]" />
+                </div>
+                <h3 className="font-display font-extrabold text-xl text-white">
+                  House lights on. No shows match.
+                </h3>
+                <p className="mt-1.5 text-xs font-mono text-white/50 max-w-sm mx-auto">
+                  The screen is dark for this combination. Tear up your active stubs to return to the catalog.
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearAll}
+                    className="mt-5 inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-display font-bold bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] shadow-lg shadow-[#c9a24b]/20 hover:brightness-110 transition-all"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset filters</span>
+                  </button>
+                )}
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
-                  {items.map((item) => {
-                    const mType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+              <div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {items.map((item, index) => {
+                    // Bento rhythm: every 11th item with a backdrop becomes a wide feature card spanning 2 columns
+                    const isBentoSpot = index > 0 && index % 11 === 0 && item.backdrop_path;
+
+                    if (isBentoSpot) {
+                      return (
+                        <FeatureCard
+                          key={`feature_${item.id}_${index}`}
+                          item={item}
+                          typeOverride={type !== 'all' ? type : undefined}
+                        />
+                      );
+                    }
+
                     return (
-                      <MovieCard key={`${mType}-${item.id}`} movie={item} type={mType as 'movie' | 'tv'} />
+                      <PosterCard
+                        key={`${item.media_type || 'm'}_${item.id}_${index}`}
+                        item={item}
+                        typeOverride={type !== 'all' ? type : undefined}
+                      />
                     );
                   })}
                 </div>
 
+                {/* Load More Fallback Button */}
                 {hasMore && (
-                  <div className="flex justify-center pt-8">
+                  <div className="mt-16 mb-6 flex justify-center">
                     <button
-                      onClick={() => setPage(p => p + 1)}
-                      className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/[0.1] bg-white/[0.03] hover:bg-red-600/80 hover:border-red-500/50 text-white/60 hover:text-white text-xs font-black font-display uppercase tracking-widest transition-all duration-300"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="px-8 py-3 rounded-xl border border-[#c9a24b]/30 bg-[#0c090e] hover:bg-[#c9a24b]/10 text-[#f5c542] text-xs font-mono font-bold uppercase tracking-widest transition-all disabled:opacity-40 shadow-xl shadow-black/80 flex items-center gap-2"
                     >
-                      <ChevronDown className="w-3.5 h-3.5" /> Load More
+                      <Film className="w-4 h-4 text-[#c9a24b]" />
+                      <span>{loadingMore ? 'Printing more tickets…' : 'Load more shows'}</span>
                     </button>
                   </div>
                 )}
-              </>
+              </div>
             )}
-          </section>
+          </main>
         </div>
-      </main>
+      </div>
+
+      {/* ── 4. Floating Back to Top Button ── */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          aria-label="Back to top"
+          className="fixed bottom-24 right-6 z-40 w-11 h-11 rounded-full bg-[#c9a24b] hover:bg-[#e5b95a] text-[#1c120c] shadow-xl shadow-black/80 flex items-center justify-center transition-all animate-in fade-in zoom-in-95 duration-200 active:scale-95"
+        >
+          <ArrowUp className="w-5 h-5 stroke-[2.5]" />
+        </button>
+      )}
+
+      {/* ── 5. Mobile Floating "Tickets" Button ── */}
+      <button
+        type="button"
+        onClick={() => setMobileDrawerOpen(true)}
+        aria-label="Open Ticket Booth"
+        className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-2xl shadow-black flex items-center gap-2 active:scale-95 transition-all border border-amber-300/40"
+      >
+        <Ticket className="w-4 h-4" />
+        <span>Ticket Booth</span>
+        {activeFiltersCount > 0 && (
+          <span className="w-2 h-2 rounded-full bg-[#8c1c2b]" />
+        )}
+      </button>
+
+      {/* ── 6. Mobile Ticket Booth Slide-Over Sheet ── */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+
+          {/* Drawer Sheet */}
+          <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-[#0c090e] border-l border-[#c9a24b]/20 p-5 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-250">
+            <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-[#c9a24b]/25 mb-4 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#c9a24b] shadow-[0_0_6px_rgba(201,162,75,0.8)]" />
+                <span className="font-display font-bold text-sm text-white">Ticket Booth</span>
+                {activeFiltersCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#c9a24b]/20 text-[#f5c542] border border-[#c9a24b]/30">
+                    {activeFiltersCount} stubs
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-mono uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  aria-label="Close ticket booth"
+                >
+                  <X className="h-4 w-4 stroke-[1.5]" />
+                </button>
+              </div>
+            </div>
+
+            <FilterRail
+              type={type}
+              onTypeChange={handleTypeChange}
+              sort={sort}
+              onSortChange={handleSortChange}
+              selectedNetworks={selectedNetworks}
+              onToggleNetwork={handleToggleNetwork}
+              selectedGenres={selectedGenres}
+              onToggleGenre={handleToggleGenre}
+              onClearAll={handleClearAll}
+              hasActiveFilters={hasActiveFilters}
+              isDrawer={true}
+              onCloseMobileDrawer={() => setMobileDrawerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ExplorePage;
-
-

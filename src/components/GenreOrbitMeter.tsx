@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GenreOrbitMeter.tsx  (redesigned)
  *
  * A film-dial genre profile for detail pages.
@@ -51,9 +51,9 @@ const DEFAULT_TONE: Tone = tone("#94a3b8", "rgba(148,163,184,0.45)");
 // ── Geometry ───────────────────────────────────────────────────────────
 const SIZE = 176;
 const C = SIZE / 2;
-const RING_R = 58;      // genre ring radius
-const TICK_IN = 72;     // tick scale inner radius
-const TICK_OUT = 76;    // tick scale outer radius
+const RING_R = 60;      // genre ring radius
+const TICK_IN = 73;     // tick scale inner radius
+const TICK_OUT = 77;    // tick scale outer radius
 const SWEEP = 270;      // total dial sweep in degrees
 const START = -135;     // dial starts bottom-left, ends bottom-right
 const TICK_COUNT = 55;
@@ -233,25 +233,35 @@ export const GenreOrbitMeter = memo(({ genres, mediaType = "movie" }: GenreOrbit
               alignItems: "center",
               justifyContent: "center",
               textAlign: "center",
-              padding: "0 46px",
+              padding: "0 8px",
               pointerEvents: "none",
             }}
           >
             <span
               style={{
                 fontFamily: "ui-serif, 'Iowan Old Style', Georgia, serif",
-                fontSize: activeGenre.name.length > 11 ? 15 : 19,
-                lineHeight: 1.15,
+                fontSize:
+                  activeGenre.name.length > 14
+                    ? 13
+                    : activeGenre.name.length > 9
+                    ? 14
+                    : activeGenre.name.length > 6
+                    ? 16
+                    : 18,
+                lineHeight: 1.18,
                 fontWeight: 600,
                 letterSpacing: "-0.01em",
                 color: activeTone.color,
                 textShadow: `0 0 18px ${activeTone.glow}`,
-                wordBreak: "break-word",
+                wordBreak: "keep-all",
+                overflowWrap: "normal",
+                maxWidth: 94,
+                display: "block",
               }}
             >
               {activeGenre.name}
             </span>
-            <span style={{ marginTop: 5, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
+            <span style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
               {active === 0 ? "Main genre" : `Genre ${active + 1} of ${total}`}
             </span>
           </div>

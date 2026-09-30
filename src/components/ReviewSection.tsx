@@ -110,7 +110,7 @@ const StarGlyph: React.FC<{ fill: number; size: number }> = ({ fill, size }) => 
   <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>
     <Star className="absolute inset-0 text-white/15" style={{ width: size, height: size }} />
     <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }}>
-      <Star className="max-w-none fill-white text-white" style={{ width: size, height: size }} />
+      <Star className="max-w-none fill-[#f5c542] text-[#f5c542]" style={{ width: size, height: size }} />
     </span>
   </span>
 );
@@ -185,17 +185,17 @@ const WriteReview: React.FC<{
   };
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0b0d13] p-5 sm:p-6 space-y-5">
+    <div className="rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d] p-5 sm:p-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-red-500" />
+          <Pencil className="h-4 w-4 text-[#f5c542]" />
           <span>Write a Review</span>
         </h3>
         {!isLoggedIn && (
           <button
             type="button"
             onClick={onOpenAuth}
-            className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 underline"
+            className="text-xs text-[#f5c542] hover:text-[#f5c542]/80 flex items-center gap-1 underline"
           >
             <UserIcon className="w-3.5 h-3.5" />
             Sign in to calibrate the MovieGuy Meter
@@ -213,7 +213,7 @@ const WriteReview: React.FC<{
       <div>
         <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-white/40">
           <span>Verdict</span>
-          <span className="text-[10px] text-red-400 font-mono flex items-center gap-1 font-semibold">
+          <span className="text-[10px] text-[#f5c542] font-mono flex items-center gap-1 font-semibold">
             <Sparkles className="w-2.5 h-2.5" />
             Shifts MovieGuy Meter
           </span>
@@ -272,7 +272,7 @@ const WriteReview: React.FC<{
           onChange={(e) => setText(e.target.value.slice(0, maxLen))}
           placeholder={`What did you think of ${title}? Share your honest take...`}
           rows={3}
-          className="w-full resize-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-red-500/50"
+          className="w-full resize-none rounded-xl border border-[#c9a24b]/20 bg-black/40 px-4 py-3 text-sm leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/25 focus:border-[#f5c542]"
         />
         <div className="mt-1 text-right text-[11px] tabular-nums text-white/30">{text.length}/{maxLen}</div>
       </div>
@@ -284,11 +284,11 @@ const WriteReview: React.FC<{
           type="button"
           onClick={post}
           disabled={!canPost && !posted}
-          className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-black transition-all ${
             posted
               ? 'bg-emerald-500 text-white'
               : canPost
-              ? 'bg-[#dc2626] hover:bg-[#ef4444] text-white shadow-lg shadow-[#dc2626]/25'
+              ? 'bg-[#f5c542] hover:bg-[#c9a24b] text-[#1c120c] shadow-lg shadow-[#f5c542]/25'
               : 'cursor-not-allowed bg-white/[0.06] text-white/25'
           }`}
         >
@@ -315,8 +315,8 @@ const SpoilerSwitch: React.FC<{ on: boolean; onToggle: () => void; label: string
     onClick={onToggle}
     className="flex items-center gap-2.5 text-xs font-semibold text-white/55 hover:text-white/80 transition-colors focus-visible:outline rounded-full"
   >
-    <span className={`relative h-5 w-9 rounded-full transition-colors ${on ? 'bg-[#dc2626]' : 'bg-white/15'}`}>
-      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${on ? 'left-[18px]' : 'left-0.5'}`} />
+    <span className={`relative h-5 w-9 rounded-full transition-colors ${on ? 'bg-[#f5c542]' : 'bg-white/15'}`}>
+      <span className={`absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-[#1c120c]' : 'bg-white'} transition-all ${on ? 'left-[18px]' : 'left-0.5'}`} />
     </span>
     {label}
   </button>
@@ -380,12 +380,12 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
           {/* Review Text */}
           <div className="mt-2.5">
             {hidden ? (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200 flex items-center justify-between">
+              <div className="rounded-xl border border-[#c9a24b]/30 bg-[#c9a24b]/10 p-3 text-xs text-[#f3e9d2] flex items-center justify-between">
                 <span>⚠️ This review contains spoilers.</span>
                 <button
                   type="button"
                   onClick={() => setRevealed(true)}
-                  className="font-bold underline text-white hover:text-red-300"
+                  className="font-bold underline text-white hover:text-[#f5c542]"
                 >
                   Reveal
                 </button>
@@ -413,10 +413,10 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
               type="button"
               onClick={() => onLike(review.id)}
               className={`flex items-center gap-1.5 text-xs font-semibold tabular-nums transition-colors ${
-                review.liked ? 'text-red-500' : 'text-white/40 hover:text-white/80'
+                review.liked ? 'text-[#f5c542]' : 'text-white/40 hover:text-white/80'
               }`}
             >
-              <ThumbsUp className={`h-3.5 w-3.5 ${review.liked ? 'fill-red-500' : ''}`} />
+              <ThumbsUp className={`h-3.5 w-3.5 ${review.liked ? 'fill-[#f5c542]' : ''}`} />
               {likeCount(review)}
             </button>
             <span className="flex items-center gap-1.5 text-xs text-white/30">
@@ -584,7 +584,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ mediaId, mediaType
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex rounded-full border border-white/[0.08] bg-white/[0.03] p-0.5" role="tablist">
+            <div className="flex rounded-full border border-[#c9a24b]/20 bg-[#140a0d] p-0.5" role="tablist">
               {SORTS.map((s) => (
                 <button
                   key={s.id}
@@ -592,7 +592,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ mediaId, mediaType
                   aria-selected={sort === s.id}
                   onClick={() => setSort(s.id)}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                    sort === s.id ? 'bg-white text-black' : 'text-white/50 hover:text-white'
+                    sort === s.id ? 'bg-[#f5c542] text-[#1c120c]' : 'text-white/50 hover:text-white'
                   }`}
                 >
                   {s.label}
@@ -605,11 +605,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ mediaId, mediaType
 
         {/* List */}
         {list.length === 0 ? (
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0b0d13] py-12 text-center text-sm text-white/40">
+          <div className="rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d] py-12 text-center text-sm text-white/40">
             No reviews yet. Be the first to review <span className="font-semibold text-white/70">{title}</span> and shift the meter!
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#0b0d13] px-5 py-4 sm:px-6">
+          <div className="divide-y divide-[#c9a24b]/10 rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d] px-5 py-4 sm:px-6">
             {list.map((r) => (
               <ReviewCard key={r.id} review={r} revealAll={revealAll} onLike={handleLike} />
             ))}

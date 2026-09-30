@@ -1,4 +1,4 @@
-// pages/SchedulePage.tsx
+﻿// pages/SchedulePage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';

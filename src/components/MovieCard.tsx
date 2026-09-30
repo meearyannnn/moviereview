@@ -280,3 +280,4 @@ export const MovieCard = memo(
 );
 
 MovieCard.displayName = 'MovieCard';
+

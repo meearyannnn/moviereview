@@ -44,103 +44,80 @@ export const MovieRow = ({
 
   useEffect(() => {
     let isMounted = true;
-    const loadMovies = async () => {
-      try {
-        const data = await fetchData();
-        if (isMounted) {
-          setMovies(data.results || []);
-        }
-      } catch (err) {
-        console.error('Failed to load movie row:', err);
-      }
-    };
-    loadMovies();
-    return () => {
-      isMounted = false;
-    };
+    fetchData()
+      .then((data) => { if (isMounted) setMovies(data.results || []); })
+      .catch(console.error);
+    return () => { isMounted = false; };
   }, [fetchData]);
 
-  useEffect(() => {
-    updateScrollState();
-  }, [movies, updateScrollState]);
+  useEffect(() => { updateScrollState(); }, [movies, updateScrollState]);
 
   if (movies.length === 0) return null;
 
   return (
-    <div className="relative group/row my-3 w-full max-w-full min-w-0">
-      {/* Header if title is provided */}
+    <div className="w-full max-w-full min-w-0">
+      {/* Header */}
       {title && title.trim() !== '' && (
-        <div className="flex items-center justify-between mb-4 px-0.5">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
-              <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center shadow-[0_0_12px_rgba(245,197,66,0.15)] flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/[0.08] text-white/60 flex items-center justify-center flex-shrink-0">
                 <Icon className="w-3.5 h-3.5" />
               </div>
             )}
-            <div className="flex items-baseline gap-2.5 truncate">
-              <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-baseline gap-1.5">
+            <div className="min-w-0">
+              <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
                 <span>{title}</span>
-                {accent && (
-                  <span className="text-[#f5c542] font-semibold text-lg sm:text-xl">
-                    {accent}
-                  </span>
-                )}
+                {accent && <span className="text-[#f5c542]">{accent}</span>}
               </h2>
               {subtitle && (
-                <span className="hidden sm:inline text-xs sm:text-sm font-mono text-white/40 truncate">
-                  • {subtitle}
-                </span>
+                <p className="text-[11px] font-mono text-white/30 mt-0.5 truncate">{subtitle}</p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {viewAllLink ? (
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {viewAllLink && (
               <Link
                 to={viewAllLink}
-                className="text-xs font-mono font-bold text-[#f5c542] hover:text-[#ffd875] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#c9a24b]/15"
+                className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-white/40 hover:text-[#f5c542] transition-colors mr-1"
               >
-                <span>See all</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                See all <ArrowRight className="w-3 h-3" />
               </Link>
-            ) : onViewMore ? (
+            )}
+            {onViewMore && !viewAllLink && (
               <button
                 onClick={onViewMore}
-                className="text-xs font-mono font-bold text-[#f5c542] hover:text-[#ffd875] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#c9a24b]/15"
+                className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-white/40 hover:text-[#f5c542] transition-colors mr-1"
               >
-                <span>See all</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                See all <ArrowRight className="w-3 h-3" />
               </button>
-            ) : null}
-
-            {/* Header Arrow Controls */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => scrollToDirection('left')}
-                disabled={!canScrollLeft}
-                aria-label="Scroll left"
-                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => scrollToDirection('right')}
-                disabled={!canScrollRight}
-                aria-label="Scroll right"
-                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/70 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all active:scale-95"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            )}
+            <button
+              onClick={() => scrollToDirection('left')}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/40 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => scrollToDirection('right')}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/40 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Movies Horizontal Scroll Container */}
+      {/* Scroll track */}
       <div
         ref={containerRef}
         {...handlers}
-        className={`flex gap-3.5 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide select-none touch-pan-x overscroll-x-contain pb-3 pt-0.5 px-0.5 ${
+        className={`flex gap-3.5 sm:gap-4 overflow-x-auto scrollbar-hide select-none touch-pan-x overscroll-x-contain pb-3 pt-0.5 ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         style={{ WebkitOverflowScrolling: 'touch' }}
@@ -148,7 +125,7 @@ export const MovieRow = ({
         {movies.map((movie) => (
           <div
             key={movie.id}
-            className={`flex-none w-[140px] sm:w-[170px] md:w-[190px] lg:w-[210px] ${
+            className={`flex-none w-[140px] sm:w-[165px] md:w-[185px] lg:w-[205px] ${
               isDragging ? 'pointer-events-none' : ''
             }`}
           >

@@ -46,7 +46,7 @@ export const HomeCuratedShelves: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-10 my-6">
+    <div className="space-y-8 my-0">
       {/* 1. Trending Worldwide */}
       <CuratedShelfRow
         title="Trending Worldwide"

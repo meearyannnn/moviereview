@@ -207,6 +207,28 @@ export const tmdb = {
   getWatchProviders: (id: number, type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/${id}/watch/providers`),
 
+  getMovieReleaseDates: (id: number): Promise<TMDBMovieReleaseDatesResponse> =>
+    tmdbFetch(`/movie/${id}/release_dates`),
+
   getImageUrl: (path: string, size: 'w500' | 'w300' | 'w185' | 'original' = 'w500') =>
     path ? `${TMDB_IMAGE_BASE}/${size}${path}` : '/placeholder.svg',
 };
+
+export interface TMDBReleaseDateItem {
+  certification: string;
+  descriptors?: string[];
+  iso_639_1?: string;
+  note?: string;
+  release_date: string; // ISO string e.g. "2026-10-02T00:00:00.000Z"
+  type: number; // 1=Premiere, 2=Theatrical (limited), 3=Theatrical, 4=Digital, 5=Physical, 6=TV
+}
+
+export interface TMDBCountryReleaseDates {
+  iso_3166_1: string;
+  release_dates: TMDBReleaseDateItem[];
+}
+
+export interface TMDBMovieReleaseDatesResponse {
+  id: number;
+  results: TMDBCountryReleaseDates[];
+}

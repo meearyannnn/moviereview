@@ -1,8 +1,8 @@
-﻿// pages/SchedulePage.tsx
+// pages/SchedulePage.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
-import { Calendar, Clock, Megaphone, Flame, Film, Tv, LayoutGrid, CalendarX } from 'lucide-react';
+import { Calendar, Clock, Megaphone, Flame, Film, Tv, LayoutGrid, CalendarX, Globe } from 'lucide-react';
 import {
   scheduleService,
   type DateGroupedSchedule,
@@ -15,6 +15,12 @@ type MediaTypeFilter = 'all' | 'movie' | 'tv';
 
 const YEARS = [2026, 2027, 2028, 2029];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const REGIONS = [
+  { code: 'IN', label: 'India', flag: '🇮🇳' },
+  { code: 'US', label: 'United States', flag: '🇺🇸' },
+  { code: 'GB', label: 'United Kingdom', flag: '🇬🇧' },
+];
 
 const MODES: { id: ScheduleMode; label: string; icon: React.ElementType }[] = [
   { id: 'released', label: 'Released', icon: Calendar },
@@ -35,6 +41,7 @@ const SchedulePage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<ScheduleMode>('upcoming');
   const [mediaType, setMediaType] = useState<MediaTypeFilter>('all');
+  const [region, setRegion] = useState<string>('IN');
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null); // null = all upcoming
   const [dateGroups, setDateGroups] = useState<DateGroupedSchedule[]>([]);
@@ -51,14 +58,15 @@ const SchedulePage: React.FC = () => {
           const data = await scheduleService.getUpcomingSchedule(
             selectedYear,
             selectedMonth || undefined,
-            mediaType
+            mediaType,
+            region
           );
           if (isMounted) setDateGroups(data);
         } else if (mode === 'released') {
-          const data = await scheduleService.getReleasedSchedule(mediaType);
+          const data = await scheduleService.getReleasedSchedule(mediaType, region);
           if (isMounted) setDateGroups(data);
         } else {
-          const data = await scheduleService.getAnnouncedSchedule(selectedYear, mediaType);
+          const data = await scheduleService.getAnnouncedSchedule(selectedYear, mediaType, region);
           if (isMounted) setAnnouncedItems(data);
         }
       } catch (err) {
@@ -72,7 +80,7 @@ const SchedulePage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [mode, mediaType, selectedYear, selectedMonth]);
+  }, [mode, mediaType, selectedYear, selectedMonth, region]);
 
   const openItem = (item: ScheduleItem) =>
     navigate(item.media_type === 'tv' ? `/tv/${item.id}` : `/movie/${item.id}`);
@@ -81,6 +89,8 @@ const SchedulePage: React.FC = () => {
     setMode(next);
     if (next !== 'upcoming') setSelectedMonth(null);
   };
+
+  const currentRegionLabel = REGIONS.find((r) => r.code === region)?.label || region;
 
   const scopeLabel =
     mode === 'released'
@@ -103,9 +113,11 @@ const SchedulePage: React.FC = () => {
 
   const renderCard = (item: ScheduleItem) => {
     const poster = item.poster_path ? tmdb.getImageUrl(item.poster_path, 'w500') : '/placeholder.svg';
+    const isFallback = item.isRegional === false && item.media_type === 'movie';
+
     return (
       <button
-        key={`${item.id}_${item.media_type}`}
+        key={`${item.id}_${item.media_type}_${item.release_date}`}
         type="button"
         onClick={() => openItem(item)}
         aria-label={`${item.title}, ${item.releaseTag}`}
@@ -135,7 +147,25 @@ const SchedulePage: React.FC = () => {
           <h4 className="truncate font-display text-sm font-semibold text-white/95 transition-colors group-hover:text-white">
             {item.title}
           </h4>
-          <p className="mt-0.5 truncate text-xs text-white/45">{item.releaseTag}</p>
+          <div className="mt-0.5 flex items-center justify-between gap-1">
+            <p className="truncate text-xs text-white/45">{item.releaseTag}</p>
+            {isFallback && (
+              <span
+                title="Date may differ in your region"
+                className="shrink-0 text-[10px] text-[#f5c542]/80 font-mono"
+              >
+                *est
+              </span>
+            )}
+          </div>
+          {isFallback && (
+            <p
+              className="mt-0.5 text-[10px] text-white/35 truncate font-mono"
+              title="Date may differ in your region"
+            >
+              Date may differ in your region
+            </p>
+          )}
         </div>
       </button>
     );
@@ -256,8 +286,34 @@ const SchedulePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Scope label */}
-        <h2 className="mb-6 font-display text-lg font-bold text-white/90 sm:text-xl">{scopeLabel}</h2>
+        {/* Scope label + Region / Source Note */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <h2 className="font-display text-lg font-bold text-white/90 sm:text-xl">{scopeLabel}</h2>
+
+          <div
+            title={`Release dates resolved for ${currentRegionLabel} from TMDB country records`}
+            className="flex items-center gap-2 rounded-full border border-[#c9a24b]/30 bg-[#1c120c]/60 px-3.5 py-1.5 backdrop-blur-md shadow-sm"
+          >
+            <Globe className="h-3.5 w-3.5 text-[#f5c542]" />
+            <span className="font-mono text-xs text-white/80">
+              Dates for <strong className="text-[#f5c542]">{currentRegionLabel}</strong>
+            </span>
+            <span className="text-white/20">·</span>
+            <span className="font-mono text-[11px] text-white/45">Source: TMDB</span>
+            <select
+              aria-label="Select Region"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="ml-1 cursor-pointer rounded bg-black/60 px-2 py-0.5 font-mono text-[11px] text-[#f5c542] border border-[#c9a24b]/30 focus:outline-none focus:ring-1 focus:ring-[#f5c542]"
+            >
+              {REGIONS.map((r) => (
+                <option key={r.code} value={r.code} className="bg-[#140a0d] text-white">
+                  {r.flag} {r.code}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         {/* Content */}
         {loading ? (

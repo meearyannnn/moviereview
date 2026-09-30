@@ -44,6 +44,7 @@ export interface UserCollection {
   username?: string;
   avatar_url?: string;
   is_saved?: boolean;
+  preview_posters?: string[];
 }
 
 export interface UserCollectionItem {
@@ -462,7 +463,12 @@ export const userLibraryService = {
     if (!userId) {
       return local.map((col) => {
         const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-        return { ...col, items_count: Math.max(col.items_count || 0, localItems.length) };
+        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
+        return {
+          ...col,
+          items_count: Math.max(col.items_count || 0, localItems.length),
+          preview_posters: posters.slice(0, 4),
+        };
       });
     }
 
@@ -476,7 +482,12 @@ export const userLibraryService = {
       if (error || !data) {
         return local.map((col) => {
           const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-          return { ...col, items_count: Math.max(col.items_count || 0, localItems.length) };
+          const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
+          return {
+            ...col,
+            items_count: Math.max(col.items_count || 0, localItems.length),
+            preview_posters: posters.slice(0, 4),
+          };
         });
       }
 
@@ -487,15 +498,52 @@ export const userLibraryService = {
       const merged = [...(data as UserCollection[]), ...unsyncedLocal].map((col) => {
         const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
         const trueCount = Math.max(col.items_count || 0, localItems.length);
-        return { ...col, items_count: trueCount };
+        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
+        return { ...col, items_count: trueCount, preview_posters: posters.slice(0, 4) };
       });
+
+      // Try fetching posters from Supabase for collections with empty local posters
+      if (cloudIds.size > 0) {
+        try {
+          const { data: itemRows } = await supabase
+            .from('collection_items')
+            .select('collection_id, media_poster, added_at')
+            .in('collection_id', Array.from(cloudIds))
+            .order('added_at', { ascending: false });
+
+          if (itemRows && itemRows.length > 0) {
+            const postersMap = new Map<string, string[]>();
+            itemRows.forEach((r: any) => {
+              if (!r.media_poster) return;
+              if (!postersMap.has(r.collection_id)) postersMap.set(r.collection_id, []);
+              const list = postersMap.get(r.collection_id)!;
+              if (list.length < 4 && !list.includes(r.media_poster)) {
+                list.push(r.media_poster);
+              }
+            });
+
+            merged.forEach((col) => {
+              const cloudPosters = postersMap.get(col.id);
+              if (cloudPosters && cloudPosters.length > 0) {
+                const combined = Array.from(new Set([...(col.preview_posters || []), ...cloudPosters]));
+                col.preview_posters = combined.slice(0, 4);
+              }
+            });
+          }
+        } catch {}
+      }
 
       setLocal(STORAGE_KEYS.COLLECTIONS, merged);
       return merged;
     } catch {
       return local.map((col) => {
         const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-        return { ...col, items_count: Math.max(col.items_count || 0, localItems.length) };
+        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
+        return {
+          ...col,
+          items_count: Math.max(col.items_count || 0, localItems.length),
+          preview_posters: posters.slice(0, 4),
+        };
       });
     }
   },
@@ -596,11 +644,20 @@ export const userLibraryService = {
       };
       setLocal(localKey, [newItem, ...items]);
 
-      // Update collection item count in local
+      // Update collection item count and preview posters in local
       const cols = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
-      const updatedCols = cols.map((c) =>
-        c.id === collectionId ? { ...c, items_count: (c.items_count || 0) + 1 } : c
-      );
+      const updatedCols = cols.map((c) => {
+        if (c.id !== collectionId) return c;
+        const currentPosters = c.preview_posters || [];
+        const newPosters = item.poster_path && !currentPosters.includes(item.poster_path)
+          ? [item.poster_path, ...currentPosters].slice(0, 4)
+          : currentPosters;
+        return {
+          ...c,
+          items_count: (c.items_count || 0) + 1,
+          preview_posters: newPosters,
+        };
+      });
       setLocal(STORAGE_KEYS.COLLECTIONS, updatedCols);
     }
 
@@ -652,10 +709,17 @@ export const userLibraryService = {
     );
     setLocal(localKey, updated);
 
-    // Update count in local
+    // Update count & preview posters in local
     const cols = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
+    const remainingPosters = updated.map((it) => it.media_poster).filter(Boolean) as string[];
     const updatedCols = cols.map((c) =>
-      c.id === collectionId ? { ...c, items_count: Math.max(0, (c.items_count || 1) - 1) } : c
+      c.id === collectionId
+        ? {
+            ...c,
+            items_count: Math.max(0, (c.items_count || 1) - 1),
+            preview_posters: remainingPosters.slice(0, 4),
+          }
+        : c
     );
     setLocal(STORAGE_KEYS.COLLECTIONS, updatedCols);
 

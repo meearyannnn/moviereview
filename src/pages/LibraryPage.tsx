@@ -28,6 +28,7 @@ import {
   type WatchHistoryItem,
 } from '@/services/userLibrary';
 import { CollectionDetailModal } from '@/components/library/CollectionDetailModal';
+import { CollectionCollageThumbnail } from '@/components/library/CollectionCollageThumbnail';
 import { toast } from 'sonner';
 
 type NavTab = 'discover' | 'collections' | 'watch-later' | 'history';
@@ -220,22 +221,8 @@ export const LibraryPage: React.FC = () => {
                       onClick={() => setSelectedCollection(col)}
                       className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.08] bg-[#140a0e] hover:border-[#f5c542]/60 hover:shadow-[0_10px_30px_rgba(245,197,66,0.18)] transition-all duration-300"
                     >
-                      {/* 16:9 Thumbnail Cover */}
-                      <div className="aspect-[16/9] w-full bg-[#1b0d14] relative overflow-hidden">
-                        {col.cover_image ? (
-                          <img
-                            src={col.cover_image}
-                            alt={col.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#24121b] to-black">
-                            <Film className="w-8 h-8 text-[#c9a24b]/30" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
-                      </div>
+                      {/* 16:9 Thumbnail Cover / Collage */}
+                      <CollectionCollageThumbnail collection={col} />
 
                       {/* Info & Meta */}
                       <div className="p-4">
@@ -321,35 +308,26 @@ export const LibraryPage: React.FC = () => {
                         onClick={() => setSelectedCollection(col)}
                         className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.08] bg-[#140a0e] hover:border-[#f5c542]/60 hover:shadow-[0_10px_30px_rgba(245,197,66,0.18)] transition-all duration-300"
                       >
-                        {/* 16:9 Thumbnail Cover (Screenshot 1) */}
-                        <div className="aspect-[16/9] w-full bg-[#1c0f16] relative flex items-center justify-center">
-                          {col.cover_image ? (
-                            <img
-                              src={col.cover_image}
-                              alt={col.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/40">
-                              <span className="text-sm font-black">••</span>
-                            </div>
-                          )}
-                        </div>
+                        {/* 16:9 Dynamic Movie Collage Thumbnail */}
+                        <CollectionCollageThumbnail collection={col} />
 
                         {/* Card Info */}
-                        <div className="p-4">
+                        <div className="p-4 flex-1 flex flex-col justify-between">
                           <h3 className="font-display font-bold text-base text-white group-hover:text-[#f5c542] transition-colors truncate">
                             {col.title}
                           </h3>
-                          <div className="flex items-center gap-2 text-xs font-mono text-white/40 mt-1">
+                          <div className="flex items-center gap-2 text-xs font-mono text-white/50 mt-1.5">
                             <span className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center text-[10px]">
                               👤
                             </span>
-                            <span>🔒</span>
-                            <span>{col.items_count} Items</span>
+                            {col.is_public ? (
+                              <Globe className="w-3.5 h-3.5 text-[#c9a24b]" title="Public collection" />
+                            ) : (
+                              <Lock className="w-3.5 h-3.5 text-amber-500/80" title="Private collection" />
+                            )}
+                            <span>{col.items_count} {col.items_count === 1 ? 'Item' : 'Items'}</span>
                             <span>·</span>
-                            <span>{col.likes_count} like</span>
+                            <span>{col.likes_count || 0} {col.likes_count === 1 ? 'like' : 'likes'}</span>
                           </div>
                         </div>
                       </article>
@@ -371,21 +349,17 @@ export const LibraryPage: React.FC = () => {
                           <article
                             key={col.id}
                             onClick={() => setSelectedCollection(col)}
-                            className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.08] bg-[#140a0e] hover:border-[#f5c542]/60 transition-all"
+                            className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.08] bg-[#140a0e] hover:border-[#f5c542]/60 hover:shadow-[0_10px_30px_rgba(245,197,66,0.18)] transition-all flex flex-col justify-between"
                           >
-                            <div className="aspect-[16/9] w-full bg-[#1c0f16] relative flex items-center justify-center">
-                              {col.cover_image ? (
-                                <img src={col.cover_image} alt={col.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <Film className="w-7 h-7 text-white/25" />
-                              )}
-                            </div>
+                            <CollectionCollageThumbnail collection={col} />
                             <div className="p-4">
                               <h3 className="font-display font-bold text-sm text-white group-hover:text-[#f5c542] truncate">
                                 {col.title}
                               </h3>
-                              <p className="text-xs font-mono text-white/40 mt-1">
-                                {col.items_count} Items · by {col.username || 'Cinephile'}
+                              <p className="text-xs font-mono text-white/40 mt-1 flex items-center gap-1.5">
+                                <span>{col.items_count} {col.items_count === 1 ? 'Item' : 'Items'}</span>
+                                <span>·</span>
+                                <span>by {col.username || 'Cinephile'}</span>
                               </p>
                             </div>
                           </article>

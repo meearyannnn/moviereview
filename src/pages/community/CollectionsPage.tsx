@@ -5,6 +5,7 @@ import { CommunityLayout } from '@/components/community/CommunityLayout';
 import { CommunityRightPanel } from '@/components/community/CommunityRightPanel';
 import { Avatar, Spinner } from '@/components/community/communityUtils';
 import { collectionsService, type Collection } from '@/services/collections';
+import { CollectionCollageThumbnail } from '@/components/library/CollectionCollageThumbnail';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -78,14 +79,8 @@ function CollectionCard({ col, isOwn, onDelete }: { col: Collection; isOwn: bool
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-5 transition-all hover:border-[#c9a24b]/45 shadow-sm">
-      {/* Visual grid placeholder */}
-      <div className="mb-4 grid h-24 grid-cols-3 gap-1 overflow-hidden rounded-xl">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-lg bg-gradient-to-br from-[#1a0f14] to-black/60 border border-[#c9a24b]/10 flex items-center justify-center">
-            <Film className="h-5 w-5 text-[#c9a24b]/30" />
-          </div>
-        ))}
-      </div>
+      {/* Dynamic Movie Collage Thumbnail */}
+      <CollectionCollageThumbnail collection={col as any} className="mb-4 rounded-xl" />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate font-bold text-white group-hover:text-[#f5c542] transition-colors">{col.title}</h3>

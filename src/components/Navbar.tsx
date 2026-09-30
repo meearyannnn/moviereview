@@ -97,11 +97,12 @@ export const Navbar = () => {
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link to="/" onClick={tick} className="flex shrink-0 items-center gap-2 focus:outline-none group">
-            <Clapperboard className="h-5 w-5 text-[#c9a24b] group-hover:scale-110 transition-transform" />
-            <span className="font-display text-lg font-extrabold leading-none tracking-tight text-white">
-              Movie<span className="text-[#f5c542]">Guy</span>
-            </span>
+          <Link to="/" onClick={tick} className="flex shrink-0 items-center gap-2.5 focus:outline-none group">
+            <img
+              src="/assets/branding/movieguy-hero-tight.png"
+              alt="MovieGuy"
+              className="h-6 sm:h-7 w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:drop-shadow-[0_0_14px_rgba(245,197,66,0.6)]"
+            />
           </Link>
 
           {/* Links: plain text with warm brass line marking active state */}

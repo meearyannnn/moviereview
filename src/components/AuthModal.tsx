@@ -98,12 +98,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Cinema aesthetic header */}
         <div className="relative h-28 bg-gradient-to-br from-[#c9a24b]/20 via-[#140a0d] to-[#0a0608] flex flex-col items-center justify-center border-b border-[#c9a24b]/20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(245,197,66,0.25),transparent_70%)]" />
-          <div className="w-12 h-12 rounded-xl bg-black/70 border border-[#c9a24b]/40 flex items-center justify-center shadow-lg relative z-10 backdrop-blur-md">
-            <Film className="w-6 h-6 text-[#f5c542]" />
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-11 h-11 rounded-xl bg-black/70 border border-[#c9a24b]/40 flex items-center justify-center shadow-lg backdrop-blur-md">
+              <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-7 h-auto object-contain" />
+            </div>
+            <img
+              src="/assets/branding/movieguy-hero-tight.png"
+              alt="MovieGuy"
+              className="h-6 w-auto object-contain drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+            />
           </div>
-          <span className="text-xs uppercase tracking-widest text-[#c9a24b] font-mono mt-2 relative z-10 flex items-center gap-1.5 font-semibold">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[#c9a24b] font-mono mt-2 relative z-10 flex items-center gap-1.5 font-semibold">
             <Sparkles className="w-3 h-3 text-[#f5c542]" />
-            MovieGuy CineClub
+            Official Cinema Pass &amp; CineClub
           </span>
         </div>
 

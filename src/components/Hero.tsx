@@ -164,9 +164,35 @@ export const Hero = () => {
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0a0608]/70 to-transparent" />
         </div>
 
+        {/* Ambient Top Studio Hallmark */}
+        <div className="pointer-events-none absolute top-16 sm:top-20 right-4 sm:right-8 lg:right-12 z-10 hidden sm:flex flex-col items-end opacity-30">
+          <img
+            src="/assets/branding/movieguy-hero-tight.png"
+            alt="MovieGuy"
+            className="h-5 sm:h-6 lg:h-7 w-auto object-contain filter drop-shadow-[0_0_16px_rgba(245,197,66,0.4)]"
+          />
+          <span className="font-mono text-[8px] tracking-[0.3em] uppercase text-[#c9a24b] mt-1 mr-0.5">
+            PREMIERE STAGE
+          </span>
+        </div>
+
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-8 sm:px-6 md:pb-12 lg:flex-row lg:items-end lg:justify-between lg:px-8">
           {/* Featured film */}
           <div key={featured.id} className="max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-700">
+            {/* MovieGuy Box Office Premiere Badge */}
+            <div className="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-black/65 border border-[#c9a24b]/30 backdrop-blur-md mb-3 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+              <img
+                src="/assets/branding/movieguy-logo-tight.png"
+                alt="MovieGuy"
+                className="h-3.5 w-auto object-contain animate-pulse"
+              />
+              <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-[#f5c542] uppercase">
+                MOVIEGUY MARQUEE
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
+              <span className="font-mono text-[10px] text-white/50">PREMIERE #{currentIndex + 1}</span>
+            </div>
+
             <p className="mb-4 flex items-center gap-3 text-sm text-white/70">
               <span className="font-mono font-bold text-[#c9a24b]">#{currentIndex + 1} THIS WEEK</span>
               {rating && (

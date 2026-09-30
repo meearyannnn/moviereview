@@ -1,6 +1,6 @@
 // src/pages/ExplorePage.tsx — "The Box Office" Unified Explore Catalog
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   SlidersHorizontal,
   X,
@@ -327,12 +327,19 @@ export const ExplorePage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              {/* Eyebrow: NOW SHOWING flanked by brass marquee-bulb dots */}
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-2 flex items-center gap-2">
+              {/* Eyebrow: NOW SHOWING with MovieGuy Ticket Emblem */}
+              <div className="flex items-center gap-2 mb-2">
+                <img
+                  src="/assets/branding/movieguy-logo-tight.png"
+                  alt="MovieGuy"
+                  className="h-3.5 w-auto object-contain"
+                />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#c9a24b]">
+                  MOVIEGUY BOX OFFICE
+                </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
-                <span>NOW SHOWING</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
-              </p>
+                <span className="text-[9px] font-mono uppercase tracking-widest text-white/40">NOW SHOWING</span>
+              </div>
 
               {/* Title in project's font-display */}
               <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none">
@@ -537,6 +544,23 @@ export const ExplorePage: React.FC = () => {
         </div>
       </div>
 
+      <footer className="safe-bottom-content border-t border-[#c9a24b]/20 bg-[#0a0608] pb-28 md:pb-10 relative z-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Link to="/" className="inline-block group focus:outline-none">
+              <img
+                src="/assets/branding/movieguy-hero-tight.png"
+                alt="MovieGuy"
+                className="h-6 sm:h-7 w-auto object-contain transition-all group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+              />
+            </Link>
+            <span className="hidden sm:inline text-white/20">|</span>
+            <span className="font-mono text-xs text-white/40">The unified cinema catalog &amp; box office window</span>
+          </div>
+          <div className="font-mono text-xs text-white/40">© {new Date().getFullYear()} MovieGuy · Data from TMDB &amp; Trakt</div>
+        </div>
+      </footer>
+
       {/* ── 4. Floating Back to Top Button ── */}
       {showBackToTop && (
         <button
@@ -555,7 +579,7 @@ export const ExplorePage: React.FC = () => {
         aria-label="Open Ticket Booth"
         className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs shadow-[0_8px_25px_rgba(0,0,0,0.8),0_0_15px_rgba(201,162,75,0.4)] flex items-center gap-2 active:scale-95 transition-all border border-amber-300/40"
       >
-        <Ticket className="w-4 h-4" />
+        <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="h-3.5 w-auto object-contain brightness-0" />
         <span>Ticket Booth</span>
         {activeFiltersCount > 0 && (
           <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-[#8c1c2b] text-[#f3e9d2] border border-[#c9a24b]/40">
@@ -577,7 +601,7 @@ export const ExplorePage: React.FC = () => {
           <div className="fixed inset-y-0 right-0 w-full max-w-[340px] sm:max-w-sm bg-[#0c090e] border-l border-[#c9a24b]/20 p-5 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-250">
             <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-[#c9a24b]/25 mb-4 shrink-0">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c9a24b] shadow-[0_0_6px_rgba(201,162,75,0.8)]" />
+                <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="h-4 w-auto object-contain" />
                 <span className="font-display font-bold text-sm text-white">Ticket Booth</span>
                 {activeFiltersCount > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#c9a24b]/20 text-[#f5c542] border border-[#c9a24b]/30">

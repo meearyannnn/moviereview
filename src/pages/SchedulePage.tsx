@@ -1,6 +1,6 @@
 // pages/SchedulePage.tsx
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Calendar, Clock, Megaphone, Flame, Film, Tv, LayoutGrid, CalendarX } from 'lucide-react';
 import {
@@ -168,9 +168,9 @@ const SchedulePage: React.FC = () => {
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Heading */}
         <header className="mb-8 max-w-2xl">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#c9a24b] mb-1.5 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
-            <span>CINEMA TIMETABLE</span>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-[#c9a24b] mb-1.5 flex items-center gap-2">
+            <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="h-3.5 w-auto object-contain" />
+            <span>MOVIEGUY CINEMA TIMETABLE</span>
           </p>
           <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl text-white">
             Release Schedule
@@ -332,6 +332,23 @@ const SchedulePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <footer className="safe-bottom-content border-t border-[#c9a24b]/20 bg-[#0a0608] pb-28 md:pb-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Link to="/" className="inline-block group focus:outline-none">
+              <img
+                src="/assets/branding/movieguy-hero-tight.png"
+                alt="MovieGuy"
+                className="h-6 sm:h-7 w-auto object-contain transition-all group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+              />
+            </Link>
+            <span className="hidden sm:inline text-white/20">|</span>
+            <span className="font-mono text-xs text-white/40">Timetable &amp; release tracking for cinema &amp; TV</span>
+          </div>
+          <div className="font-mono text-xs text-white/40">© {new Date().getFullYear()} MovieGuy · Data from TMDB &amp; Trakt</div>
+        </div>
+      </footer>
     </div>
   );
 };

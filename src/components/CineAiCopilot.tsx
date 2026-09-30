@@ -112,7 +112,7 @@ export const CineAiCopilot = () => {
           aria-label="Open CineAI Copilot"
           title="Ask CineAI Copilot (Press C)"
         >
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#f5c542] group-hover:rotate-12 transition-transform" />
+          <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain group-hover:scale-110 transition-transform" />
         </button>
       )}
 
@@ -124,7 +124,7 @@ export const CineAiCopilot = () => {
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c9a24b] to-[#f5c542] p-0.5 flex items-center justify-center shadow-md shadow-[#c9a24b]/20">
                 <div className="w-full h-full bg-[#140a0d] rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-[#f5c542]" />
+                  <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain" />
                 </div>
               </div>
               <div>
@@ -134,7 +134,7 @@ export const CineAiCopilot = () => {
                     Online
                   </span>
                 </h3>
-                <p className="text-[10px] text-[#c9a24b]/70 font-mono">Personal Cinema Intelligence</p>
+                <p className="text-[10px] text-[#c9a24b]/70 font-mono">MovieGuy Cinema Intelligence</p>
               </div>
             </div>
 

@@ -17,13 +17,13 @@ import { MidnightVaultModal } from './MidnightVaultModal';
 import { AuthModal } from './AuthModal';
 
 const NAV = [
-  { path: '/', label: 'Home' },
-  { path: '/explore', label: 'Explore' },
-  { path: '/community', label: 'Community' },
-  { path: '/schedule', label: 'Schedule' },
-  { path: '/genres', label: 'Genres' },
-  { path: '/directors', label: 'Directors' },
-  { path: '/time-machine', label: 'Time Machine' },
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/explore', label: 'Explore', icon: Compass },
+  { path: '/community', label: 'Community', icon: Users },
+  { path: '/schedule', label: 'Schedule', icon: Calendar },
+  { path: '/genres', label: 'Genres', icon: Film },
+  { path: '/directors', label: 'Directors', icon: Clapperboard },
+  { path: '/time-machine', label: 'Time Machine', icon: History },
 ];
 
 const tick = () => soundEffects.playHoverTick();
@@ -107,22 +107,31 @@ export const Navbar = () => {
             />
           </Link>
 
-          {/* Links: plain text with warm brass line marking active state */}
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
-            {NAV.map(({ path, label }) => (
-              <Link
-                key={path}
-                to={path}
-                onClick={tick}
-                aria-current={isActive(path) ? 'page' : undefined}
-                className={`relative whitespace-nowrap py-1 text-[13px] font-medium transition-colors ${isActive(path)
-                    ? 'text-[#f5c542] font-semibold after:absolute after:inset-x-0 after:-bottom-[17px] after:h-[2px] after:rounded-full after:bg-gradient-to-r after:from-[#c9a24b] after:to-[#f5c542] after:shadow-[0_0_8px_rgba(201,162,75,0.7)]'
-                    : 'text-white/60 hover:text-white'
+          {/* Links: icons in place of text, shifted right */}
+          <nav className="hidden items-center gap-1.5 md:flex ml-auto mr-3" aria-label="Main">
+            {NAV.map(({ path, label, icon: Icon }) => {
+              const active = isActive(path);
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  onClick={tick}
+                  title={label}
+                  aria-label={label}
+                  aria-current={active ? 'page' : undefined}
+                  className={`group relative grid h-9 w-9 place-items-center rounded-xl transition-all duration-200 ${
+                    active
+                      ? 'bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 shadow-[0_0_12px_rgba(245,197,66,0.2)]'
+                      : 'text-white/60 hover:bg-white/[0.08] hover:text-white border border-transparent'
                   }`}
-              >
-                {label}
-              </Link>
-            ))}
+                >
+                  <Icon className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  {active && (
+                    <span className="absolute -bottom-[9px] h-[2px] w-3.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Actions */}

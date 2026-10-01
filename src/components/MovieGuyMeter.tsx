@@ -355,22 +355,16 @@ export const MovieGuyMeter: React.FC<MovieGuyMeterProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {lead.key === 'absoluteCinema' ? (
-              <span className="px-3.5 py-1.5 rounded-full text-xs font-extrabold border whitespace-nowrap text-[#e879f9] bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 border-fuchsia-400/40">
-                Absolute Cinema
-              </span>
-            ) : (
-              <span
-                className="px-3.5 py-1.5 rounded-full text-xs font-extrabold border whitespace-nowrap shadow-sm"
-                style={{
-                  color: lead.color,
-                  backgroundColor: `${lead.color}1a`,
-                  borderColor: `${lead.color}55`,
-                }}
-              >
-                {lead.label}
-              </span>
-            )}
+            <span
+              className="px-3.5 py-1.5 rounded-full text-xs font-extrabold border whitespace-nowrap shadow-sm"
+              style={{
+                color: lead.color,
+                backgroundColor: `${lead.color}1a`,
+                borderColor: `${lead.color}55`,
+              }}
+            >
+              {lead.label}
+            </span>
             <button
               onClick={handleShare}
               aria-label="Share verdict"

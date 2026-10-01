@@ -222,28 +222,6 @@ const WriteReview: React.FC<{
           {VERDICTS.map((v) => {
             const m = VERDICT_META[v];
             const active = verdict === v;
-            const isAC = v === 'Absolute Cinema';
-
-            if (isAC) {
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setVerdict(v)}
-                  className={`relative flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-black transition-all overflow-hidden ${
-                    active
-                      ? 'border-fuchsia-400 bg-gradient-to-r from-fuchsia-600/30 via-purple-600/25 to-pink-600/30 text-fuchsia-100 shadow-[0_0_22px_rgba(217,70,239,0.5)]'
-                      : 'border-fuchsia-500/30 bg-fuchsia-500/[0.04] text-fuchsia-300/70 hover:border-fuchsia-400/60 hover:text-fuchsia-200'
-                  }`}
-                >
-                  <span className="h-2 w-2 rounded-full bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-300 shadow-[0_0_8px_#d946ef] shrink-0" />
-                  <span className={active ? 'bg-gradient-to-r from-pink-200 to-violet-300 bg-clip-text text-transparent' : ''}>
-                    {m.label}
-                  </span>
-                  {active && <Sparkles className="w-3 h-3 text-fuchsia-300 shrink-0" />}
-                </button>
-              );
-            }
 
             return (
               <button
@@ -340,12 +318,8 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
     <article className="py-5 first:pt-2 last:pb-2">
       <div className="flex items-start gap-3.5">
         <div
-          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black border ${
-            isAC
-              ? 'border-fuchsia-400/80 bg-gradient-to-br from-fuchsia-600/25 to-purple-950/40 text-fuchsia-200 shadow-[0_0_12px_rgba(217,70,239,0.35)]'
-              : 'bg-white/[0.07] text-white'
-          }`}
-          style={!isAC ? { borderColor: `${meta.color}66` } : {}}
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black border bg-white/[0.07] text-white"
+          style={{ borderColor: `${meta.color}66` }}
         >
           {review.avatar || review.author.slice(0, 2).toUpperCase()}
         </div>
@@ -355,21 +329,12 @@ const ReviewCard: React.FC<{ review: Review; revealAll: boolean; onLike: (id: st
             <span className="font-semibold text-white text-sm">{review.author}</span>
             <span className="text-white/30 text-xs">•</span>
             <span className="text-white/40 text-xs">{review.date}</span>
-            {isAC ? (
-              <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border border-fuchsia-400/50 bg-gradient-to-r from-fuchsia-600/25 via-purple-600/15 to-pink-600/20 text-fuchsia-200 shadow-[0_0_14px_rgba(217,70,239,0.35)]">
-                <Sparkles className="w-2.5 h-2.5 text-fuchsia-300" />
-                <span className="bg-gradient-to-r from-pink-200 via-fuchsia-200 to-violet-300 bg-clip-text text-transparent">
-                  Absolute Cinema
-                </span>
-              </span>
-            ) : (
-              <span
-                className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold border"
-                style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.border }}
-              >
-                {meta.label}
-              </span>
-            )}
+            <span
+              className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold border"
+              style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.border }}
+            >
+              {meta.label}
+            </span>
           </div>
 
           <div className="mt-1.5 flex items-center gap-2">

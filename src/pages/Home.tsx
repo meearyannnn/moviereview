@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { TraktAnticipatedShelf } from '@/components/TraktAnticipatedShelf';
 import { HomeCuratedShelves } from '@/components/HomeCuratedShelves';
 import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
+import { HomeNewLaunchesSection } from '@/components/HomeNewLaunchesSection';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -71,6 +72,7 @@ const JumpBar = () => {
 
   const jumpChips = [
     { key: 'directors-spotlight', chip: 'Directors Vault' },
+    { key: 'new-launches', chip: 'Spotlight Drops' },
     ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, chip: s.chip! })),
   ];
 
@@ -143,10 +145,13 @@ const Home = () => {
             </div>
           </div>
 
-          {/* 3. Trakt Anticipated Shelf — Full Width */}
+          {/* 3. Spotlight Drops & Launches (Bollywood & Hollywood Realtime Feed) */}
+          <HomeNewLaunchesSection />
+
+          {/* 4. Trakt Anticipated Shelf — Full Width */}
           <TraktAnticipatedShelf />
 
-          {/* 4. Main Category & Genre Shelves (Top Rated, Action, Sci-Fi, Drama, TV) — Full Width */}
+          {/* 5. Main Category & Genre Shelves (Top Rated, Action, Sci-Fi, Drama, TV) — Full Width */}
           <div className="space-y-10">
             {MAIN.map((s) => <Row key={s.key} s={s} />)}
           </div>

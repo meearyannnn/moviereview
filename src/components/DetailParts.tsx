@@ -5,7 +5,7 @@
 import { useEffect, useState, type ElementType, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock } from 'lucide-react';
-import type { CastMember, CrewMember } from '@/services/tmdb';
+import { tmdb, type CastMember, type CrewMember } from '@/services/tmdb';
 
 // ── Small atoms ────────────────────────────────────────────────────────
 export const SectionTitle = ({ children }: { children: ReactNode }) => (

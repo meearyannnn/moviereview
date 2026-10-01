@@ -1,264 +1,396 @@
-import { useState, useEffect } from 'react';
+// src/pages/community/CollectionsPage.tsx — Matches Screenshots 3 & 4 with collection rows, posters & modal integration
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BookMarked, Plus, Globe, Lock, Trash2, X, Film } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  MessageCircle,
+  Plus,
+  X,
+  Bookmark,
+} from 'lucide-react';
 import { CommunityLayout } from '@/components/community/CommunityLayout';
 import { CommunityRightPanel } from '@/components/community/CommunityRightPanel';
-import { Avatar, Spinner } from '@/components/community/communityUtils';
-import { collectionsService, type Collection } from '@/services/collections';
-import { CollectionCollageThumbnail } from '@/components/library/CollectionCollageThumbnail';
+import { Avatar } from '@/components/community/communityUtils';
 import { CollectionDetailModal } from '@/components/library/CollectionDetailModal';
+import { collectionsService, type Collection } from '@/services/collections';
+import { userLibraryService, type UserCollection } from '@/services/userLibrary';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-// ─── Create Collection Modal ────────────────────────────────────────────────────
-function CreateCollectionModal({ onClose, onCreate }: {
-  onClose: () => void;
-  onCreate: (col: Collection) => void;
-}) {
-  const { user } = useAuth();
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
-  const [busy, setBusy] = useState(false);
-
-  const submit = async () => {
-    if (!user || !title.trim()) return;
-    setBusy(true);
-    const col = await collectionsService.createCollection(user.id, title.trim(), desc.trim(), isPublic);
-    setBusy(false);
-    if (col) { onCreate(col); onClose(); toast.success('Collection created!'); }
-    else toast.error('Failed to create collection. Run supabase_collections_schema.sql first.');
+interface CuratedCollectionRow {
+  id: string;
+  title: string;
+  creator: {
+    username: string;
+    avatarUrl?: string;
   };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xl" onClick={onClose}>
-      <div role="dialog" onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl border border-[#c9a24b]/30 bg-[#140a0d] p-6 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">New Collection</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors"><X className="h-5 w-5" /></button>
-        </div>
-        <label className="mb-4 block">
-          <span className="mb-1.5 block text-xs font-semibold text-white/50">Title *</span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="My 2025 Watches"
-            className="w-full rounded-xl border border-[#c9a24b]/20 bg-white/[0.04] px-3 py-2.5 text-sm focus:border-[#c9a24b]/60 focus:outline-none" />
-        </label>
-        <label className="mb-4 block">
-          <span className="mb-1.5 block text-xs font-semibold text-white/50">Description <span className="text-white/25">(optional)</span></span>
-          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} maxLength={300}
-            className="w-full resize-none rounded-xl border border-[#c9a24b]/20 bg-white/[0.04] px-3 py-2.5 text-sm focus:border-[#c9a24b]/60 focus:outline-none" />
-        </label>
-        <label className="mb-6 flex items-center gap-3 cursor-pointer select-none">
-          <div
-            onClick={() => setIsPublic((v) => !v)}
-            className={`relative h-5 w-9 rounded-full transition-colors ${isPublic ? 'bg-[#f5c542]' : 'bg-white/20'}`}
-          >
-            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#1c120c] shadow transition-transform ${isPublic ? 'translate-x-4' : 'translate-x-0.5'}`} />
-          </div>
-          <span className="text-sm text-white/70">{isPublic ? 'Public — visible to everyone' : 'Private — only you'}</span>
-        </label>
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-full border border-white/[0.08] py-2.5 text-sm font-semibold text-white/50 hover:text-white transition-colors">Cancel</button>
-          <button onClick={submit} disabled={!title.trim() || busy}
-            className="flex-1 rounded-full bg-[#f5c542] hover:bg-[#e6b738] py-2.5 text-sm font-bold text-[#1c120c] disabled:opacity-40 transition-colors shadow-md shadow-[#f5c542]/20">
-            {busy ? 'Creating…' : 'Create'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  commentsCount: number;
+  items: Array<{
+    id: number;
+    title: string;
+    type: 'Movie' | 'TV';
+    year: string;
+    poster: string;
+  }>;
 }
 
-// ─── Collection Card ───────────────────────────────────────────────────────────
-function CollectionCard({
-  col,
-  isOwn,
-  onSelect,
-  onDelete,
-}: {
-  col: Collection;
-  isOwn: boolean;
-  onSelect?: (col: Collection) => void;
-  onDelete?: (id: string) => void;
-}) {
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!onDelete) return;
-    const ok = await collectionsService.deleteCollection(col.id, col.user_id);
-    if (ok) {
-      onDelete(col.id);
-      toast.success('Collection deleted');
-    } else {
-      toast.error('Failed to delete');
-    }
-  };
+const SHOWCASE_COLLECTIONS: CuratedCollectionRow[] = [
+  {
+    id: 'col-1',
+    title: 'Wait, WHAT Movie Is This?',
+    creator: {
+      username: 'cult_cinema',
+      avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=cult',
+    },
+    commentsCount: 18,
+    items: [
+      {
+        id: 10834,
+        title: 'From Dusk Till Dawn',
+        type: 'Movie',
+        year: '1996',
+        poster: 'https://image.tmdb.org/t/p/w780/snAeeiQ3k6vN6V6dZ8sT3m1yC2e.jpg',
+      },
+      {
+        id: 496243,
+        title: 'Parasite',
+        type: 'Movie',
+        year: '2019',
+        poster: 'https://image.tmdb.org/t/p/w780/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
+      },
+      {
+        id: 534780,
+        title: 'Andhadhun',
+        type: 'Movie',
+        year: '2018',
+        poster: 'https://image.tmdb.org/t/p/w780/dyHaAepgqT269n05b4sU7q5x2P2.jpg',
+      },
+      {
+        id: 11324,
+        title: 'Shutter Island',
+        type: 'Movie',
+        year: '2010',
+        poster: 'https://image.tmdb.org/t/p/w780/4GDy0PHYX3VRXUtwK5ysqvqlOhv.jpg',
+      },
+      {
+        id: 77,
+        title: 'Memento',
+        type: 'Movie',
+        year: '2000',
+        poster: 'https://image.tmdb.org/t/p/w780/yuNs09hvpHVU1cBTCA99x5w2Qox.jpg',
+      },
+    ],
+  },
+  {
+    id: 'col-2',
+    title: 'Sci-Fi Mindbenders & Cosmic Epics',
+    creator: {
+      username: 'nolan_disciple',
+      avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=nolan',
+    },
+    commentsCount: 37,
+    items: [
+      {
+        id: 999991,
+        title: 'Project Hail Mary',
+        type: 'Movie',
+        year: '2026',
+        poster: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=780&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 157336,
+        title: 'Interstellar',
+        type: 'Movie',
+        year: '2014',
+        poster: 'https://image.tmdb.org/t/p/w780/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+      },
+      {
+        id: 872585,
+        title: 'Oppenheimer',
+        type: 'Movie',
+        year: '2023',
+        poster: 'https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+      },
+      {
+        id: 693134,
+        title: 'Dune: Part Two',
+        type: 'Movie',
+        year: '2024',
+        poster: 'https://image.tmdb.org/t/p/w780/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+      },
+    ],
+  },
+  {
+    id: 'col-3',
+    title: 'TIFF Winners & Festival Gems 2026',
+    creator: {
+      username: 'criterion_archivist',
+      avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=criterion',
+    },
+    commentsCount: 22,
+    items: [
+      {
+        id: 1079091,
+        title: 'The Life of Chuck',
+        type: 'Movie',
+        year: '2024',
+        poster: 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=780&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 974576,
+        title: 'Conclave',
+        type: 'Movie',
+        year: '2024',
+        poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=780&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 402431,
+        title: 'Wicked',
+        type: 'Movie',
+        year: '2024',
+        poster: 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=780&auto=format&fit=crop&q=80',
+      },
+    ],
+  },
+];
 
-  return (
-    <div
-      onClick={() => onSelect?.(col)}
-      className="group relative overflow-hidden rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-5 transition-all hover:border-[#c9a24b]/50 shadow-sm cursor-pointer hover:shadow-xl hover:scale-[1.01]"
-    >
-      {/* Dynamic Movie Collage Thumbnail */}
-      <CollectionCollageThumbnail collection={col as any} className="mb-4 rounded-xl" />
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-bold text-white group-hover:text-[#f5c542] transition-colors">
-            {col.title}
-          </h3>
-          {col.description && (
-            <p className="mt-0.5 truncate text-xs text-white/50">{col.description}</p>
-          )}
-          <div className="mt-1.5 flex items-center gap-2 text-xs text-white/40">
-            <span>{col.items_count} titles</span>
-            {col.is_public ? (
-              <Globe className="h-3 w-3 text-[#c9a24b]" />
-            ) : (
-              <Lock className="h-3 w-3" />
-            )}
-            {col.username && !isOwn && (
-              <span>
-                by{' '}
-                <Link
-                  to={`/community/user/${col.user_id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-white/60 hover:text-[#f5c542] transition-colors"
-                >
-                  {col.username}
-                </Link>
-              </span>
-            )}
-          </div>
-        </div>
-        {isOwn && (
-          <button
-            onClick={handleDelete}
-            className="shrink-0 p-1 text-white/30 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
-            title="Delete collection"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+const TOPICS = ['All Topics', 'Cult Thrillers', 'Sci-Fi Epics', 'Festival Gems', 'Oscar Contenders'];
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function CollectionsPage() {
   const { user } = useAuth();
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [myCollections, setMyCollections] = useState<Collection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'browse' | 'mine'>('browse');
-  const [showCreate, setShowCreate] = useState(false);
-  const [selectedCol, setSelectedCol] = useState<Collection | null>(null);
+  const [activeTopic, setActiveTopic] = useState('All Topics');
+  const [showTopicsMenu, setShowTopicsMenu] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      const [pub, mine] = await Promise.all([
-        collectionsService.getPublicCollections(),
-        user ? collectionsService.getUserCollections(user.id) : Promise.resolve([]),
-      ]);
-      setCollections(pub);
-      setMyCollections(mine);
-      setLoading(false);
+  // Selected collection for CollectionDetailModal
+  const [selectedCollection, setSelectedCollection] = useState<UserCollection | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const scrollRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const scrollLeft = (key: string) => {
+    const el = scrollRefs.current[key];
+    if (el) el.scrollBy({ left: -340, behavior: 'smooth' });
+  };
+
+  const scrollRight = (key: string) => {
+    const el = scrollRefs.current[key];
+    if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
+  };
+
+  const handleOpenCollection = (row: CuratedCollectionRow) => {
+    const col: UserCollection = {
+      id: row.id,
+      user_id: user?.id || 'demo-user',
+      title: row.title,
+      description: `Curated cinema showcase by @${row.creator.username}`,
+      cover_image: row.items[0]?.poster,
+      is_public: true,
+      items_count: row.items.length,
+      likes_count: row.commentsCount,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
-    fetchAll();
-  }, [user]);
-
-  const handleCreate = (col: Collection) => {
-    setMyCollections((p) => [col, ...p]);
-    setCollections((p) => col.is_public ? [col, ...p] : p);
-    setActiveTab('mine');
+    setSelectedCollection(col);
+    setIsDetailModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setMyCollections((p) => p.filter((c) => c.id !== id));
-    setCollections((p) => p.filter((c) => c.id !== id));
-    if (selectedCol?.id === id) setSelectedCol(null);
-  };
-
-  const displayed = activeTab === 'mine' ? myCollections : collections;
+  const filteredRows = SHOWCASE_COLLECTIONS.filter((row) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      row.title.toLowerCase().includes(q) ||
+      row.items.some((it) => it.title.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <CommunityLayout rightPanel={<CommunityRightPanel />}>
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Collections</h1>
-          <p className="mt-1 text-sm text-white/45">Curated watchlists by the community.</p>
-        </div>
-        {user && (
+      {/* ── Top Bar (Screenshots 3 & 4) ── */}
+      <div className="mb-8 flex items-center justify-between">
+        {/* Topics (5) Filter Button */}
+        <div className="relative">
           <button
-            onClick={() => setShowCreate(true)}
-            className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#f5c542] hover:bg-[#e6b738] px-4 py-2 text-sm font-bold text-[#1c120c] transition-all shadow-md shadow-[#f5c542]/20"
+            onClick={() => setShowTopicsMenu((v) => !v)}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs font-mono font-medium text-white transition-all shadow-sm"
           >
-            <Plus className="h-4 w-4" /> New List
+            <SlidersHorizontal className="w-3.5 h-3.5 text-white/70" />
+            <span>Topics</span>
+            <span className="w-4 h-4 rounded-full bg-white/[0.1] flex items-center justify-center text-[10px] font-bold">
+              {TOPICS.length}
+            </span>
           </button>
-        )}
-      </div>
 
-      {/* Tabs */}
-      <div className="mb-5 flex gap-1 rounded-full border border-[#c9a24b]/30 bg-[#140c10] p-1 self-start w-fit shadow-md">
-        {[
-          { key: 'browse', label: '🌐 Browse' },
-          { key: 'mine', label: '📁 Mine' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => {
-              if (key === 'mine' && !user) { toast.info('Sign in to see your collections'); return; }
-              setActiveTab(key as any);
-            }}
-            className={`rounded-full px-4 py-1.5 text-sm font-bold transition-all ${activeTab === key ? 'bg-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/20' : 'text-white/40 hover:text-white'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse rounded-2xl bg-white/[0.04]" />
-          ))}
+          {showTopicsMenu && (
+            <div className="absolute top-10 left-0 z-30 w-48 rounded-2xl border border-white/[0.1] bg-[#140a0e] p-2 shadow-2xl backdrop-blur-xl animate-in fade-in duration-100">
+              {TOPICS.map((topic) => (
+                <button
+                  key={topic}
+                  onClick={() => {
+                    setActiveTopic(topic);
+                    setShowTopicsMenu(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                    activeTopic === topic
+                      ? 'bg-[#f5c542] text-[#1c120c] font-bold'
+                      : 'text-white/70 hover:bg-white/[0.06] hover:text-white'
+                  }`}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      ) : displayed.length === 0 ? (
-        <div className="rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/60 py-20 text-center">
-          <BookMarked className="mx-auto mb-3 h-8 w-8 text-[#c9a24b]/30" />
-          <p className="font-semibold text-white/50">
-            {activeTab === 'mine' ? "You haven't created any collections yet." : 'No public collections yet.'}
-          </p>
-          {user && activeTab === 'mine' && (
-            <button onClick={() => setShowCreate(true)} className="mt-4 rounded-full bg-[#f5c542] hover:bg-[#e6b738] px-5 py-2 text-sm font-bold text-[#1c120c] transition-colors shadow-md shadow-[#f5c542]/20">
-              Create your first list
+
+        {/* Search */}
+        <div className="flex items-center gap-2">
+          {searchOpen ? (
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1 animate-in fade-in duration-150">
+              <Search className="w-3.5 h-3.5 text-white/40" />
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search collections or titles..."
+                className="w-44 bg-transparent text-xs text-white focus:outline-none placeholder-white/30"
+              />
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchOpen(false);
+                }}
+                className="text-white/40 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 rounded-full text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
+              title="Search collections"
+            >
+              <Search className="w-4 h-4" />
             </button>
           )}
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {displayed.map((col) => (
-            <CollectionCard
-              key={col.id}
-              col={col}
-              isOwn={col.user_id === user?.id}
-              onSelect={setSelectedCol}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      </div>
 
-      {showCreate && (
-        <CreateCollectionModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
-      )}
+      {/* ── Collection Rows (Screenshots 3 & 4) ── */}
+      <div className="space-y-12">
+        {filteredRows.map((collection) => (
+          <section key={collection.id} className="space-y-4">
+            {/* Collection Header: Title + "< >" Navigation Arrows */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white">
+                {collection.title}
+              </h2>
 
-      {/* Full Feature Collection Detail Modal with + Add Content & Management */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => scrollLeft(collection.id)}
+                  className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  title="Scroll left"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => scrollRight(collection.id)}
+                  className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  title="Scroll right"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Row of Posters */}
+            <div
+              ref={(el) => {
+                scrollRefs.current[collection.id] = el;
+              }}
+              className="flex gap-4 overflow-x-auto pb-2 scrollbar-none custom-scrollbar"
+            >
+              {collection.items.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleOpenCollection(collection)}
+                  className="w-44 sm:w-56 shrink-0 cursor-pointer group"
+                >
+                  <div className="aspect-[2/3] w-full rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shadow-lg relative">
+                    <img
+                      src={item.poster}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="px-3 py-1 rounded-full bg-[#f5c542] text-[#1c120c] font-mono text-[11px] font-bold shadow-lg">
+                        View List
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5">
+                    <h3 className="text-sm font-bold text-white group-hover:text-[#f5c542] transition-colors truncate">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs font-mono text-white/40 mt-0.5">
+                      {item.type} • {item.year}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Collection Footer: Avatar (Left) + Visit Collection Link (Center) + Comments (Right) */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+              {/* Creator Avatar */}
+              <div className="flex items-center gap-2">
+                <Avatar
+                  username={collection.creator.username}
+                  url={collection.creator.avatarUrl}
+                  size={8}
+                />
+              </div>
+
+              {/* Visit Collection Link */}
+              <button
+                onClick={() => handleOpenCollection(collection)}
+                className="text-xs font-mono text-white/60 hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition-all flex items-center gap-1"
+              >
+                <span>Visit Collection</span>
+                <span className="text-[10px]">↗</span>
+              </button>
+
+              {/* Comments Icon with Count */}
+              <button
+                onClick={() => handleOpenCollection(collection)}
+                className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.05] transition-colors flex items-center gap-1.5 text-xs font-mono"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{collection.commentsCount}</span>
+              </button>
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {/* ── Collection Detail Modal ── */}
       <CollectionDetailModal
-        collection={selectedCol as any}
-        isOpen={Boolean(selectedCol)}
-        onClose={() => setSelectedCol(null)}
-        isOwner={selectedCol?.user_id === user?.id}
+        collection={selectedCollection}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedCollection(null);
+        }}
       />
     </CommunityLayout>
   );

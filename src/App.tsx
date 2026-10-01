@@ -20,7 +20,9 @@ const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const DirectorsPage = lazy(() => import("./pages/DirectorsPage"));
 const DirectorDetailPage = lazy(() => import("./pages/DirectorDetailPage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const NewsPage = lazy(() => import("./pages/community/NewsPage"));
 const DiscussionsPage = lazy(() => import("./pages/community/DiscussionsPage"));
+const TrailersPage = lazy(() => import("./pages/community/TrailersPage"));
 const ReviewsPage = lazy(() => import("./pages/community/ReviewsPage"));
 const CollectionsPage = lazy(() => import("./pages/community/CollectionsPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
@@ -86,14 +88,16 @@ const App = () => (
               <Route path="/tv/:id" element={<TVDetail />} />
               <Route path="/recommendations" element={<Navigate to="/" replace />} />
               <Route path="/community" element={<CommunityPage />} />
+              <Route path="/community/news" element={<NewsPage />} />
               <Route path="/community/discussions" element={<DiscussionsPage />} />
+              <Route path="/community/trailers" element={<TrailersPage />} />
               <Route path="/community/reviews" element={<ReviewsPage />} />
+              <Route path="/community/collections" element={<CollectionsPage />} />
+              <Route path="/community/user/:userId" element={<UserProfilePage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/collections" element={<LibraryPage />} />
               <Route path="/watch-later" element={<Navigate to="/library?tab=watch-later" replace />} />
               <Route path="/history" element={<Navigate to="/library?tab=history" replace />} />
-              <Route path="/community/collections" element={<LibraryPage />} />
-              <Route path="/community/user/:userId" element={<UserProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/time-machine" element={<TimeMachinePage />} />
               <Route path="/schedule" element={<SchedulePage />} />

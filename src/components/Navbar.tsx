@@ -231,11 +231,13 @@ export const Navbar = () => {
                       </div>
                     ) : (
                       cinemaNews.map((item) => (
-                        <a
+                        <Link
                           key={item.id}
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          to="/community/news"
+                          onClick={() => {
+                            tick();
+                            setShowBell(false);
+                          }}
                           className="group flex gap-2.5 p-2 rounded-xl border border-transparent hover:border-white/[0.08] hover:bg-white/[0.04] transition-all"
                         >
                           {item.thumbnail && (
@@ -252,24 +254,25 @@ export const Navbar = () => {
                             </p>
                             <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono text-white/40">
                               <span className="text-[#f5c542] bg-[#f5c542]/10 px-1.5 py-0.5 rounded font-semibold">
-                                {item.source}
+                                MovieGuy Wire
                               </span>
                               <span>
                                 {item.pubDate
                                   ? new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                   : 'Today'}
                               </span>
-                              <ExternalLink className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-white/60" />
                             </div>
                           </div>
-                        </a>
+                        </Link>
                       ))
                     )}
                   </div>
 
                   <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-white/30 px-1">
-                    <span>Legal RSS Syndication</span>
-                    <span>Collider • Variety • Deadline</span>
+                    <span>MovieGuy Cinema Wire</span>
+                    <Link to="/community/news" onClick={() => setShowBell(false)} className="text-[#f5c542] hover:underline">
+                      View All Scoops →
+                    </Link>
                   </div>
                 </div>
               )}

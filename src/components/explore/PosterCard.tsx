@@ -53,6 +53,7 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
   const title = item.title || item.name || 'Untitled';
   const dateStr = item.release_date || item.first_air_date || '';
   const year = dateStr ? dateStr.slice(0, 4) : '2026';
+  const rating = item.vote_average && item.vote_average > 0 ? item.vote_average.toFixed(1) : null;
 
   const firstGenreId = item.genre_ids?.[0];
   const genreName = firstGenreId ? (GENRE_MAP[firstGenreId] || 'Cinema') : 'Cinema';

@@ -1,4 +1,4 @@
-// src/services/trailers.ts — Realtime TMDB & YouTube Trailer Fetcher for Trailers, Promos, BTS & Teasers
+// src/services/trailers.ts — Realtime TMDB & YouTube Trailer Fetcher (100% Dynamic, Zero Dummy Data)
 import { tmdb } from './tmdb';
 
 export type TrailerType = 'Trailer' | 'Promo' | 'BTS' | 'Teaser';
@@ -26,176 +26,42 @@ export interface CinemaTrailer {
   overview?: string;
 }
 
-// Verified showcase trailers matching the user's reference screenshots (Lanterns, Black Doves, Werwulf, Ramayana BTS, VisionQuest)
-const SHOWCASE_TRAILERS: CinemaTrailer[] = [
-  {
-    id: 'tr-lanterns-promo',
-    mediaId: 934051,
-    mediaType: 'tv',
-    movieTitle: 'Lanterns',
-    title: 'Lanterns Episode 8 Promo - Season Finale',
-    author: 'MovieGuy Official',
-    timeAgo: '28th September',
-    commentsCount: 38,
-    likesCount: 142,
-    thumbnail: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'P_3_Lg0fM70',
-    topic: 'DC Studios',
-    categoryTag: 'Shows on Air',
-    videoType: 'Promo',
-    badgeText: 'FINALE PROMO HD',
-    entities: ['Lanterns', 'Episode 8 Promo', 'Season Finale'],
-    overview: 'Hal Jordan and John Stewart investigate an ancient mystery on Earth that threatens the entire Green Lantern Corps.',
-  },
-  {
-    id: 'tr-black-doves',
-    mediaId: 242131,
-    mediaType: 'tv',
-    movieTitle: 'Black Doves: Season 2',
-    title: 'Black Doves: Season 2 | Official Trailer',
-    subtitle: 'Starring Keira Knightley and Ben Whishaw.',
-    author: 'MovieGuy Official',
-    timeAgo: '25th September',
-    commentsCount: 52,
-    likesCount: 219,
-    thumbnail: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'b9EkMc79ZSU',
-    topic: 'Espionage',
-    categoryTag: 'Shows on Air',
-    videoType: 'Trailer',
-    badgeText: 'OFFICIAL TRAILER',
-    streamer: 'netflix',
-    entities: ['Black Doves: Season 2', 'Official Trailer', 'Keira Knightley', 'Ben Whishaw'],
-    overview: 'Helen embarks on a passionate affair that endangers her secret identity. When her lover falls victim to London’s underworld, her employers send an old friend to keep her safe.',
-  },
-  {
-    id: 'tr-werwulf-trailer',
-    mediaId: 884021,
-    mediaType: 'movie',
-    movieTitle: 'Werwulf',
-    title: "The official second trailer for Robert Eggers' Werwulf has been released.",
-    author: 'MovieGuy Official',
-    timeAgo: '26th September',
-    commentsCount: 84,
-    likesCount: 460,
-    thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'Zg4tE7c7u2k',
-    topic: 'Horror',
-    categoryTag: 'Upcoming Movies',
-    videoType: 'Trailer',
-    badgeText: 'OFFICIAL TRAILER 2',
-    entities: ["Robert Eggers'", 'Werwulf', 'official second trailer'],
-    overview: 'Robert Eggers returns with a chilling, historical nightmare exploring the dread of ancient folklore and the primal beast within.',
-  },
-  {
-    id: 'tr-ramayana-bts',
-    mediaId: 1045231,
-    mediaType: 'movie',
-    movieTitle: 'Ramayana: Part One',
-    title: 'Ramayana: Part One',
-    subtitle: 'This is our Rama: BTS',
-    author: 'Kshamik V',
-    timeAgo: '28th September',
-    commentsCount: 67,
-    likesCount: 512,
-    thumbnail: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 't433PEQGErc',
-    topic: 'Mythology',
-    categoryTag: 'Upcoming Movies',
-    videoType: 'BTS',
-    badgeText: 'BTS',
-    entities: ['Ramayana: Part One', 'Rama: BTS'],
-    overview: 'Nitesh Tiwari takes us behind the scenes into the ground-breaking VFX, prosthetic mastery, and world-building of Ramayana: Part One.',
-  },
-  {
-    id: 'tr-visionquest-teaser',
-    mediaId: 981245,
-    mediaType: 'tv',
-    movieTitle: 'VisionQuest',
-    title: 'A new teaser for VisionQuest has been released.',
-    author: 'MovieGuy Official',
-    timeAgo: '27th September',
-    commentsCount: 49,
-    likesCount: 310,
-    thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'HCSq_x1l6n4',
-    topic: 'Marvel',
-    categoryTag: 'Shows on Air',
-    videoType: 'Teaser',
-    badgeText: 'TEASER',
-    streamer: 'disney',
-    entities: ['VisionQuest', 'new teaser'],
-    overview: 'Paul Bettany returns as the White Vision searching for memory, human emotion, and his ultimate destiny in the aftermath of Westview.',
-  },
-  {
-    id: 'tr-arjun-das-love',
-    mediaId: 911432,
-    mediaType: 'movie',
-    movieTitle: '#Love',
-    title: "The official trailer for Arjun Das' #Love has been released.",
-    author: 'Kshamik V',
-    timeAgo: '25th September',
-    commentsCount: 31,
-    likesCount: 198,
-    thumbnail: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: '5qap5aO4i9A',
-    topic: 'Romance Thriller',
-    categoryTag: 'Latest Released',
-    videoType: 'Trailer',
-    badgeText: 'OFFICIAL TRAILER',
-    entities: ["Arjun Das'", '#Love', 'official trailer'],
-    overview: 'An intense romantic thriller centered on trust, obsessive romance, and a sudden revelation that tests everything.',
-  },
-  {
-    id: 'tr-mickey-17',
-    mediaId: 438631,
-    mediaType: 'movie',
-    movieTitle: 'Mickey 17',
-    title: "Bong Joon Ho's Mickey 17 Official Main Trailer starring Robert Pattinson.",
-    author: 'Warner Bros. Pictures',
-    timeAgo: '3 days ago',
-    commentsCount: 92,
-    likesCount: 680,
-    thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'osYpGSz_94E',
-    topic: 'Sci-Fi',
-    categoryTag: 'Upcoming Movies',
-    videoType: 'Trailer',
-    badgeText: 'OFFICIAL TRAILER',
-    entities: ['Bong Joon Ho', 'Mickey 17', 'Robert Pattinson'],
-    overview: 'Mickey 17 is an expendable employee on a human expedition sent to colonize the ice world Niflheim. After one iteration dies, a new body is regenerated with most of his memories intact.',
-  },
-  {
-    id: 'tr-superman-teaser',
-    mediaId: 1064213,
-    mediaType: 'movie',
-    movieTitle: 'Superman (2025)',
-    title: "James Gunn unveils first teaser trailer for David Corenswet's Superman.",
-    author: 'DC Studios Official',
-    timeAgo: '4 days ago',
-    commentsCount: 184,
-    likesCount: 1420,
-    thumbnail: 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=1280&auto=format&fit=crop&q=80',
-    youtubeId: 'uhUht6vAsMY',
-    topic: 'DC Studios',
-    categoryTag: 'Upcoming Movies',
-    videoType: 'Teaser',
-    badgeText: 'OFFICIAL TEASER',
-    entities: ['James Gunn', 'David Corenswet', 'Superman'],
-    overview: 'Superman embarks on a journey to reconcile his Kryptonian heritage with his human upbringing as Clark Kent of Smallville, Kansas.',
-  },
-];
+const CACHE_KEY = 'mg_realtime_trailers_live_v1';
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-const CACHE_KEY = 'mg_realtime_trailers_cache_v3';
-const CACHE_TTL = 15 * 60 * 1000; // 15 mins
+// Helper to determine relative time from video publish date or fallback
+function formatRelativeTime(dateString?: string): string {
+  if (!dateString) return 'Recent';
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / (1000 * 60));
+  if (mins < 60) return `${Math.max(1, mins)} mins ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hrs ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days} days ago`;
+  return new Date(dateString).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+}
+
+// Detect streamer / network from title or overview
+function detectStreamer(text: string): CinemaTrailer['streamer'] | undefined {
+  const t = text.toLowerCase();
+  if (t.includes('netflix')) return 'netflix';
+  if (t.includes('disney+') || t.includes('disney plus') || t.includes('marvel studios')) return 'disney';
+  if (t.includes('hbo') || t.includes('max original') || t.includes('warner')) return 'max';
+  if (t.includes('apple tv') || t.includes('apple original')) return 'apple';
+  if (t.includes('paramount')) return 'paramount';
+  if (t.includes('universal')) return 'universal';
+  return undefined;
+}
 
 export const trailersService = {
   /**
-   * Fetches latest movies, shows, and upcoming movies from TMDB,
-   * categorizing videos into Trailer, Promo, BTS, and Teaser.
+   * Fetches real-time upcoming movies, in-theater movies, and airing shows from TMDB,
+   * queries their actual video catalogs, and classifies them into Trailers, Promos, BTS, and Teasers.
+   * Completely live: zero hardcoded dummy arrays.
    */
   async getTrailers(filter: 'all' | 'trailers' | 'promos' | 'bts' | 'teasers' | 'upcoming' = 'all'): Promise<CinemaTrailer[]> {
-    // 1. Check local cache
+    // 1. Check local session cache to prevent rapid API rate exhaustion
     try {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -205,14 +71,14 @@ export const trailersService = {
         }
       }
     } catch {
-      // Ignore
+      // Ignore cache error
     }
 
     try {
-      // 2. Fetch Now Playing, Upcoming movies, and On The Air TV shows from TMDB
-      const [nowPlayingRes, upcomingRes, tvRes] = await Promise.allSettled([
-        tmdb.getNowPlaying(),
+      // 2. Fetch live media pools in parallel from TMDB API
+      const [upcomingRes, nowPlayingRes, tvRes] = await Promise.allSettled([
         tmdb.getUpcoming(),
+        tmdb.getNowPlaying(),
         tmdb.getOnTheAir(),
       ]);
 
@@ -226,15 +92,16 @@ export const trailersService = {
         categoryTag: CinemaTrailer['categoryTag'];
       }> = [];
 
+      // Process Upcoming Movies
       if (upcomingRes.status === 'fulfilled' && upcomingRes.value?.results) {
-        for (const m of upcomingRes.value.results.slice(0, 6)) {
-          if (m.backdrop_path || m.poster_path) {
+        for (const m of upcomingRes.value.results.slice(0, 10)) {
+          if (m.id && (m.title || m.original_title)) {
             pool.push({
               mediaId: m.id,
               mediaType: 'movie',
               movieTitle: m.title || m.original_title,
               overview: m.overview || '',
-              backdrop_path: m.backdrop_path || m.poster_path,
+              backdrop_path: m.backdrop_path || m.poster_path || '',
               releaseDate: m.release_date || 'Coming Soon',
               categoryTag: 'Upcoming Movies',
             });
@@ -242,15 +109,16 @@ export const trailersService = {
         }
       }
 
+      // Process Now Playing Movies
       if (nowPlayingRes.status === 'fulfilled' && nowPlayingRes.value?.results) {
-        for (const m of nowPlayingRes.value.results.slice(0, 4)) {
-          if (m.backdrop_path || m.poster_path) {
+        for (const m of nowPlayingRes.value.results.slice(0, 8)) {
+          if (m.id && (m.title || m.original_title)) {
             pool.push({
               mediaId: m.id,
               mediaType: 'movie',
               movieTitle: m.title || m.original_title,
               overview: m.overview || '',
-              backdrop_path: m.backdrop_path || m.poster_path,
+              backdrop_path: m.backdrop_path || m.poster_path || '',
               releaseDate: m.release_date || 'In Theaters',
               categoryTag: 'Latest Released',
             });
@@ -258,15 +126,16 @@ export const trailersService = {
         }
       }
 
+      // Process Airing TV Shows
       if (tvRes.status === 'fulfilled' && tvRes.value?.results) {
-        for (const s of tvRes.value.results.slice(0, 4)) {
-          if (s.backdrop_path || s.poster_path) {
+        for (const s of tvRes.value.results.slice(0, 8)) {
+          if (s.id && (s.name || s.original_name)) {
             pool.push({
               mediaId: s.id,
               mediaType: 'tv',
               movieTitle: s.name || s.original_name,
               overview: s.overview || '',
-              backdrop_path: s.backdrop_path || s.poster_path,
+              backdrop_path: s.backdrop_path || s.poster_path || '',
               releaseDate: s.first_air_date || 'Streaming Now',
               categoryTag: 'Shows on Air',
             });
@@ -274,92 +143,113 @@ export const trailersService = {
         }
       }
 
-      // 3. For each title in pool, fetch videos and classify (Trailer, Promo, BTS, Teaser)
-      const fetchedItems: CinemaTrailer[] = [];
-
-      for (const item of pool) {
+      // 3. For each real movie/show, query TMDB video API to fetch real YouTube videos
+      const videoFetchPromises = pool.map(async (item) => {
         try {
           const vids = await tmdb.getVideos(item.mediaId, item.mediaType);
           const results = vids?.results || [];
+          if (!Array.isArray(results) || results.length === 0) return [];
 
-          if (results.length === 0) continue;
+          const itemsForMedia: CinemaTrailer[] = [];
 
-          // Categorize available videos
-          for (const v of results.slice(0, 2)) {
+          for (const v of results) {
             if (v.site !== 'YouTube' || !v.key) continue;
 
-            const nameLower = (v.name || '').toLowerCase();
+            const name = v.name || '';
+            const nameLower = name.toLowerCase();
+
             let videoType: TrailerType = 'Trailer';
             let badgeText = 'OFFICIAL TRAILER';
 
-            if (v.type === 'Behind the Scenes' || v.type === 'Featurette' || /bts|behind the scenes|making of|featurette/i.test(nameLower)) {
+            if (
+              v.type === 'Behind the Scenes' ||
+              v.type === 'Featurette' ||
+              /bts|behind the scenes|making of|featurette|inside look/i.test(nameLower)
+            ) {
               videoType = 'BTS';
               badgeText = 'BTS';
-            } else if (/promo|finale|episode|sneak peek/i.test(nameLower) || v.type === 'Clip') {
+            } else if (
+              /promo|finale|episode|sneak peek|clip/i.test(nameLower) ||
+              v.type === 'Clip'
+            ) {
               videoType = 'Promo';
               badgeText = /finale/i.test(nameLower) ? 'FINALE PROMO HD' : 'PROMO HD';
             } else if (v.type === 'Teaser' || /teaser/i.test(nameLower)) {
               videoType = 'Teaser';
               badgeText = 'TEASER';
+            } else if (/trailer 2/i.test(nameLower)) {
+              badgeText = 'OFFICIAL TRAILER 2';
             }
 
-            const backdropUrl = item.backdrop_path
+            const thumbnail = item.backdrop_path
               ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`
               : `https://img.youtube.com/vi/${v.key}/maxresdefault.jpg`;
 
-            fetchedItems.push({
-              id: `tmdb-${v.key}`,
+            // Clean headline
+            const title = name.toLowerCase().includes(item.movieTitle.toLowerCase())
+              ? name
+              : `${item.movieTitle} | ${name}`;
+
+            const streamer = detectStreamer(`${item.movieTitle} ${item.overview} ${name}`);
+
+            itemsForMedia.push({
+              id: `tmdb-${item.mediaType}-${item.mediaId}-${v.key}`,
               mediaId: item.mediaId,
               mediaType: item.mediaType,
               movieTitle: item.movieTitle,
-              title: v.name?.includes(item.movieTitle)
-                ? v.name
-                : `${item.movieTitle} | ${v.name || 'Official Video'}`,
+              title,
+              subtitle: item.overview ? `${item.overview.slice(0, 110)}...` : undefined,
               author: 'MovieGuy Official',
-              timeAgo: 'Recent Release',
-              commentsCount: Math.floor(Math.random() * 40) + 15,
-              likesCount: Math.floor(Math.random() * 200) + 60,
-              thumbnail: backdropUrl,
+              timeAgo: formatRelativeTime(v.published_at),
+              commentsCount: 0,
+              likesCount: 0,
+              thumbnail,
               youtubeId: v.key,
               topic: item.categoryTag === 'Shows on Air' ? 'Series' : item.categoryTag === 'Upcoming Movies' ? 'Upcoming' : 'Cinema',
               categoryTag: item.categoryTag,
               videoType,
               badgeText,
+              streamer,
               entities: [item.movieTitle, videoType],
               releaseDate: item.releaseDate,
               overview: item.overview,
             });
           }
-        } catch {
-          // Continue to next item
-        }
-      }
 
-      // Merge showcase trailers first, then real TMDB trailers
-      const combined = [...SHOWCASE_TRAILERS, ...fetchedItems];
+          return itemsForMedia;
+        } catch {
+          return [];
+        }
+      });
+
+      const nestedResults = await Promise.all(videoFetchPromises);
+      const allFetched = nestedResults.flat();
 
       // Deduplicate by youtubeId
       const unique: CinemaTrailer[] = [];
       const seen = new Set<string>();
-      for (const t of combined) {
+      for (const t of allFetched) {
         if (!seen.has(t.youtubeId)) {
           seen.add(t.youtubeId);
           unique.push(t);
         }
       }
 
+      // Save to session cache
       try {
-        sessionStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ timestamp: Date.now(), items: unique })
-        );
+        if (unique.length > 0) {
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ timestamp: Date.now(), items: unique })
+          );
+        }
       } catch {
         // Ignore
       }
 
       return this.applyFilter(unique, filter);
     } catch {
-      return this.applyFilter(SHOWCASE_TRAILERS, filter);
+      return [];
     }
   },
 

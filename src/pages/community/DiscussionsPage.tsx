@@ -1,5 +1,5 @@
-// src/pages/community/DiscussionsPage.tsx — Cinema Open Floor & Community Discussions matching Screenshots 1-2
-import { useState, useMemo } from 'react';
+// src/pages/community/DiscussionsPage.tsx — Realtime Database Discussions (100% Real Data, Zero Dummy Data)
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   SlidersHorizontal,
   Search,
@@ -10,83 +10,15 @@ import {
   X,
   MessageSquare,
   Sparkles,
-  Flame,
-  Check,
+  Send,
+  Loader2,
 } from 'lucide-react';
 import { CommunityLayout } from '@/components/community/CommunityLayout';
 import { CommunityRightPanel } from '@/components/community/CommunityRightPanel';
+import { communityService, type CommunityPost, type PostComment } from '@/services/community';
 import { useAuth } from '@/contexts/AuthContext';
+import { timeAgo } from '@/components/community/communityUtils';
 import { toast } from 'sonner';
-
-interface DiscussionComment {
-  id: string;
-  username: string;
-  avatarUrl?: string;
-  timeAgo: string;
-  content: string;
-  fullContent?: string;
-  likesCount: number;
-  isLiked?: boolean;
-  replies?: Array<{
-    id: string;
-    username: string;
-    timeAgo: string;
-    content: string;
-  }>;
-}
-
-const INITIAL_COMMENTS: DiscussionComment[] = [
-  {
-    id: 'comm-1',
-    username: 'avenger_akash_16',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-    timeAgo: '15 hrs',
-    content:
-      'Unpopular opinion: Indian masala cinema(commercial movies) lacks respect mainly because creators recycle the same formulas without taking screenwriting risks.',
-    fullContent:
-      'Unpopular opinion: Indian masala cinema(commercial movies) lacks respect mainly because creators recycle the same formulas without taking screenwriting risks. When filmmakers like Rajamouli, Prashanth Neel, or Lokesh Kanagaraj push world-building and character motivation, the entire global cinema audience celebrates it.',
-    likesCount: 10,
-    isLiked: false,
-    replies: [
-      {
-        id: 'rep-1',
-        username: 'cinephile_sam',
-        timeAgo: '12 hrs',
-        content: 'Agreed 100%. Craftsmanship in technical departments is world class, but the writing needs bolder original arcs.',
-      },
-    ],
-  },
-  {
-    id: 'comm-2',
-    username: 'nolan_theorist',
-    avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&auto=format&fit=crop&q=80',
-    timeAgo: '12 hrs',
-    content:
-      'Christopher Nolan doing a period gothic espionage thriller next would shatter every box office record. The tension pacing would be completely unreal.',
-    likesCount: 42,
-    isLiked: false,
-  },
-  {
-    id: 'comm-3',
-    username: 'cinephile_zoe',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-    timeAgo: '8 hrs',
-    content:
-      'Severance Season 2 and Black Doves Season 2 are setting the gold standard for modern television writing. We are in a new golden age of psychological suspense.',
-    likesCount: 28,
-    isLiked: false,
-  },
-  {
-    id: 'comm-4',
-    username: 'cinema_vault_official',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-    timeAgo: '5 hrs',
-    content:
-      "Robert Eggers tackling folklore dread in Werwulf rather than modern jump scares is the best news for horror cinema fans this year. The atmosphere alone will be hypnotic.",
-    likesCount: 65,
-    isLiked: false,
-  },
-];
 
 const TOPICS_LIST = [
   '🎬 Film Theories & Hot Takes',
@@ -98,12 +30,15 @@ const TOPICS_LIST = [
 
 export default function DiscussionsPage() {
   const { user, profile } = useAuth();
-  const [comments, setComments] = useState<DiscussionComment[]>(INITIAL_COMMENTS);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'top' | 'newest'>('top');
   const [newCommentText, setNewCommentText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [commentsMap, setCommentsMap] = useState<Record<string, PostComment[]>>({});
   const [showTopicsMenu, setShowTopicsMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,69 +49,115 @@ export default function DiscussionsPage() {
     return days[new Date().getDay()];
   }, []);
 
-  const handlePostComment = () => {
+  // Fetch real discussions from database
+  const loadDiscussions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const feed = await communityService.getGlobalFeed(user?.id ?? null, 40, 0, ['discussion', 'general']);
+      setPosts(feed || []);
+    } catch {
+      toast.error('Could not load discussion feed.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadDiscussions();
+  }, [loadDiscussions]);
+
+  const handlePostDiscussion = async () => {
     if (!newCommentText.trim()) return;
 
-    const username = profile?.username || user?.email?.split('@')[0] || 'Cinephile_User';
-    const newCommentItem: DiscussionComment = {
-      id: `comm-${Date.now()}`,
-      username,
-      avatarUrl: profile?.avatar_url || undefined,
-      timeAgo: 'Just now',
-      content: newCommentText.trim(),
-      likesCount: 0,
-      isLiked: false,
-    };
+    if (!user) {
+      toast.error('Please sign in to join the discussion.');
+      return;
+    }
 
-    setComments((prev) => [newCommentItem, ...prev]);
-    setNewCommentText('');
-    toast.success('Your comment has been posted to the Open Floor!');
+    setSubmitting(true);
+    try {
+      const created = await communityService.createPost({
+        content: newCommentText.trim(),
+        category: 'discussion',
+      });
+
+      if (created) {
+        setPosts((prev) => [created, ...prev]);
+        setNewCommentText('');
+        toast.success('Your take has been posted to the Open Floor!');
+      } else {
+        toast.error('Could not post your take. Try again.');
+      }
+    } catch {
+      toast.error('Failed to post discussion.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleAddReply = (commentId: string) => {
+  const handleToggleLike = async (post: CommunityPost) => {
+    if (!user) {
+      toast.error('Please sign in to like takes.');
+      return;
+    }
+
+    // Optimistic UI update
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === post.id) {
+          const isLiked = !p.liked_by_user;
+          return {
+            ...p,
+            liked_by_user: isLiked,
+            likes_count: isLiked ? p.likes_count + 1 : Math.max(0, p.likes_count - 1),
+          };
+        }
+        return p;
+      })
+    );
+
+    try {
+      await communityService.toggleLike(post.id, user.id);
+    } catch {
+      // Revert if failed
+      loadDiscussions();
+    }
+  };
+
+  const loadRepliesForPost = async (postId: string) => {
+    if (commentsMap[postId]) return;
+    try {
+      const replies = await communityService.getComments(postId);
+      setCommentsMap((prev) => ({ ...prev, [postId]: replies }));
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleSendReply = async (postId: string) => {
     if (!replyText.trim()) return;
-    const username = profile?.username || user?.email?.split('@')[0] || 'Cinephile_User';
+    if (!user) {
+      toast.error('Please sign in to reply.');
+      return;
+    }
 
-    setComments((prev) =>
-      prev.map((c) => {
-        if (c.id === commentId) {
-          const currentReplies = c.replies || [];
-          return {
-            ...c,
-            replies: [
-              ...currentReplies,
-              {
-                id: `rep-${Date.now()}`,
-                username,
-                timeAgo: 'Just now',
-                content: replyText.trim(),
-              },
-            ],
-          };
-        }
-        return c;
-      })
-    );
-
-    setReplyingToId(null);
-    setReplyText('');
-    toast.success('Reply posted!');
-  };
-
-  const toggleLike = (commentId: string) => {
-    setComments((prev) =>
-      prev.map((c) => {
-        if (c.id === commentId) {
-          const isLiked = !c.isLiked;
-          return {
-            ...c,
-            isLiked,
-            likesCount: isLiked ? c.likesCount + 1 : c.likesCount - 1,
-          };
-        }
-        return c;
-      })
-    );
+    try {
+      const res = await communityService.addComment(postId, user.id, replyText.trim());
+      if (res) {
+        setCommentsMap((prev) => ({
+          ...prev,
+          [postId]: [...(prev[postId] || []), res],
+        }));
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p))
+        );
+        setReplyText('');
+        setReplyingToId(null);
+        toast.success('Reply added!');
+      }
+    } catch {
+      toast.error('Could not submit reply.');
+    }
   };
 
   const handleShare = () => {
@@ -184,21 +165,21 @@ export default function DiscussionsPage() {
     toast.success('Discussion link copied to clipboard!');
   };
 
-  const sortedComments = useMemo(() => {
-    let list = [...comments];
+  const sortedPosts = useMemo(() => {
+    let list = [...posts];
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
-        (c) =>
-          c.content.toLowerCase().includes(q) ||
-          c.username.toLowerCase().includes(q)
+        (p) =>
+          p.content.toLowerCase().includes(q) ||
+          p.username.toLowerCase().includes(q)
       );
     }
     if (activeTab === 'top') {
-      return list.sort((a, b) => b.likesCount - a.likesCount);
+      return list.sort((a, b) => b.likes_count - a.likes_count);
     }
-    return list; // 'newest' preserves insertion order
-  }, [comments, activeTab, searchQuery]);
+    return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [posts, activeTab, searchQuery]);
 
   return (
     <CommunityLayout rightPanel={<CommunityRightPanel />}>
@@ -213,7 +194,7 @@ export default function DiscussionsPage() {
             <SlidersHorizontal className="w-3.5 h-3.5 text-white/70" />
             <span>Topics</span>
             <span className="w-4.5 h-4.5 rounded-full bg-white/[0.12] flex items-center justify-center text-[10px] font-bold">
-              5
+              {TOPICS_LIST.length}
             </span>
           </button>
 
@@ -302,7 +283,7 @@ export default function DiscussionsPage() {
             <div className="flex items-center gap-2 text-xs text-white/45">
               <span>By MovieGuy Official</span>
               <span>•</span>
-              <span>15 hrs</span>
+              <span>Today</span>
             </div>
 
             <button
@@ -358,8 +339,9 @@ export default function DiscussionsPage() {
             type="text"
             value={newCommentText}
             onChange={(e) => setNewCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
-            placeholder="Write a comment..."
+            onKeyDown={(e) => e.key === 'Enter' && !submitting && handlePostDiscussion()}
+            placeholder={user ? "Write a comment..." : "Sign in to join the discussion..."}
+            disabled={submitting}
             className="flex-1 bg-transparent text-xs text-white placeholder-white/40 focus:outline-none"
           />
 
@@ -373,154 +355,180 @@ export default function DiscussionsPage() {
           </button>
 
           <button
-            onClick={handlePostComment}
-            disabled={!newCommentText.trim()}
-            className="text-xs font-semibold text-[#f5c542] hover:text-[#ffd666] disabled:opacity-30 disabled:hover:text-[#f5c542] transition-colors px-1"
+            onClick={handlePostDiscussion}
+            disabled={!newCommentText.trim() || submitting}
+            className="text-xs font-semibold text-[#f5c542] hover:text-[#ffd666] disabled:opacity-30 disabled:hover:text-[#f5c542] transition-colors px-1 flex items-center gap-1"
           >
-            Post
+            {submitting && <Loader2 className="w-3 h-3 animate-spin" />}
+            <span>Post</span>
           </button>
         </div>
       </div>
 
       {/* ── Community Comments Feed (Screenshot 1) ── */}
-      <div className="space-y-6">
-        {sortedComments.map((comment) => {
-          const isExpanded = !!expandedMap[comment.id];
-          const hasFullContent = !!comment.fullContent;
-          const displayContent =
-            hasFullContent && !isExpanded
-              ? comment.content
-              : comment.fullContent || comment.content;
-
-          return (
-            <article key={comment.id} className="group">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  {/* User avatar */}
-                  <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-white/[0.1] overflow-hidden">
-                    {comment.avatarUrl ? (
-                      <img
-                        src={comment.avatarUrl}
-                        alt={comment.username}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white/70">
-                        {comment.username[0].toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Comment Body */}
-                  <div className="min-w-0 flex-1">
-                    <span className="text-xs font-bold text-white/90">
-                      {comment.username}
-                    </span>
-
-                    {/* Comment text */}
-                    <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/80">
-                    {displayContent}
-                    {hasFullContent && !isExpanded && (
-                      <button
-                        onClick={() =>
-                          setExpandedMap((prev) => ({ ...prev, [comment.id]: true }))
-                        }
-                        className="ml-1 text-xs text-white/50 hover:text-white font-medium"
-                      >
-                        ...more
-                      </button>
-                    )}
-                  </p>
-
-                  {/* Comment Footer: TimeAgo, Reply, Menu */}
-                  <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
-                    <span>{comment.timeAgo}</span>
-                    <button
-                      onClick={() =>
-                        setReplyingToId(replyingToId === comment.id ? null : comment.id)
-                      }
-                      className="hover:text-white font-medium transition-colors"
-                    >
-                      Reply
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          `${window.location.origin}/community/discussions#${comment.id}`
-                        );
-                        toast.success('Comment link copied');
-                      }}
-                      className="hover:text-white transition-colors"
-                      title="Options"
-                    >
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Inline Reply Input */}
-                  {replyingToId === comment.id && (
-                    <div className="mt-3 flex items-center gap-2 rounded-2xl border border-white/[0.1] bg-black/40 p-2">
-                      <input
-                        type="text"
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddReply(comment.id)}
-                        placeholder={`Reply to ${comment.username}...`}
-                        className="flex-1 bg-transparent px-2 text-xs text-white placeholder-white/40 focus:outline-none"
-                      />
-                      <button
-                        onClick={() => handleAddReply(comment.id)}
-                        disabled={!replyText.trim()}
-                        className="rounded-xl bg-[#f5c542] px-3 py-1 text-xs font-bold text-[#1c120c] hover:bg-[#e0b034] disabled:opacity-40"
-                      >
-                        Reply
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Nested Replies */}
-                  {comment.replies && comment.replies.length > 0 && (
-                    <div className="mt-3 space-y-2 border-l border-white/[0.08] pl-3">
-                      {comment.replies.map((rep) => (
-                        <div key={rep.id} className="text-xs">
-                          <span className="font-semibold text-white/90">
-                            {rep.username}
-                          </span>
-                          <span className="ml-2 text-[10px] text-white/40">
-                            {rep.timeAgo}
-                          </span>
-                          <p className="mt-0.5 text-white/70 leading-relaxed">
-                            {rep.content}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+      {loading ? (
+        <div className="space-y-4 py-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="w-9 h-9 rounded-full bg-white/[0.04]" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-32 rounded bg-white/[0.04]" />
+                <div className="h-4 w-full rounded bg-white/[0.04]" />
               </div>
-
-              {/* Like column on far right (Screenshot 1) */}
-              <button
-                onClick={() => toggleLike(comment.id)}
-                className="flex flex-col items-center gap-0.5 shrink-0 text-white/40 hover:text-white transition-colors pt-0.5"
-                title={comment.isLiked ? 'Liked' : 'Like'}
-              >
-                <Heart
-                  className={`h-4 w-4 ${
-                    comment.isLiked
-                      ? 'fill-red-500 text-red-500'
-                      : 'text-white/40 hover:text-white/80'
-                  }`}
-                />
-                <span className="text-[11px] font-medium text-white/50">
-                  {comment.likesCount}
-                </span>
-              </button>
             </div>
-          </article>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : sortedPosts.length === 0 ? (
+        <div className="rounded-2xl border border-white/[0.08] bg-[#140a0e] p-12 text-center">
+          <MessageSquare className="w-8 h-8 text-white/30 mx-auto mb-3" />
+          <p className="text-white/80 font-bold text-sm">The floor is quiet</p>
+          <p className="text-white/40 text-xs mt-1">
+            Be the first cinephile to share a hot take or theory above!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {sortedPosts.map((post) => {
+            const isExpanded = !!expandedMap[post.id];
+            const isLong = post.content.length > 200;
+            const displayContent =
+              isLong && !isExpanded ? `${post.content.slice(0, 200)}...` : post.content;
+            const postReplies = commentsMap[post.id] || [];
+
+            return (
+              <article key={post.id} className="group">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* User avatar */}
+                    <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-white/[0.1] overflow-hidden">
+                      {post.avatar_url ? (
+                        <img
+                          src={post.avatar_url}
+                          alt={post.username}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white/70">
+                          {post.username[0]?.toUpperCase() || 'U'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Comment Body */}
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs font-bold text-white/90">
+                        {post.username}
+                      </span>
+
+                      {/* Comment text */}
+                      <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/80">
+                        {displayContent}
+                        {isLong && !isExpanded && (
+                          <button
+                            onClick={() =>
+                              setExpandedMap((prev) => ({ ...prev, [post.id]: true }))
+                            }
+                            className="ml-1 text-xs text-white/50 hover:text-white font-medium"
+                          >
+                            more
+                          </button>
+                        )}
+                      </p>
+
+                      {/* Comment Footer: TimeAgo, Reply, Menu */}
+                      <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
+                        <span>{timeAgo(post.created_at)}</span>
+                        <button
+                          onClick={() => {
+                            const willOpen = replyingToId !== post.id;
+                            setReplyingToId(willOpen ? post.id : null);
+                            if (willOpen) loadRepliesForPost(post.id);
+                          }}
+                          className="hover:text-white font-medium transition-colors"
+                        >
+                          Reply {post.comments_count > 0 && `(${post.comments_count})`}
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              `${window.location.origin}/community/discussions#${post.id}`
+                            );
+                            toast.success('Take link copied');
+                          }}
+                          className="hover:text-white transition-colors"
+                          title="Options"
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Inline Reply Input */}
+                      {replyingToId === post.id && (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center gap-2 rounded-2xl border border-white/[0.1] bg-black/40 p-2">
+                            <input
+                              type="text"
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSendReply(post.id)}
+                              placeholder={`Reply to ${post.username}...`}
+                              className="flex-1 bg-transparent px-2 text-xs text-white placeholder-white/40 focus:outline-none"
+                            />
+                            <button
+                              onClick={() => handleSendReply(post.id)}
+                              disabled={!replyText.trim()}
+                              className="rounded-xl bg-[#f5c542] px-3 py-1 text-xs font-bold text-[#1c120c] hover:bg-[#e0b034] disabled:opacity-40"
+                            >
+                              Reply
+                            </button>
+                          </div>
+
+                          {/* Nested Replies */}
+                          {postReplies.length > 0 && (
+                            <div className="space-y-2 border-l border-white/[0.08] pl-3 mt-2">
+                              {postReplies.map((rep) => (
+                                <div key={rep.id} className="text-xs">
+                                  <span className="font-semibold text-white/90">
+                                    {rep.username || 'Cinephile'}
+                                  </span>
+                                  <span className="ml-2 text-[10px] text-white/40">
+                                    {timeAgo(rep.created_at)}
+                                  </span>
+                                  <p className="mt-0.5 text-white/70 leading-relaxed">
+                                    {rep.content}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Like column on far right (Screenshot 1) */}
+                  <button
+                    onClick={() => handleToggleLike(post)}
+                    className="flex flex-col items-center gap-0.5 shrink-0 text-white/40 hover:text-white transition-colors pt-0.5"
+                    title={post.liked_by_user ? 'Liked' : 'Like'}
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        post.liked_by_user
+                          ? 'fill-red-500 text-red-500'
+                          : 'text-white/40 hover:text-white/80'
+                      }`}
+                    />
+                    <span className="text-[11px] font-medium text-white/50">
+                      {post.likes_count}
+                    </span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </CommunityLayout>
   );
 }

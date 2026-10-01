@@ -34,7 +34,6 @@ export const HomeDirectorsSpotlight: React.FC = () => {
   const pillRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
 
   const currentDirector: CuratedDirector = directors[currentIndex] || directors[0];
-  const nextDirector: CuratedDirector = directors[(currentIndex + 1) % directors.length];
 
   // Advance to next director in loop
   const goToNext = useCallback(() => {
@@ -257,33 +256,6 @@ export const HomeDirectorsSpotlight: React.FC = () => {
               transitionDuration: isPlaying && !isHovered ? '50ms' : '300ms',
             }}
           />
-        </div>
-
-        {/* ── Top Bar: Active Director Counter & Next Up Peek ── */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-white/40 pb-2 border-b border-white/[0.05] mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[#f5c542] font-bold">
-              #{String(currentIndex + 1).padStart(2, '0')} of {directors.length}
-            </span>
-            <span className="text-white/20">·</span>
-            <span className="text-white/60">{currentDirector.era}</span>
-          </div>
-
-          {/* Quick Click to Skip to Next Director */}
-          <button
-            type="button"
-            onClick={goToNext}
-            className="group/next flex items-center gap-1.5 hover:text-[#f5c542] transition-colors text-right"
-            title={`Skip to ${nextDirector.name}`}
-          >
-            <span className="hidden sm:inline text-white/30 group-hover/next:text-white/50">
-              Next in loop:
-            </span>
-            <span className="text-white/70 group-hover/next:text-[#f5c542] font-semibold">
-              {nextDirector.name}
-            </span>
-            <ChevronRight className="w-3 h-3 group-hover/next:translate-x-0.5 transition-transform text-[#f5c542]" />
-          </button>
         </div>
 
         {/* ── Active Director Row (Key-triggered smooth fade transition) ── */}

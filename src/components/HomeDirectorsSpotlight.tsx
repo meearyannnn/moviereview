@@ -4,10 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Clapperboard,
   ArrowRight,
-  ChevronLeft,
   ChevronRight,
-  Play,
-  Pause,
   Sparkles,
   Film,
 } from 'lucide-react';
@@ -26,7 +23,6 @@ export const HomeDirectorsSpotlight: React.FC = () => {
     return nolanIdx >= 0 ? nolanIdx : 0;
   });
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
 
@@ -38,12 +34,6 @@ export const HomeDirectorsSpotlight: React.FC = () => {
   // Advance to next director in loop
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % directors.length);
-    setProgress(0);
-  }, [directors.length]);
-
-  // Go to previous director in loop
-  const goToPrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + directors.length) % directors.length);
     setProgress(0);
   }, [directors.length]);
 
@@ -89,9 +79,9 @@ export const HomeDirectorsSpotlight: React.FC = () => {
     }
   }, [currentDirector.id]);
 
-  // Automatic rotation loop timer with progress bar (only runs when playing, not hovered, and in viewport)
+  // Automatic rotation loop timer with progress bar (runs automatically, pauses on hover or when out of view)
   useEffect(() => {
-    if (!isPlaying || isHovered || !isIntersecting) return;
+    if (isHovered || !isIntersecting) return;
 
     const tickInterval = 50; // update progress bar smoothly
     const step = (tickInterval / ROTATION_INTERVAL_MS) * 100;
@@ -107,7 +97,7 @@ export const HomeDirectorsSpotlight: React.FC = () => {
     }, tickInterval);
 
     return () => clearInterval(timer);
-  }, [isPlaying, isHovered, isIntersecting, goToNext]);
+  }, [isHovered, isIntersecting, goToNext]);
 
   return (
     <section
@@ -118,96 +108,32 @@ export const HomeDirectorsSpotlight: React.FC = () => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ── Section Header with Loop & Navigation Controls ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      {/* ── Clean Section Header ── */}
+      <div className="flex items-center justify-between mb-4">
         {/* Title & Tagline */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center flex-shrink-0 shadow-sm">
             <Clapperboard className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
-                <span>Directors</span>
-                <span className="text-[#f5c542]">Vault</span>
-              </h2>
-              {/* Dynamic Loop Live Indicator */}
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 border border-[#c9a24b]/30 text-[10px] font-mono text-[#f5c542] backdrop-blur-md">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isPlaying && !isHovered ? 'bg-[#f5c542] animate-ping' : 'bg-white/40'
-                  }`}
-                />
-                <span className="hidden xs:inline">
-                  {isHovered ? 'Paused (Hovering)' : isPlaying ? 'Live Loop' : 'Paused'}
-                </span>
-                <span>
-                  {currentIndex + 1}/{directors.length}
-                </span>
-              </span>
-            </div>
+            <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
+              <span>Directors</span>
+              <span className="text-[#f5c542]">Vault</span>
+            </h2>
             <p className="text-[11px] font-mono text-white/40 mt-0.5 truncate">
               Visionary auteurs, signature filmographies &amp; masterworks
             </p>
           </div>
         </div>
 
-        {/* Action Controls & Navigation */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Play / Pause Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setIsPlaying((p) => !p)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/60 hover:text-white text-[11px] font-mono transition-all"
-            title={isPlaying ? 'Pause Auto-Rotation' : 'Resume Auto-Rotation'}
-            aria-label={isPlaying ? 'Pause Director Loop' : 'Play Director Loop'}
-          >
-            {isPlaying ? (
-              <>
-                <Pause className="w-3 h-3 text-[#f5c542]" />
-                <span className="hidden md:inline">Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-3 h-3 text-[#f5c542] fill-[#f5c542]" />
-                <span className="hidden md:inline">Play</span>
-              </>
-            )}
-          </button>
-
-          {/* Prev / Next Steppers */}
-          <div className="flex items-center rounded-full bg-white/[0.04] border border-white/[0.08] p-0.5">
-            <button
-              type="button"
-              onClick={goToPrev}
-              className="p-1 rounded-full text-white/60 hover:text-[#f5c542] hover:bg-white/[0.08] transition-all"
-              title="Previous Director"
-              aria-label="Previous Director"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={goToNext}
-              className="p-1 rounded-full text-white/60 hover:text-[#f5c542] hover:bg-white/[0.08] transition-all"
-              title="Next Director"
-              aria-label="Next Director"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
-
-          {/* All 45+ Directors Link */}
-          <Link
-            to="/directors"
-            className="flex items-center gap-1 text-[11px] font-mono text-[#c9a24b] hover:text-[#f5c542] transition-colors flex-shrink-0"
-          >
-            <span>All 45+ Directors</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
+        {/* All 45+ Directors Link */}
+        <Link
+          to="/directors"
+          className="flex items-center gap-1 text-[11px] font-mono text-[#c9a24b] hover:text-[#f5c542] transition-colors flex-shrink-0"
+        >
+          <span>All 45+ Directors</span>
+          <ArrowRight className="w-3 h-3" />
+        </Link>
       </div>
 
       {/* ── Director Switcher Pills (Continuous Scrollable Loop of all 40+ Directors) ── */}
@@ -277,8 +203,8 @@ export const HomeDirectorsSpotlight: React.FC = () => {
           <div
             className="h-full bg-gradient-to-r from-[#c9a24b] to-[#f5c542] transition-all ease-linear shadow-[0_0_8px_rgba(245,197,66,0.6)]"
             style={{
-              width: `${isPlaying && !isHovered ? progress : isPlaying ? progress : 0}%`,
-              transitionDuration: isPlaying && !isHovered ? '50ms' : '300ms',
+              width: `${!isHovered ? progress : 0}%`,
+              transitionDuration: !isHovered ? '50ms' : '300ms',
             }}
           />
         </div>

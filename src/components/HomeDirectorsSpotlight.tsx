@@ -53,21 +53,45 @@ export const HomeDirectorsSpotlight: React.FC = () => {
     setProgress(0);
   };
 
-  // Smoothly center the active pill in the horizontal switcher
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState<boolean>(true);
+
+  // Pause rotation when section is scrolled out of viewport
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Smoothly center the active pill strictly INSIDE the horizontal container (never scrolling the page/window)
   useEffect(() => {
     const activePill = pillRefs.current[currentDirector.id];
-    if (activePill && pillsContainerRef.current) {
-      activePill.scrollIntoView({
+    const container = pillsContainerRef.current;
+    if (activePill && container) {
+      const pillRect = activePill.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const pillRelativeLeft = pillRect.left - containerRect.left + container.scrollLeft;
+      const targetScrollLeft = pillRelativeLeft - (container.clientWidth / 2) + (activePill.clientWidth / 2);
+
+      container.scrollTo({
+        left: Math.max(0, targetScrollLeft),
         behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
       });
     }
   }, [currentDirector.id]);
 
-  // Automatic rotation loop timer with progress bar
+  // Automatic rotation loop timer with progress bar (only runs when playing, not hovered, and in viewport)
   useEffect(() => {
-    if (!isPlaying || isHovered) return;
+    if (!isPlaying || isHovered || !isIntersecting) return;
 
     const tickInterval = 50; // update progress bar smoothly
     const step = (tickInterval / ROTATION_INTERVAL_MS) * 100;
@@ -83,10 +107,11 @@ export const HomeDirectorsSpotlight: React.FC = () => {
     }, tickInterval);
 
     return () => clearInterval(timer);
-  }, [isPlaying, isHovered, goToNext]);
+  }, [isPlaying, isHovered, isIntersecting, goToNext]);
 
   return (
     <section
+      ref={sectionRef}
       id="directors-spotlight"
       aria-label="Directors Vault"
       className="scroll-mt-24 pt-2"

@@ -150,6 +150,15 @@ export const tmdb = {
   getPopular: (type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/popular`),
 
+  getNowPlaying: () =>
+    tmdbFetch('/movie/now_playing'),
+
+  getUpcoming: () =>
+    tmdbFetch('/movie/upcoming'),
+
+  getOnTheAir: () =>
+    tmdbFetch('/tv/on_the_air'),
+
   getTopRated: (type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/top_rated`),
 

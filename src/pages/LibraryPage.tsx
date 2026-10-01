@@ -29,6 +29,7 @@ import {
 } from '@/services/userLibrary';
 import { CollectionDetailModal } from '@/components/library/CollectionDetailModal';
 import { CollectionCollageThumbnail } from '@/components/library/CollectionCollageThumbnail';
+import { tmdb } from '@/services/tmdb';
 import { toast } from 'sonner';
 
 type NavTab = 'discover' | 'collections' | 'watch-later' | 'history';

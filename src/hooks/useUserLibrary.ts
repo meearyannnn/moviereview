@@ -176,6 +176,24 @@ export function useUserLibrary() {
     [user?.id]
   );
 
+  const updateCollection = useCallback(
+    async (
+      collectionId: string,
+      updates: {
+        title?: string;
+        description?: string;
+        cover_image?: string;
+        is_public?: boolean;
+      }
+    ) => {
+      const col = await userLibraryService.updateCollection(collectionId, updates, user?.id);
+      toast.success('Collection updated');
+      dispatchUpdate();
+      return col;
+    },
+    [user?.id]
+  );
+
   const addItemToCollection = useCallback(
     async (
       collectionId: string,
@@ -230,6 +248,7 @@ export function useUserLibrary() {
     toggleWatchLater,
     setWatchLaterTag,
     createCollection,
+    updateCollection,
     deleteCollection,
     addItemToCollection,
     removeItemFromCollection,

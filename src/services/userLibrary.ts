@@ -612,6 +612,53 @@ export const userLibraryService = {
     return true;
   },
 
+  async updateCollection(
+    collectionId: string,
+    updates: {
+      title?: string;
+      description?: string;
+      cover_image?: string;
+      is_public?: boolean;
+    },
+    userId?: string
+  ): Promise<UserCollection | null> {
+    const local = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
+    let updatedCol: UserCollection | null = null;
+    const updated = local.map((c) => {
+      if (c.id === collectionId) {
+        updatedCol = { ...c, ...updates };
+        return updatedCol;
+      }
+      return c;
+    });
+    setLocal(STORAGE_KEYS.COLLECTIONS, updated);
+
+    if (userId && !collectionId.startsWith('col-')) {
+      try {
+        const { data, error } = await supabase
+          .from('collections')
+          .update({
+            ...(updates.title !== undefined ? { title: updates.title } : {}),
+            ...(updates.description !== undefined ? { description: updates.description } : {}),
+            ...(updates.cover_image !== undefined ? { cover_image: updates.cover_image } : {}),
+            ...(updates.is_public !== undefined ? { is_public: updates.is_public } : {}),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', collectionId)
+          .eq('user_id', userId)
+          .select('*')
+          .single();
+
+        if (data && !error) {
+          updatedCol = { ...(updatedCol || {}), ...data } as UserCollection;
+        }
+      } catch (err) {
+        console.warn('Supabase updateCollection fallback:', err);
+      }
+    }
+    return updatedCol;
+  },
+
   async addItemToCollection(
     collectionId: string,
     item: {

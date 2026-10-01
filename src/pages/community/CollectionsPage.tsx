@@ -6,6 +6,7 @@ import { CommunityRightPanel } from '@/components/community/CommunityRightPanel'
 import { Avatar, Spinner } from '@/components/community/communityUtils';
 import { collectionsService, type Collection } from '@/services/collections';
 import { CollectionCollageThumbnail } from '@/components/library/CollectionCollageThumbnail';
+import { CollectionDetailModal } from '@/components/library/CollectionDetailModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -69,32 +70,71 @@ function CreateCollectionModal({ onClose, onCreate }: {
 }
 
 // ─── Collection Card ───────────────────────────────────────────────────────────
-function CollectionCard({ col, isOwn, onDelete }: { col: Collection; isOwn: boolean; onDelete?: (id: string) => void }) {
-  const handleDelete = async () => {
+function CollectionCard({
+  col,
+  isOwn,
+  onSelect,
+  onDelete,
+}: {
+  col: Collection;
+  isOwn: boolean;
+  onSelect?: (col: Collection) => void;
+  onDelete?: (id: string) => void;
+}) {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!onDelete) return;
     const ok = await collectionsService.deleteCollection(col.id, col.user_id);
-    if (ok) { onDelete(col.id); toast.success('Collection deleted'); }
-    else toast.error('Failed to delete');
+    if (ok) {
+      onDelete(col.id);
+      toast.success('Collection deleted');
+    } else {
+      toast.error('Failed to delete');
+    }
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-5 transition-all hover:border-[#c9a24b]/45 shadow-sm">
+    <div
+      onClick={() => onSelect?.(col)}
+      className="group relative overflow-hidden rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/85 p-5 transition-all hover:border-[#c9a24b]/50 shadow-sm cursor-pointer hover:shadow-xl hover:scale-[1.01]"
+    >
       {/* Dynamic Movie Collage Thumbnail */}
       <CollectionCollageThumbnail collection={col as any} className="mb-4 rounded-xl" />
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="truncate font-bold text-white group-hover:text-[#f5c542] transition-colors">{col.title}</h3>
-          {col.description && <p className="mt-0.5 truncate text-xs text-white/50">{col.description}</p>}
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate font-bold text-white group-hover:text-[#f5c542] transition-colors">
+            {col.title}
+          </h3>
+          {col.description && (
+            <p className="mt-0.5 truncate text-xs text-white/50">{col.description}</p>
+          )}
           <div className="mt-1.5 flex items-center gap-2 text-xs text-white/40">
             <span>{col.items_count} titles</span>
-            {col.is_public ? <Globe className="h-3 w-3 text-[#c9a24b]" /> : <Lock className="h-3 w-3" />}
+            {col.is_public ? (
+              <Globe className="h-3 w-3 text-[#c9a24b]" />
+            ) : (
+              <Lock className="h-3 w-3" />
+            )}
             {col.username && !isOwn && (
-              <span>by <Link to={`/community/user/${col.user_id}`} className="text-white/60 hover:text-[#f5c542] transition-colors">{col.username}</Link></span>
+              <span>
+                by{' '}
+                <Link
+                  to={`/community/user/${col.user_id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-white/60 hover:text-[#f5c542] transition-colors"
+                >
+                  {col.username}
+                </Link>
+              </span>
             )}
           </div>
         </div>
         {isOwn && (
-          <button onClick={handleDelete} className="shrink-0 p-1 text-white/30 opacity-0 transition-all group-hover:opacity-100 hover:text-[#f5c542]">
+          <button
+            onClick={handleDelete}
+            className="shrink-0 p-1 text-white/30 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+            title="Delete collection"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         )}
@@ -111,6 +151,7 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'browse' | 'mine'>('browse');
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedCol, setSelectedCol] = useState<Collection | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -135,6 +176,7 @@ export default function CollectionsPage() {
   const handleDelete = (id: string) => {
     setMyCollections((p) => p.filter((c) => c.id !== id));
     setCollections((p) => p.filter((c) => c.id !== id));
+    if (selectedCol?.id === id) setSelectedCol(null);
   };
 
   const displayed = activeTab === 'mine' ? myCollections : collections;
@@ -200,6 +242,7 @@ export default function CollectionsPage() {
               key={col.id}
               col={col}
               isOwn={col.user_id === user?.id}
+              onSelect={setSelectedCol}
               onDelete={handleDelete}
             />
           ))}
@@ -209,6 +252,14 @@ export default function CollectionsPage() {
       {showCreate && (
         <CreateCollectionModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
       )}
+
+      {/* Full Feature Collection Detail Modal with + Add Content & Management */}
+      <CollectionDetailModal
+        collection={selectedCol as any}
+        isOpen={Boolean(selectedCol)}
+        onClose={() => setSelectedCol(null)}
+        isOwner={selectedCol?.user_id === user?.id}
+      />
     </CommunityLayout>
   );
 }

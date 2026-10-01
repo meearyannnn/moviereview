@@ -15,8 +15,8 @@ export function CommunitySidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar (Screenshots 2-5) */}
-      <aside className="sticky top-20 hidden w-52 shrink-0 lg:block">
+      {/* Desktop Sidebar (Screenshots 2-5) — Stays 100% stable during scroll */}
+      <aside className="sticky top-20 hidden w-52 shrink-0 lg:block self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none z-20">
         <nav className="space-y-1">
           {COMMUNITY_SIDEBAR_LINKS.map(({ to, label, Icon, exact }) => {
             const active = exact ? pathname === to : pathname.startsWith(to);

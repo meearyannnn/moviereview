@@ -110,7 +110,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-overflow-scrolling: touch;
-    overflow-x: hidden;
+    overflow-x: clip;
     line-height: 1.5;
     padding-top: env(safe-area-inset-top);
     background-color: #0a0608;

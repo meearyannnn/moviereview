@@ -1,396 +1,309 @@
-// src/pages/community/NewsPage.tsx — Cinema & TV News (simple, elegant reader)
-import { useState, useEffect, useMemo } from 'react';
+// src/pages/community/NewsPage.tsx — Clean Cinephile News Stream matching Screenshot layout
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  RefreshCw,
-  Search,
-  LayoutGrid,
-  Flame,
-  Zap,
-  Heart,
-  X,
-  Clock,
-  ArrowUpRight,
   MessageCircle,
-  Megaphone,
-  Image as ImageIcon,
-  Users,
-  Scale,
-  Check,
-  Newspaper,
-  type LucideIcon,
+  X,
+  Sparkles,
+  CheckCircle2,
+  ExternalLink,
+  RefreshCw,
+  Film,
+  Tv,
 } from 'lucide-react';
 import { CommunityLayout } from '@/components/community/CommunityLayout';
 import { CommunityRightPanel } from '@/components/community/CommunityRightPanel';
-import { cinemaNewsService, type CinemaNewsItem, type ScoopCategory } from '@/services/cinemaNews';
+import { cinemaNewsService, type CinemaNewsItem } from '@/services/cinemaNews';
 import { toast } from 'sonner';
-
-type Reaction = 'fire' | 'hyped' | 'shocked';
-
-const FILTERS: { key: string; label: string; icon: LucideIcon }[] = [
-  { key: 'all', label: 'All', icon: LayoutGrid },
-  { key: 'Controversy', label: 'Controversies', icon: Scale },
-  { key: 'Poster', label: 'Posters', icon: ImageIcon },
-  { key: 'Announcement', label: 'Announcements', icon: Megaphone },
-  { key: 'Casting', label: 'Casting', icon: Users },
-];
-
-const CATEGORIES: { key: 'all' | 'movie' | 'tv'; label: string }[] = [
-  { key: 'all', label: 'Everything' },
-  { key: 'movie', label: 'Movies' },
-  { key: 'tv', label: 'TV' },
-];
-
-const REACTIONS: { key: Reaction; label: string; icon: LucideIcon; base: number }[] = [
-  { key: 'fire', label: 'Fire', icon: Flame, base: 40 },
-  { key: 'hyped', label: 'Hyped', icon: Heart, base: 65 },
-  { key: 'shocked', label: 'Shocked', icon: Zap, base: 12 },
-];
-
-const formatDate = (d?: string | Date, withYear = false) =>
-  d
-    ? new Date(d).toLocaleDateString([], {
-      month: 'short',
-      day: 'numeric',
-      ...(withYear ? { year: 'numeric' } : {}),
-    })
-    : 'Today';
 
 export default function NewsPage() {
   const navigate = useNavigate();
   const [news, setNews] = useState<CinemaNewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState<'all' | 'movie' | 'tv'>('all');
-  const [filter, setFilter] = useState('all');
-  const [query, setQuery] = useState('');
-  const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [activeStory, setActiveStory] = useState<CinemaNewsItem | null>(null);
-  const [reactions, setReactions] = useState<Record<string, Partial<Record<Reaction, number>>>>({});
+  const [reactions, setReactions] = useState<{ [id: string]: { fire: number; hyped: number; shocked: number } }>({});
 
-  const fetchNews = async (cat = category) => {
+  const fetchNews = async () => {
     setLoading(true);
     try {
-      setNews(await cinemaNewsService.getNews(cat));
-      setLastRefreshed(new Date());
+      const data = await cinemaNewsService.getNews('all');
+      setNews(data);
     } catch {
-      toast.error('Could not refresh the news. Try again.');
+      toast.error('Could not refresh news feeds.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNews(category);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+    fetchNews();
+  }, []);
 
-  // Close reader with Escape
-  useEffect(() => {
-    if (!activeStory) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setActiveStory(null);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [activeStory]);
+  const handleReact = (storyId: string, type: 'fire' | 'hyped' | 'shocked') => {
+    setReactions((prev) => {
+      const current = prev[storyId] || { fire: 0, hyped: 0, shocked: 0 };
+      toast.success(`Marked as ${type === 'fire' ? '🔥 Cinema Fire' : type === 'hyped' ? '🍿 Hyped' : '😮 Shocking'}!`);
+      return {
+        ...prev,
+        [storyId]: {
+          ...current,
+          [type]: current[type] + 1,
+        },
+      };
+    });
+  };
 
-  const react = (id: string, type: Reaction) =>
-    setReactions((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [type]: (prev[id]?.[type] || 0) + 1 },
-    }));
+  // Highlights movie and director keywords in bold
+  const renderFormattedText = (text: string) => {
+    const boldTerms = [
+      'Joe Russo & Anthony Russo',
+      'Doctor Doom',
+      'Avengers: Endgame Encore',
+      'Iron Man',
+      'Doom',
+      'THE FURTHER MIS-ADVENTURES OF CLIFF BOOTH',
+      'Once Upon a Time... in Hollywood',
+      'Brad Pitt',
+      'studio fixer',
+      'Quentin Tarantino',
+      'L.A. noir',
+      'blackmail and extortion',
+      'Mark Ruffalo',
+      'Paramount-Warner Bros.',
+      'Christopher Nolan',
+      'Robert Downey Jr.',
+      'Matt Reeves',
+      'The Batman Part II',
+      'Dune: Prophecy',
+      'Severance Season 2',
+      'Ben Stiller',
+    ];
 
-  const filtered = useMemo(() => {
-    let result = news;
-    if (filter !== 'all') result = result.filter((i) => i.scoopType.includes(filter));
-    const q = query.trim().toLowerCase();
-    if (q) {
-      result = result.filter(
-        (i) =>
-          i.title.toLowerCase().includes(q) ||
-          i.description.toLowerCase().includes(q) ||
-          i.scoopType.toLowerCase().includes(q)
+    const regex = new RegExp(`(${boldTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, i) => {
+      const isBold = boldTerms.some((t) => t.toLowerCase() === part.toLowerCase());
+      return isBold ? (
+        <strong key={i} className="font-bold text-white">
+          {part}
+        </strong>
+      ) : (
+        <span key={i}>{part}</span>
       );
-    }
-    return result;
-  }, [news, filter, query]);
-
-  const hero = filtered[0];
-  const rest = filtered.slice(1);
-
-  const scoopIcon = (type: ScoopCategory): LucideIcon => {
-    if (type.includes('Controversy')) return Scale;
-    if (type.includes('Poster')) return ImageIcon;
-    if (type.includes('Announcement')) return Megaphone;
-    if (type.includes('Casting')) return Users;
-    return Newspaper;
+    });
   };
-
-  const Tag = ({ type, className = '' }: { type: ScoopCategory; className?: string }) => {
-    const Icon = scoopIcon(type);
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-[#f5c542] backdrop-blur-md ${className}`}
-      >
-        <Icon className="h-3 w-3" strokeWidth={1.75} />
-        {type}
-      </span>
-    );
-  };
-
-  const Meta = ({ item }: { item: CinemaNewsItem }) => (
-    <div className="flex items-center gap-2 text-xs text-white/45">
-      <span className="font-medium text-white/70">{item.author}</span>
-      <span aria-hidden>·</span>
-      <span>{formatDate(item.pubDate)}</span>
-      <span aria-hidden>·</span>
-      <span className="inline-flex items-center gap-1">
-        <Clock className="h-3 w-3" strokeWidth={1.75} />
-        {item.readTime}
-      </span>
-    </div>
-  );
 
   return (
     <CommunityLayout rightPanel={<CommunityRightPanel />}>
-      {/* Header */}
-      <header className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-white">Cinema & TV news</h1>
-          <p className="mt-1 text-sm text-white/50">Fresh buzz, posters and announcements.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-white/35 sm:inline">
-            Updated {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <button
-            onClick={() => {
-              localStorage.removeItem('mg_cinema_realtime_news_v4');
-              fetchNews(category).then(() => toast.success('News refreshed'));
-            }}
-            disabled={loading}
-            aria-label="Refresh news"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:border-[#f5c542]/50 hover:text-[#f5c542] disabled:opacity-40"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-          </button>
-        </div>
-      </header>
-
-      {/* Controls */}
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex w-fit rounded-full border border-white/10 p-1">
-            {CATEGORIES.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setCategory(key)}
-                className={`rounded-full px-4 py-1.5 text-sm transition ${category === key ? 'bg-[#f5c542] font-semibold text-[#1c120c]' : 'text-white/55 hover:text-white'
-                  }`}
-              >
-                {label}
-              </button>
+      {/* ── Main Stream of News Posts (Screenshots 1 & 2) ── */}
+      <div className="space-y-12 max-w-2xl mx-auto">
+        {loading && news.length === 0 ? (
+          <div className="space-y-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="h-16 w-full rounded-xl bg-white/[0.03] animate-pulse" />
+                <div className="h-72 w-full rounded-2xl bg-white/[0.03] animate-pulse" />
+              </div>
             ))}
           </div>
+        ) : (
+          news.map((item) => (
+            <article key={item.id} className="space-y-4 group">
+              {/* Text on Top (Matching Screenshots 1 & 2) */}
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div
+                    onClick={() => setActiveStory(item)}
+                    className="text-sm sm:text-base text-white/90 leading-relaxed font-sans cursor-pointer hover:text-white transition-colors"
+                  >
+                    {renderFormattedText(item.description)}
+                  </div>
 
-          <div className="relative sm:w-64">
-            <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35"
-              strokeWidth={1.75}
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search stories"
-              className="w-full rounded-full border border-white/10 bg-transparent py-2 pl-10 pr-4 text-sm text-white placeholder-white/30 transition focus:border-[#f5c542]/60 focus:outline-none"
-            />
-          </div>
-        </div>
+                  {/* Comment Bubble Icon on Right Top */}
+                  <button
+                    onClick={() => setActiveStory(item)}
+                    className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors shrink-0"
+                    title="View comments & discussion"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </button>
+                </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {FILTERS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${filter === key
-                  ? 'border-[#f5c542]/60 text-[#f5c542]'
-                  : 'border-transparent text-white/45 hover:text-white/80'
-                }`}
-            >
-              <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+                {/* Byline: By MovieGuy Official • [time] */}
+                <div className="flex items-center gap-2 text-xs font-mono text-white/40 pt-1">
+                  <span className="font-semibold text-white/60">By {item.author || 'MovieGuy Official'}</span>
+                  <span>•</span>
+                  <span>{item.readTime || '1 hr'}</span>
+                </div>
+              </div>
 
-      {/* Content */}
-      {loading && news.length === 0 ? (
-        <div className="space-y-4">
-          <div className="h-72 animate-pulse rounded-3xl bg-white/[0.04]" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="h-56 animate-pulse rounded-2xl bg-white/[0.04]" />
-            <div className="h-56 animate-pulse rounded-2xl bg-white/[0.04]" />
-          </div>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="py-20 text-center">
-          <Newspaper className="mx-auto mb-3 h-8 w-8 text-white/20" strokeWidth={1.5} />
-          <p className="font-medium text-white/70">No stories match.</p>
-          <button
-            onClick={() => {
-              setFilter('all');
-              setQuery('');
-            }}
-            className="mt-2 text-sm text-[#f5c542] hover:underline"
-          >
-            Clear filters
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* Featured */}
-          {hero && (
-            <article
-              onClick={() => setActiveStory(hero)}
-              className="group relative cursor-pointer overflow-hidden rounded-3xl"
-            >
-              <img
-                src={hero.thumbnail}
-                alt=""
-                className="h-80 w-full object-cover transition duration-700 group-hover:scale-[1.03] sm:h-[26rem]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#140a0e] via-[#140a0e]/50 to-transparent" />
-              <Tag type={hero.scoopType} className="absolute left-5 top-5" />
-              <div className="absolute inset-x-0 bottom-0 space-y-3 p-6 sm:p-8">
-                <h2 className="font-display text-2xl font-bold leading-tight text-white sm:text-3xl">{hero.title}</h2>
-                {hero.description && (
-                  <p className="line-clamp-2 max-w-xl text-sm leading-relaxed text-white/70">{hero.description}</p>
-                )}
-                <Meta item={hero} />
+              {/* Full-Width Image Below Text (Matching Screenshots 1 & 2) */}
+              <div
+                onClick={() => setActiveStory(item)}
+                className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/60 cursor-pointer shadow-lg group-hover:ring-1 group-hover:ring-white/20 transition-all"
+              >
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+
+                {/* Subtitle Dots indicator (as seen in screenshot) */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  <span className="w-4 h-1 rounded-full bg-white/90" />
+                  <span className="w-1.5 h-1 rounded-full bg-white/40" />
+                </div>
               </div>
             </article>
-          )}
+          ))
+        )}
+      </div>
 
-          {/* Stories */}
-          {rest.length > 0 && (
-            <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2">
-              {rest.map((item) => (
-                <article key={item.id} onClick={() => setActiveStory(item)} className="group cursor-pointer space-y-3">
-                  <div className="relative overflow-hidden rounded-2xl">
-                    <img
-                      src={item.thumbnail}
-                      alt=""
-                      loading="lazy"
-                      className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                    <Tag type={item.scoopType} className="absolute left-3 top-3" />
-                  </div>
-                  <h3 className="line-clamp-2 font-display text-lg font-semibold leading-snug text-white transition group-hover:text-[#f5c542]">
-                    {item.title}
-                  </h3>
-                  <p className="line-clamp-2 text-sm leading-relaxed text-white/55">{item.description}</p>
-                  <div className="flex items-center justify-between">
-                    <Meta item={item} />
-                    <ArrowUpRight
-                      className="h-4 w-4 text-white/30 transition group-hover:text-[#f5c542]"
-                      strokeWidth={1.75}
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Reader */}
+      {/* ── Native MovieGuy In-House Blog Reader Modal ── */}
       {activeStory && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-lg"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-xl animate-in fade-in duration-200"
           onClick={() => setActiveStory(null)}
         >
           <div
             role="dialog"
-            aria-modal="true"
-            aria-label={activeStory.title}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#140a0e] text-white shadow-2xl"
+            className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl border border-white/[0.12] bg-[#140a0e] shadow-2xl relative text-white space-y-6 custom-scrollbar"
           >
-            <div className="relative h-60 sm:h-72">
-              <img src={activeStory.thumbnail} alt="" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#140a0e] to-transparent" />
+            {/* Header Image */}
+            <div className="relative h-64 sm:h-80 w-full overflow-hidden bg-black/70">
+              <img
+                src={activeStory.thumbnail}
+                alt={activeStory.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#140a0e] via-[#140a0e]/40 to-transparent" />
+
               <button
                 onClick={() => setActiveStory(null)}
-                aria-label="Close"
-                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur-md transition hover:text-white"
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 backdrop-blur-md text-white/70 hover:text-white border border-white/10 transition-colors"
               >
-                <X className="h-4 w-4" strokeWidth={1.75} />
+                <X className="w-5 h-5" />
               </button>
-              <Tag type={activeStory.scoopType} className="absolute bottom-4 left-6" />
+
+              <div className="absolute bottom-4 left-6 flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full border border-[#f5c542]/40 bg-[#f5c542]/20 text-xs font-mono font-bold uppercase tracking-wider text-[#f5c542] backdrop-blur-md">
+                  {activeStory.scoopType}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-[#f5c542]/40 text-[#f5c542] font-mono text-xs font-bold">
+                  MovieGuy Wire
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-6 px-6 pb-8 pt-2 sm:px-8">
-              <div className="space-y-3">
-                <h2 className="font-display text-2xl font-bold leading-snug">{activeStory.title}</h2>
-                <div className="flex items-center gap-2 text-xs text-white/45">
-                  <span className="font-medium text-white/70">{activeStory.author}</span>
-                  <span aria-hidden>·</span>
-                  <span>{formatDate(activeStory.pubDate, true)}</span>
-                  <span aria-hidden>·</span>
+            {/* Modal Body: Full In-House Blog Article */}
+            <div className="px-6 sm:px-8 pb-8 space-y-6">
+              {/* Title & Metadata */}
+              <div className="space-y-2">
+                <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white leading-snug">
+                  {activeStory.title}
+                </h2>
+                <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-white/40 pt-1">
+                  <span className="text-[#f5c542] font-semibold">{activeStory.author}</span>
+                  <span>•</span>
+                  <span>
+                    {new Date(activeStory.pubDate).toLocaleDateString([], {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span>•</span>
                   <span>{activeStory.readTime}</span>
                 </div>
               </div>
 
-              <div className="space-y-5 leading-relaxed">
-                <p className="text-base font-medium text-white/90">{activeStory.fullBlog.leadParagraph}</p>
-                <p className="text-sm text-white/70">{activeStory.fullBlog.deepDiveParagraph}</p>
-
-                <blockquote className="border-l-2 border-[#f5c542] pl-4">
-                  <p className="text-sm italic text-white/85">{activeStory.fullBlog.insiderTakeParagraph}</p>
-                  <footer className="mt-2 text-xs text-[#f5c542]">MovieGuy's take</footer>
-                </blockquote>
-
-                <p className="text-sm text-white/70">{activeStory.fullBlog.whatToExpectParagraph}</p>
+              {/* Interactive Reaction Bar */}
+              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <button
+                  onClick={() => handleReact(activeStory.id, 'fire')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] text-xs font-mono text-white/80 transition-colors"
+                >
+                  <span>🔥</span>
+                  <span>Cinema Fire ({(activeStory.reactionCount?.fire || 40) + (reactions[activeStory.id]?.fire || 0)})</span>
+                </button>
+                <button
+                  onClick={() => handleReact(activeStory.id, 'hyped')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] text-xs font-mono text-white/80 transition-colors"
+                >
+                  <span>🍿</span>
+                  <span>Hyped ({(activeStory.reactionCount?.hyped || 65) + (reactions[activeStory.id]?.hyped || 0)})</span>
+                </button>
+                <button
+                  onClick={() => handleReact(activeStory.id, 'shocked')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] text-xs font-mono text-white/80 transition-colors"
+                >
+                  <span>😮</span>
+                  <span>Shocking ({(activeStory.reactionCount?.shocked || 12) + (reactions[activeStory.id]?.shocked || 0)})</span>
+                </button>
               </div>
 
-              <ul className="space-y-2.5 border-t border-white/10 pt-5">
-                {activeStory.fullBlog.keyTakeaways.map((t, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-white/70">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#f5c542]" strokeWidth={2} />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* Blog Lead Paragraph */}
+              <div className="text-sm sm:text-base text-white/90 leading-relaxed font-sans font-medium">
+                {activeStory.fullBlog.leadParagraph}
+              </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
-                <div className="flex gap-1.5">
-                  {REACTIONS.map(({ key, label, icon: Icon, base }) => {
-                    const count = (activeStory.reactionCount?.[key] || base) + (reactions[activeStory.id]?.[key] || 0);
-                    const active = !!reactions[activeStory.id]?.[key];
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => react(activeStory.id, key)}
-                        aria-label={label}
-                        className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition ${active
-                            ? 'border-[#f5c542]/60 text-[#f5c542]'
-                            : 'border-white/10 text-white/55 hover:border-white/25 hover:text-white'
-                          }`}
-                      >
-                        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} fill={active ? 'currentColor' : 'none'} />
-                        {count}
-                      </button>
-                    );
-                  })}
+              {/* Deep Dive Paragraph */}
+              <div className="text-sm text-white/75 leading-relaxed font-sans">
+                {activeStory.fullBlog.deepDiveParagraph}
+              </div>
+
+              {/* MovieGuy Insider Perspective Box */}
+              <div className="p-5 rounded-2xl border border-[#c9a24b]/40 bg-[#1c1216] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#f5c542] uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#f5c542]" />
+                  <span>MovieGuy Cinephile Perspective</span>
                 </div>
+                <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-sans">
+                  {activeStory.fullBlog.insiderTakeParagraph}
+                </p>
+              </div>
 
+              {/* What to Expect Next */}
+              <div className="text-sm text-white/75 leading-relaxed font-sans">
+                {activeStory.fullBlog.whatToExpectParagraph}
+              </div>
+
+              {/* Key Takeaways */}
+              <div className="space-y-2.5 pt-2 border-t border-white/[0.08]">
+                <h4 className="text-xs font-mono uppercase tracking-wider text-white/50 font-bold">
+                  Key Industry Takeaways
+                </h4>
+                <div className="space-y-2">
+                  {activeStory.fullBlog.keyTakeaways.map((highlight, i) => (
+                    <div key={i} className="flex items-start gap-2.5 text-xs text-white/75 font-mono">
+                      <CheckCircle2 className="w-4 h-4 text-[#f5c542] shrink-0 mt-0.5" />
+                      <span>{highlight}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="pt-4 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
                 <button
-                  onClick={() => navigate('/community')}
-                  className="flex items-center gap-2 rounded-full bg-[#f5c542] px-4 py-2 text-sm font-semibold text-[#1c120c] transition hover:bg-[#c9a24b]"
+                  type="button"
+                  onClick={() => {
+                    navigate('/community');
+                    toast.success('Opening Community feed to discuss scoop!');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.1] bg-[#f5c542] hover:bg-[#c9a24b] text-[#1c120c] font-mono font-bold text-xs shadow-md transition-all"
                 >
-                  <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
-                  Discuss this story
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Discuss with Cinephiles in Feed</span>
                 </button>
+
+                <div className="text-[11px] font-mono text-white/30">
+                  Published by MovieGuy Cinema Wire
+                </div>
               </div>
             </div>
           </div>

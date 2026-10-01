@@ -320,10 +320,10 @@ export default function DiscussionsPage() {
       <div className="mb-5 flex items-center gap-1.5">
         <button
           onClick={() => setActiveTab('top')}
-          className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+          className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
             activeTab === 'top'
               ? 'bg-white text-black shadow-md'
-              : 'bg-[#140a0e] text-white/60 hover:text-white border border-white/[0.08]'
+              : 'bg-[#181016] text-white/60 hover:text-white border border-white/[0.08]'
           }`}
         >
           Top
@@ -331,10 +331,10 @@ export default function DiscussionsPage() {
 
         <button
           onClick={() => setActiveTab('newest')}
-          className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+          className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
             activeTab === 'newest'
               ? 'bg-white text-black shadow-md'
-              : 'bg-[#140a0e] text-white/60 hover:text-white border border-white/[0.08]'
+              : 'bg-[#181016] text-white/60 hover:text-white border border-white/[0.08]'
           }`}
         >
           Newest
@@ -394,49 +394,31 @@ export default function DiscussionsPage() {
 
           return (
             <article key={comment.id} className="group">
-              <div className="flex items-start gap-3">
-                {/* User avatar */}
-                <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-white/[0.1] overflow-hidden">
-                  {comment.avatarUrl ? (
-                    <img
-                      src={comment.avatarUrl}
-                      alt={comment.username}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white/70">
-                      {comment.username[0].toUpperCase()}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  {/* User avatar */}
+                  <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-white/[0.1] overflow-hidden">
+                    {comment.avatarUrl ? (
+                      <img
+                        src={comment.avatarUrl}
+                        alt={comment.username}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white/70">
+                        {comment.username[0].toUpperCase()}
+                      </div>
+                    )}
+                  </div>
 
-                {/* Comment Body */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
+                  {/* Comment Body */}
+                  <div className="min-w-0 flex-1">
                     <span className="text-xs font-bold text-white/90">
                       {comment.username}
                     </span>
 
-                    {/* Like button on top right of comment (Screenshot 1) */}
-                    <button
-                      onClick={() => toggleLike(comment.id)}
-                      className="flex items-center gap-1 text-white/50 hover:text-white transition-colors"
-                    >
-                      <Heart
-                        className={`h-3.5 w-3.5 ${
-                          comment.isLiked
-                            ? 'fill-red-500 text-red-500'
-                            : 'text-white/50 group-hover:text-white/70'
-                        }`}
-                      />
-                      <span className="text-[11px] font-medium">
-                        {comment.likesCount}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Comment text */}
-                  <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/80">
+                    {/* Comment text */}
+                    <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/80">
                     {displayContent}
                     {hasFullContent && !isExpanded && (
                       <button
@@ -516,7 +498,26 @@ export default function DiscussionsPage() {
                   )}
                 </div>
               </div>
-            </article>
+
+              {/* Like column on far right (Screenshot 1) */}
+              <button
+                onClick={() => toggleLike(comment.id)}
+                className="flex flex-col items-center gap-0.5 shrink-0 text-white/40 hover:text-white transition-colors pt-0.5"
+                title={comment.isLiked ? 'Liked' : 'Like'}
+              >
+                <Heart
+                  className={`h-4 w-4 ${
+                    comment.isLiked
+                      ? 'fill-red-500 text-red-500'
+                      : 'text-white/40 hover:text-white/80'
+                  }`}
+                />
+                <span className="text-[11px] font-medium text-white/50">
+                  {comment.likesCount}
+                </span>
+              </button>
+            </div>
+          </article>
           );
         })}
       </div>

@@ -37,9 +37,6 @@ export function CommunitySidebar() {
                   style={{ width: 19, height: 19 }}
                 />
                 <span>{label}</span>
-                {active && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_#f5c542]" />
-                )}
               </NavLink>
             );
           })}

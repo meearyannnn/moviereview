@@ -126,7 +126,7 @@ export default function TrailersPage() {
             return (
               <span
                 key={i}
-                className="underline underline-offset-4 decoration-white/40 font-semibold text-white hover:text-[#f5c542] transition-colors"
+                className="underline decoration-dotted underline-offset-4 decoration-white/50 font-semibold text-white hover:text-[#f5c542] transition-colors"
               >
                 {part}
               </span>

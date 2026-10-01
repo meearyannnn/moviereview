@@ -23,24 +23,53 @@ export function timeAgo(iso: string) {
 
 export function Avatar({
   username,
+  name,
   url,
-  size = 9,
+  src,
+  size = 8,
+  className = '',
 }: {
-  username: string;
+  username?: string;
+  name?: string;
   url?: string;
-  size?: number;
+  src?: string;
+  size?: number | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
 }) {
-  const px = size * 4;
-  const fs = size * 1.6;
-  const cls = 'shrink-0 rounded-full bg-gradient-to-br from-red-700 to-red-950 object-cover';
-  return url ? (
-    <img src={url} alt={username} className={cls} style={{ width: px, height: px }} />
+  const displayName = username || name || 'User';
+  const initial = (displayName ? displayName.trim().slice(0, 1) : 'U').toUpperCase();
+  const avatarSrc = url || src;
+
+  let px = 32;
+  if (typeof size === 'number') {
+    px = size * 4;
+  } else if (size === 'xs') px = 20;
+  else if (size === 'sm') px = 28;
+  else if (size === 'md') px = 36;
+  else if (size === 'lg') px = 48;
+  else if (size === 'xl') px = 64;
+
+  const fs = Math.max(Math.round(px * 0.4), 10);
+  const cls = `shrink-0 rounded-full bg-gradient-to-br from-[#c9a24b] to-[#140a0d] border border-white/10 object-cover ${className}`;
+
+  return avatarSrc ? (
+    <img
+      src={avatarSrc}
+      alt={displayName}
+      loading="lazy"
+      decoding="async"
+      onError={(e) => {
+        (e.target as HTMLImageElement).style.display = 'none';
+      }}
+      className={cls}
+      style={{ width: px, height: px }}
+    />
   ) : (
     <span
-      className={`${cls} grid place-items-center font-bold text-white`}
+      className={`${cls} grid place-items-center font-bold text-white select-none`}
       style={{ width: px, height: px, fontSize: fs }}
     >
-      {username.slice(0, 1).toUpperCase()}
+      {initial}
     </span>
   );
 }

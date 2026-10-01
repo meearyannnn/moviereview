@@ -50,9 +50,9 @@ type VerdictDist = Record<TierKey, number>;
 
 const TIERS: { key: TierKey; label: string; color: string }[] = [
   { key: "hardPass", label: "Hard Pass", color: "#ef4444" },
-  { key: "decentWatch", label: "Decent Watch", color: "#38bdf8" },
-  { key: "mustWatch", label: "Must Watch", color: "#10b981" },
-  { key: "absoluteCinema", label: "Absolute Cinema", color: "#d946ef" },
+  { key: "decentWatch", label: "Decent Watch", color: "#f59e0b" },
+  { key: "mustWatch", label: "Must Watch", color: "#f5c542" },
+  { key: "absoluteCinema", label: "Absolute Cinema", color: "#e879f9" },
 ];
 
 // ── Scoring engine (same logistic + Hare-Niemeyer as MovieGuyMeter) ─────

@@ -46,11 +46,11 @@
 
     /* Verdict tiers (shared by Meter + Reviews) */
     --tier-hard-pass: #ef4444;
-    --tier-decent-watch: #38bdf8;
-    --tier-must-watch: #10b981;
-    --tier-absolute-cinema: #d946ef;
-    --tier-absolute-cinema-gradient: linear-gradient(135deg, #fdf4ff 0%, #f472b6 25%, #d946ef 55%, #a855f7 80%, #6b21a8 100%);
-    --tier-absolute-cinema-glow: rgba(217, 70, 239, 0.55);
+    --tier-decent-watch: #f59e0b;
+    --tier-must-watch: #f5c542;
+    --tier-absolute-cinema: #e879f9;
+    --tier-absolute-cinema-gradient: linear-gradient(135deg, #fffbeb 0%, #fde047 18%, #f472b6 45%, #c084fc 75%, #7e22ce 100%);
+    --tier-absolute-cinema-glow: rgba(232, 121, 249, 0.55);
 
     /* Typography */
     --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;

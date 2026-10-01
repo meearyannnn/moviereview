@@ -31,9 +31,9 @@ const tint = (color: string) => ({ bg: `${color}1a`, border: `${color}55` });
 
 export const VERDICT_META: Record<Verdict, { label: string; color: string; bg: string; border: string }> = {
   'Hard Pass': { label: 'Hard Pass', color: '#ef4444', ...tint('#ef4444') },
-  'Decent Watch': { label: 'Decent Watch', color: '#38bdf8', ...tint('#38bdf8') },
-  'Must Watch': { label: 'Must Watch', color: '#10b981', ...tint('#10b981') },
-  'Absolute Cinema': { label: 'Absolute Cinema', color: '#d946ef', bg: 'rgba(217, 70, 239, 0.16)', border: 'rgba(232, 121, 249, 0.55)' },
+  'Decent Watch': { label: 'Decent Watch', color: '#f59e0b', ...tint('#f59e0b') },
+  'Must Watch': { label: 'Must Watch', color: '#f5c542', ...tint('#f5c542') },
+  'Absolute Cinema': { label: 'Absolute Cinema', color: '#e879f9', bg: 'rgba(232, 121, 249, 0.16)', border: 'rgba(232, 121, 249, 0.55)' },
 };
 const VERDICTS = Object.keys(VERDICT_META) as Verdict[];
 

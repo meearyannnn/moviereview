@@ -632,7 +632,7 @@ export const ExploreHubModal: React.FC<ExploreHubModalProps> = ({
                 onClick={() => {
                   soundEffects.playHoverTick();
                   onClose();
-                  navigate('/genres');
+                  navigate('/explore');
                 }}
                 className={`group rounded-xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isGenreActive

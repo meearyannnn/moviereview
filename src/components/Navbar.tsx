@@ -22,9 +22,7 @@ const NAV = [
   { path: '/explore', label: 'Explore', icon: Compass },
   { path: '/community', label: 'Community', icon: Users },
   { path: '/schedule', label: 'Schedule', icon: Calendar },
-  { path: '/genres', label: 'Genres', icon: Film },
   { path: '/directors', label: 'Directors', icon: Clapperboard },
-  { path: '/time-machine', label: 'Time Machine', icon: History },
 ];
 
 const tick = () => soundEffects.playHoverTick();
@@ -346,13 +344,7 @@ export const Navbar = () => {
                 )}
                 {/* Mobile-only nav items */}
                 <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
-                  <Link to="/genres">Genres</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
                   <Link to="/directors">Directors</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
-                  <Link to="/time-machine">Time Machine</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
                   <Link to="/schedule">Schedule</Link>

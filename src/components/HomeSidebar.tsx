@@ -186,11 +186,11 @@ export const HomeSidebar = () => {
         {loading ? <Skeleton /> : <ol className="space-y-0.5">{hiddenGems.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
       </SideCard>
 
-      <SideCard icon={Crown} label="Timeless Vault" link="/time-machine">
+      <SideCard icon={Crown} label="Timeless Vault" link="/explore">
         {loading ? <Skeleton /> : <ol className="space-y-0.5">{timelessVault.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
       </SideCard>
 
-      <SideCard icon={Moon} label="Late-Night Thrills" link="/genres">
+      <SideCard icon={Moon} label="Late-Night Thrills" link="/explore">
         {loading ? <Skeleton /> : <ol className="space-y-0.5">{lateNight.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
       </SideCard>
 
@@ -319,13 +319,13 @@ export const HomeSidebar = () => {
             </div>
             <span className="font-display text-sm font-black text-white">Explore Genres</span>
           </div>
-          <Link to="/genres" className="text-[10px] font-mono font-bold text-white/35 hover:text-white/70 transition-colors">All →</Link>
+          <Link to="/explore" className="text-[10px] font-mono font-bold text-white/35 hover:text-white/70 transition-colors">All →</Link>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {GENRES.map((g) => (
             <Link
               key={g.id}
-              to="/genres"
+              to={`/explore?genres=${g.id}`}
               className="rounded-full border border-[#c9a24b]/15 bg-[#c9a24b]/5 px-3 py-1.5 text-[11px] font-mono text-white/55 hover:border-[#c9a24b]/50 hover:bg-[#c9a24b]/12 hover:text-[#f5c542] transition-all"
             >
               {g.name}

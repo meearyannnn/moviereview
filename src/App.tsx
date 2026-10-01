@@ -15,7 +15,6 @@ import { GoldenAestheticBackground } from '@/components/GoldenAestheticBackgroun
 const MovieDetail = lazy(() => import("./pages/MovieDetail"));
 const TVDetail = lazy(() => import("./pages/TVDetail"));
 const Search = lazy(() => import("./pages/Search"));
-const Genres = lazy(() => import("./pages/Genres"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const DirectorsPage = lazy(() => import("./pages/DirectorsPage"));
 const DirectorDetailPage = lazy(() => import("./pages/DirectorDetailPage"));
@@ -28,7 +27,6 @@ const CollectionsPage = lazy(() => import("./pages/community/CollectionsPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const TimeMachinePage = lazy(() => import("./pages/TimeMachinePage"));
 const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 const LanguagesPage = lazy(() => import("./pages/LanguagesPage"));
 const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
@@ -80,7 +78,7 @@ const App = () => (
               <Route path="/movies" element={<Navigate to="/explore?type=movie" replace />} />
               <Route path="/tv" element={<Navigate to="/explore?type=tv" replace />} />
               <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/genres" element={<Genres />} />
+              <Route path="/genres" element={<Navigate to="/explore" replace />} />
               <Route path="/directors" element={<DirectorsPage />} />
               <Route path="/director/:id" element={<DirectorDetailPage />} />
               <Route path="/search" element={<Search />} />
@@ -99,7 +97,7 @@ const App = () => (
               <Route path="/watch-later" element={<Navigate to="/library?tab=watch-later" replace />} />
               <Route path="/history" element={<Navigate to="/library?tab=history" replace />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/time-machine" element={<TimeMachinePage />} />
+              <Route path="/time-machine" element={<Navigate to="/explore" replace />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/languages" element={<LanguagesPage />} />
               <Route path="/categories" element={<CategoriesPage />} />

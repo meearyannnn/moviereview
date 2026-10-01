@@ -23,12 +23,10 @@ import { trailersService, type CinemaTrailer, type TrailerType } from '@/service
 import { toast } from 'sonner';
 
 const TOPIC_FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'trailers', label: 'Trailers' },
-  { id: 'promos', label: 'Promos' },
-  { id: 'bts', label: 'BTS' },
-  { id: 'teasers', label: 'Teasers' },
-  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'all', label: 'All Trailers' },
+  { id: 'upcoming', label: 'Upcoming Movies' },
+  { id: 'theaters', label: 'In Theaters' },
+  { id: 'popular', label: 'Popular' },
 ];
 
 export default function TrailersPage() {
@@ -42,20 +40,7 @@ export default function TrailersPage() {
   const [commentDrawerItem, setCommentDrawerItem] = useState<CinemaTrailer | null>(null);
   const [likedIds, setLikedIds] = useState<Record<string, boolean>>({});
   const [newComment, setNewComment] = useState('');
-  const [localComments, setLocalComments] = useState<Record<string, string[]>>({
-    'tr-lanterns-promo': [
-      'The cinematography for this finale looks insane! Cannot wait for episode 8.',
-      'John Stewart and Hal Jordan dynamic is peak DC.',
-    ],
-    'tr-black-doves': [
-      'Keira Knightley and Ben Whishaw is the duo I never knew I needed.',
-      'Season 1 was a masterclass in tension, hope Season 2 tops it.',
-    ],
-    'tr-werwulf-trailer': [
-      'Robert Eggers never misses. The atmosphere and audio design are terrifying.',
-      'That gothic costume work gives pure folklore dread.',
-    ],
-  });
+  const [localComments, setLocalComments] = useState<Record<string, string[]>>({});
 
   const fetchTrailers = async () => {
     setLoading(true);
@@ -304,32 +289,12 @@ export default function TrailersPage() {
                     </div>
                   )}
 
-                  {/* Type / Watermark Tag in Corner */}
+                  {/* Watermark Tag in Corner - Strictly Official Trailer */}
                   {item.badgeText && (
                     <div className="absolute bottom-4 left-4">
-                      {item.badgeText === 'FINALE PROMO HD' ? (
-                        <div className="flex flex-col">
-                          <span className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                            FINALE PROMO
-                          </span>
-                          <span className="w-fit rounded border border-white/60 px-1 text-[10px] font-bold tracking-widest text-white/90">
-                            HD
-                          </span>
-                        </div>
-                      ) : item.badgeText === 'OFFICIAL TRAILER 2' ? (
-                        <div className="flex flex-col">
-                          <span className="font-serif text-lg sm:text-xl font-bold uppercase tracking-widest text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                            {item.movieTitle}
-                          </span>
-                          <span className="text-[11px] font-mono tracking-widest text-white/70 uppercase">
-                            OFFICIAL TRAILER 2
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="inline-block rounded-md bg-black/70 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10">
-                          {item.badgeText}
-                        </span>
-                      )}
+                      <span className="inline-block rounded-md bg-black/75 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/15 shadow-lg">
+                        {item.badgeText}
+                      </span>
                     </div>
                   )}
 

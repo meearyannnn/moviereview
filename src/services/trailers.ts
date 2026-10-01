@@ -1,12 +1,10 @@
-// src/services/trailers.ts — Realtime TMDB & YouTube Trailer Fetcher (100% Dynamic, Zero Dummy Data)
+// src/services/trailers.ts — Realtime Official MOVIE TRAILERS Only (No Promos, No First Looks, No Teasers, No TV)
 import { tmdb } from './tmdb';
-
-export type TrailerType = 'Trailer' | 'Promo' | 'BTS' | 'Teaser';
 
 export interface CinemaTrailer {
   id: string;
   mediaId: number;
-  mediaType: 'movie' | 'tv';
+  mediaType: 'movie';
   movieTitle: string;
   title: string;
   subtitle?: string;
@@ -17,21 +15,20 @@ export interface CinemaTrailer {
   thumbnail: string;
   youtubeId: string;
   topic: string;
-  categoryTag: 'Latest Released' | 'Upcoming Movies' | 'Shows on Air' | 'Trending';
-  videoType: TrailerType;
-  badgeText?: string;
+  categoryTag: 'Upcoming Movies' | 'In Theaters' | 'Popular';
+  badgeText: string;
   streamer?: 'netflix' | 'disney' | 'max' | 'apple' | 'paramount' | 'universal' | 'warner';
   entities?: string[];
   releaseDate?: string;
   overview?: string;
 }
 
-const CACHE_KEY = 'mg_realtime_trailers_live_v1';
+const CACHE_KEY = 'mg_realtime_movie_trailers_only_v1';
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-// Helper to determine relative time from video publish date or fallback
+// Helper to format relative time
 function formatRelativeTime(dateString?: string): string {
-  if (!dateString) return 'Recent';
+  if (!dateString) return 'Recently';
   const diff = Date.now() - new Date(dateString).getTime();
   const mins = Math.floor(diff / (1000 * 60));
   if (mins < 60) return `${Math.max(1, mins)} mins ago`;
@@ -42,26 +39,25 @@ function formatRelativeTime(dateString?: string): string {
   return new Date(dateString).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
 
-// Detect streamer / network from title or overview
-function detectStreamer(text: string): CinemaTrailer['streamer'] | undefined {
+// Detect movie studio / distributor
+function detectDistributor(text: string): CinemaTrailer['streamer'] | undefined {
   const t = text.toLowerCase();
   if (t.includes('netflix')) return 'netflix';
-  if (t.includes('disney+') || t.includes('disney plus') || t.includes('marvel studios')) return 'disney';
-  if (t.includes('hbo') || t.includes('max original') || t.includes('warner')) return 'max';
-  if (t.includes('apple tv') || t.includes('apple original')) return 'apple';
+  if (t.includes('disney') || t.includes('marvel studios')) return 'disney';
+  if (t.includes('warner bros') || t.includes('hbo') || t.includes('max')) return 'warner';
   if (t.includes('paramount')) return 'paramount';
   if (t.includes('universal')) return 'universal';
+  if (t.includes('apple original') || t.includes('apple tv')) return 'apple';
   return undefined;
 }
 
 export const trailersService = {
   /**
-   * Fetches real-time upcoming movies, in-theater movies, and airing shows from TMDB,
-   * queries their actual video catalogs, and classifies them into Trailers, Promos, BTS, and Teasers.
-   * Completely live: zero hardcoded dummy arrays.
+   * Strictly fetches official MOVIE TRAILERS from TMDB and YouTube.
+   * Completely excludes TV shows, promos, teasers, first looks, BTS, and clips.
    */
-  async getTrailers(filter: 'all' | 'trailers' | 'promos' | 'bts' | 'teasers' | 'upcoming' = 'all'): Promise<CinemaTrailer[]> {
-    // 1. Check local session cache to prevent rapid API rate exhaustion
+  async getTrailers(filter: 'all' | 'upcoming' | 'theaters' | 'popular' = 'all'): Promise<CinemaTrailer[]> {
+    // 1. Session Cache check
     try {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -71,183 +67,193 @@ export const trailersService = {
         }
       }
     } catch {
-      // Ignore cache error
+      // Ignore
     }
 
     try {
-      // 2. Fetch live media pools in parallel from TMDB API
-      const [upcomingRes, nowPlayingRes, tvRes] = await Promise.allSettled([
+      // 2. Query ONLY Movies from TMDB: Upcoming movies, In Theaters (Now Playing), and Popular movies
+      const [upcomingRes, nowPlayingRes, popularRes] = await Promise.allSettled([
         tmdb.getUpcoming(),
         tmdb.getNowPlaying(),
-        tmdb.getOnTheAir(),
+        tmdb.getPopular('movie'),
       ]);
 
-      const pool: Array<{
-        mediaId: number;
-        mediaType: 'movie' | 'tv';
-        movieTitle: string;
+      const moviePool: Array<{
+        id: number;
+        title: string;
         overview: string;
         backdrop_path: string;
-        releaseDate: string;
+        poster_path: string;
+        release_date: string;
         categoryTag: CinemaTrailer['categoryTag'];
       }> = [];
 
-      // Process Upcoming Movies
+      // Add Upcoming Movies
       if (upcomingRes.status === 'fulfilled' && upcomingRes.value?.results) {
-        for (const m of upcomingRes.value.results.slice(0, 10)) {
-          if (m.id && (m.title || m.original_title)) {
-            pool.push({
-              mediaId: m.id,
-              mediaType: 'movie',
-              movieTitle: m.title || m.original_title,
+        for (const m of upcomingRes.value.results) {
+          if (m.id && (m.title || m.original_title) && (m.backdrop_path || m.poster_path)) {
+            moviePool.push({
+              id: m.id,
+              title: m.title || m.original_title,
               overview: m.overview || '',
-              backdrop_path: m.backdrop_path || m.poster_path || '',
-              releaseDate: m.release_date || 'Coming Soon',
+              backdrop_path: m.backdrop_path,
+              poster_path: m.poster_path,
+              release_date: m.release_date || 'Coming Soon',
               categoryTag: 'Upcoming Movies',
             });
           }
         }
       }
 
-      // Process Now Playing Movies
+      // Add In Theaters Movies
       if (nowPlayingRes.status === 'fulfilled' && nowPlayingRes.value?.results) {
-        for (const m of nowPlayingRes.value.results.slice(0, 8)) {
-          if (m.id && (m.title || m.original_title)) {
-            pool.push({
-              mediaId: m.id,
-              mediaType: 'movie',
-              movieTitle: m.title || m.original_title,
+        for (const m of nowPlayingRes.value.results) {
+          if (m.id && (m.title || m.original_title) && (m.backdrop_path || m.poster_path)) {
+            moviePool.push({
+              id: m.id,
+              title: m.title || m.original_title,
               overview: m.overview || '',
-              backdrop_path: m.backdrop_path || m.poster_path || '',
-              releaseDate: m.release_date || 'In Theaters',
-              categoryTag: 'Latest Released',
+              backdrop_path: m.backdrop_path,
+              poster_path: m.poster_path,
+              release_date: m.release_date || 'In Theaters',
+              categoryTag: 'In Theaters',
             });
           }
         }
       }
 
-      // Process Airing TV Shows
-      if (tvRes.status === 'fulfilled' && tvRes.value?.results) {
-        for (const s of tvRes.value.results.slice(0, 8)) {
-          if (s.id && (s.name || s.original_name)) {
-            pool.push({
-              mediaId: s.id,
-              mediaType: 'tv',
-              movieTitle: s.name || s.original_name,
-              overview: s.overview || '',
-              backdrop_path: s.backdrop_path || s.poster_path || '',
-              releaseDate: s.first_air_date || 'Streaming Now',
-              categoryTag: 'Shows on Air',
+      // Add Popular Movies
+      if (popularRes.status === 'fulfilled' && popularRes.value?.results) {
+        for (const m of popularRes.value.results.slice(0, 10)) {
+          if (m.id && (m.title || m.original_title) && (m.backdrop_path || m.poster_path)) {
+            moviePool.push({
+              id: m.id,
+              title: m.title || m.original_title,
+              overview: m.overview || '',
+              backdrop_path: m.backdrop_path,
+              poster_path: m.poster_path,
+              release_date: m.release_date || 'Popular',
+              categoryTag: 'Popular',
             });
           }
         }
       }
 
-      // 3. For each real movie/show, query TMDB video API to fetch real YouTube videos
-      const videoFetchPromises = pool.map(async (item) => {
+      // Deduplicate movies by ID
+      const uniqueMovies: typeof moviePool = [];
+      const seenMovieIds = new Set<number>();
+      for (const m of moviePool) {
+        if (!seenMovieIds.has(m.id)) {
+          seenMovieIds.add(m.id);
+          uniqueMovies.push(m);
+        }
+      }
+
+      // 3. For each movie, query TMDB videos and strictly filter ONLY official movie trailers
+      const trailerPromises = uniqueMovies.slice(0, 24).map(async (movie) => {
         try {
-          const vids = await tmdb.getVideos(item.mediaId, item.mediaType);
+          const vids = await tmdb.getVideos(movie.id, 'movie');
           const results = vids?.results || [];
-          if (!Array.isArray(results) || results.length === 0) return [];
+          if (!Array.isArray(results) || results.length === 0) return null;
 
-          const itemsForMedia: CinemaTrailer[] = [];
+          // STRICT FILTER: Must be YouTube, Type must be 'Trailer'
+          // Exclude anything with teaser, promo, bts, clip, first look, sneak peek
+          const movieTrailers = results.filter((v: any) => {
+            if (v.site !== 'YouTube' || !v.key) return false;
+            if (v.type !== 'Trailer') return false;
 
-          for (const v of results) {
-            if (v.site !== 'YouTube' || !v.key) continue;
+            const name = (v.name || '').toLowerCase();
+            const forbiddenKeywords = [
+              'teaser',
+              'promo',
+              'first look',
+              'behind the scenes',
+              'bts',
+              'featurette',
+              'clip',
+              'sneak peek',
+              'tv spot',
+              'interview',
+              'bloopers',
+              'bruh',
+            ];
+            if (forbiddenKeywords.some((w) => name.includes(w))) return false;
 
-            const name = v.name || '';
-            const nameLower = name.toLowerCase();
+            return true;
+          });
 
-            let videoType: TrailerType = 'Trailer';
-            let badgeText = 'OFFICIAL TRAILER';
+          if (movieTrailers.length === 0) return null;
 
-            if (
-              v.type === 'Behind the Scenes' ||
-              v.type === 'Featurette' ||
-              /bts|behind the scenes|making of|featurette|inside look/i.test(nameLower)
-            ) {
-              videoType = 'BTS';
-              badgeText = 'BTS';
-            } else if (
-              /promo|finale|episode|sneak peek|clip/i.test(nameLower) ||
-              v.type === 'Clip'
-            ) {
-              videoType = 'Promo';
-              badgeText = /finale/i.test(nameLower) ? 'FINALE PROMO HD' : 'PROMO HD';
-            } else if (v.type === 'Teaser' || /teaser/i.test(nameLower)) {
-              videoType = 'Teaser';
-              badgeText = 'TEASER';
-            } else if (/trailer 2/i.test(nameLower)) {
-              badgeText = 'OFFICIAL TRAILER 2';
-            }
+          // Pick the official trailer or main trailer
+          const selectedTrailer =
+            movieTrailers.find((v: any) => v.official && /official/i.test(v.name)) ||
+            movieTrailers.find((v: any) => /main/i.test(v.name) || /trailer 1/i.test(v.name)) ||
+            movieTrailers[0];
 
-            const thumbnail = item.backdrop_path
-              ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`
-              : `https://img.youtube.com/vi/${v.key}/maxresdefault.jpg`;
+          if (!selectedTrailer?.key) return null;
 
-            // Clean headline
-            const title = name.toLowerCase().includes(item.movieTitle.toLowerCase())
-              ? name
-              : `${item.movieTitle} | ${name}`;
+          const backdropUrl = movie.backdrop_path
+            ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+            : `https://img.youtube.com/vi/${selectedTrailer.key}/maxresdefault.jpg`;
 
-            const streamer = detectStreamer(`${item.movieTitle} ${item.overview} ${name}`);
+          // Format clean, official movie trailer headline
+          const cleanTitle = `The official trailer for ${movie.title} has been released.`;
+          const badgeText = /trailer 2/i.test(selectedTrailer.name) ? 'OFFICIAL TRAILER 2' : 'OFFICIAL TRAILER';
+          const streamer = detectDistributor(`${movie.title} ${selectedTrailer.name} ${movie.overview}`);
 
-            itemsForMedia.push({
-              id: `tmdb-${item.mediaType}-${item.mediaId}-${v.key}`,
-              mediaId: item.mediaId,
-              mediaType: item.mediaType,
-              movieTitle: item.movieTitle,
-              title,
-              subtitle: item.overview ? `${item.overview.slice(0, 110)}...` : undefined,
-              author: 'MovieGuy Official',
-              timeAgo: formatRelativeTime(v.published_at),
-              commentsCount: 0,
-              likesCount: 0,
-              thumbnail,
-              youtubeId: v.key,
-              topic: item.categoryTag === 'Shows on Air' ? 'Series' : item.categoryTag === 'Upcoming Movies' ? 'Upcoming' : 'Cinema',
-              categoryTag: item.categoryTag,
-              videoType,
-              badgeText,
-              streamer,
-              entities: [item.movieTitle, videoType],
-              releaseDate: item.releaseDate,
-              overview: item.overview,
-            });
-          }
+          const trailerItem: CinemaTrailer = {
+            id: `tmdb-movie-trailer-${movie.id}-${selectedTrailer.key}`,
+            mediaId: movie.id,
+            mediaType: 'movie',
+            movieTitle: movie.title,
+            title: cleanTitle,
+            subtitle: movie.overview ? `${movie.overview.slice(0, 120)}...` : undefined,
+            author: 'MovieGuy Official',
+            timeAgo: formatRelativeTime(selectedTrailer.published_at),
+            commentsCount: 0,
+            likesCount: 0,
+            thumbnail: backdropUrl,
+            youtubeId: selectedTrailer.key,
+            topic: 'Cinema',
+            categoryTag: movie.categoryTag,
+            badgeText,
+            streamer,
+            entities: [movie.title, 'official trailer'],
+            releaseDate: movie.release_date,
+            overview: movie.overview,
+          };
 
-          return itemsForMedia;
+          return trailerItem;
         } catch {
-          return [];
+          return null;
         }
       });
 
-      const nestedResults = await Promise.all(videoFetchPromises);
-      const allFetched = nestedResults.flat();
+      const fetchedTrailers = (await Promise.all(trailerPromises)).filter(Boolean) as CinemaTrailer[];
 
-      // Deduplicate by youtubeId
-      const unique: CinemaTrailer[] = [];
-      const seen = new Set<string>();
-      for (const t of allFetched) {
-        if (!seen.has(t.youtubeId)) {
-          seen.add(t.youtubeId);
-          unique.push(t);
+      // Deduplicate by YouTube ID
+      const uniqueTrailers: CinemaTrailer[] = [];
+      const seenYt = new Set<string>();
+      for (const t of fetchedTrailers) {
+        if (!seenYt.has(t.youtubeId)) {
+          seenYt.add(t.youtubeId);
+          uniqueTrailers.push(t);
         }
       }
 
-      // Save to session cache
+      // Cache results
       try {
-        if (unique.length > 0) {
+        if (uniqueTrailers.length > 0) {
           sessionStorage.setItem(
             CACHE_KEY,
-            JSON.stringify({ timestamp: Date.now(), items: unique })
+            JSON.stringify({ timestamp: Date.now(), items: uniqueTrailers })
           );
         }
       } catch {
         // Ignore
       }
 
-      return this.applyFilter(unique, filter);
+      return this.applyFilter(uniqueTrailers, filter);
     } catch {
       return [];
     }
@@ -256,11 +262,9 @@ export const trailersService = {
   applyFilter(items: CinemaTrailer[], filter: string): CinemaTrailer[] {
     const f = filter.toLowerCase();
     if (f === 'all') return items;
-    if (f === 'trailers' || f === 'trailer') return items.filter((it) => it.videoType === 'Trailer');
-    if (f === 'promos' || f === 'promo') return items.filter((it) => it.videoType === 'Promo');
-    if (f === 'bts') return items.filter((it) => it.videoType === 'BTS');
-    if (f === 'teasers' || f === 'teaser') return items.filter((it) => it.videoType === 'Teaser');
     if (f === 'upcoming') return items.filter((it) => it.categoryTag === 'Upcoming Movies');
+    if (f === 'theaters' || f === 'now') return items.filter((it) => it.categoryTag === 'In Theaters');
+    if (f === 'popular') return items.filter((it) => it.categoryTag === 'Popular');
     return items;
   },
 };

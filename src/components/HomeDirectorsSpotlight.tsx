@@ -1,83 +1,234 @@
-// src/components/HomeDirectorsSpotlight.tsx — Directors Showcase Section for Home Page
-import React, { useState } from 'react';
+// src/components/HomeDirectorsSpotlight.tsx — Dynamic 40+ Directors Showcase Section for Home Page
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Clapperboard, ArrowRight, Film, Star, ChevronRight } from 'lucide-react';
+import {
+  Clapperboard,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  Sparkles,
+  Film,
+} from 'lucide-react';
 import { DirectorRow } from '@/components/directors/DirectorRow';
 import { CURATED_DIRECTORS, type CuratedDirector } from '@/config/directors';
 
-// Featured directors with guaranteed pre-cached posters for 0ms initial rendering
-const FEATURED_IDS = [525, 137427, 138, 1032, 7467, 608, 147021];
-
-const FEATURED_DIRECTORS: CuratedDirector[] = FEATURED_IDS.map((id) =>
-  CURATED_DIRECTORS.find((d) => d.id === id)
-).filter((d): d is CuratedDirector => Boolean(d));
-
-// Mini discovery cards for other masters
-const OTHER_MASTERS_IDS = [240, 5026, 21684, 45400]; // Kubrick, Kurosawa, Bong Joon-ho, Greta Gerwig
-const OTHER_MASTERS: CuratedDirector[] = OTHER_MASTERS_IDS.map((id) =>
-  CURATED_DIRECTORS.find((d) => d.id === id)
-).filter((d): d is CuratedDirector => Boolean(d));
+const ROTATION_INTERVAL_MS = 6000; // 6 seconds per director
 
 export const HomeDirectorsSpotlight: React.FC = () => {
-  const [activeId, setActiveId] = useState<number>(FEATURED_DIRECTORS[0]?.id || 525);
+  // Use all 40+ curated directors in a continuous loop
+  const directors = CURATED_DIRECTORS;
 
-  const selectedDirector =
-    FEATURED_DIRECTORS.find((d) => d.id === activeId) || FEATURED_DIRECTORS[0];
+  // Start with Christopher Nolan (id 525) or the first director
+  const [currentIndex, setCurrentIndex] = useState<number>(() => {
+    const nolanIdx = directors.findIndex((d) => d.id === 525);
+    return nolanIdx >= 0 ? nolanIdx : 0;
+  });
+
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+
+  const pillsContainerRef = useRef<HTMLDivElement>(null);
+  const pillRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
+
+  const currentDirector: CuratedDirector = directors[currentIndex] || directors[0];
+  const nextDirector: CuratedDirector = directors[(currentIndex + 1) % directors.length];
+
+  // Advance to next director in loop
+  const goToNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % directors.length);
+    setProgress(0);
+  }, [directors.length]);
+
+  // Go to previous director in loop
+  const goToPrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + directors.length) % directors.length);
+    setProgress(0);
+  }, [directors.length]);
+
+  // Select a specific director
+  const selectDirector = (index: number) => {
+    setCurrentIndex(index);
+    setProgress(0);
+  };
+
+  // Smoothly center the active pill in the horizontal switcher
+  useEffect(() => {
+    const activePill = pillRefs.current[currentDirector.id];
+    if (activePill && pillsContainerRef.current) {
+      activePill.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [currentDirector.id]);
+
+  // Automatic rotation loop timer with progress bar
+  useEffect(() => {
+    if (!isPlaying || isHovered) return;
+
+    const tickInterval = 50; // update progress bar smoothly
+    const step = (tickInterval / ROTATION_INTERVAL_MS) * 100;
+
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          goToNext();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, tickInterval);
+
+    return () => clearInterval(timer);
+  }, [isPlaying, isHovered, goToNext]);
 
   return (
-    <section id="directors-spotlight" className="scroll-mt-24 pt-2">
-      {/* ── Section Header matching MovieGuy aesthetic ── */}
-      <div className="flex items-center justify-between mb-4">
+    <section
+      id="directors-spotlight"
+      aria-label="Directors Vault"
+      className="scroll-mt-24 pt-2"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* ── Section Header with Loop & Navigation Controls ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        {/* Title & Tagline */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center flex-shrink-0">
-            <Clapperboard className="w-3.5 h-3.5" />
+          <div className="w-8 h-8 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Clapperboard className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
-              <span>Directors</span>
-              <span className="text-[#f5c542]">Vault</span>
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
+                <span>Directors</span>
+                <span className="text-[#f5c542]">Vault</span>
+              </h2>
+              {/* Dynamic Loop Live Indicator */}
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 border border-[#c9a24b]/30 text-[10px] font-mono text-[#f5c542] backdrop-blur-md">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isPlaying && !isHovered ? 'bg-[#f5c542] animate-ping' : 'bg-white/40'
+                  }`}
+                />
+                <span className="hidden xs:inline">
+                  {isHovered ? 'Paused (Hovering)' : isPlaying ? 'Live Loop' : 'Paused'}
+                </span>
+                <span>
+                  {currentIndex + 1}/{directors.length}
+                </span>
+              </span>
+            </div>
             <p className="text-[11px] font-mono text-white/40 mt-0.5 truncate">
               Visionary auteurs, signature filmographies &amp; masterworks
             </p>
           </div>
         </div>
 
-        <Link
-          to="/directors"
-          className="flex items-center gap-1 text-[11px] font-mono text-[#c9a24b] hover:text-[#f5c542] transition-colors flex-shrink-0"
-        >
-          <span>All 45+ Directors</span>
-          <ArrowRight className="w-3 h-3" />
-        </Link>
+        {/* Action Controls & Navigation */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Play / Pause Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsPlaying((p) => !p)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/60 hover:text-white text-[11px] font-mono transition-all"
+            title={isPlaying ? 'Pause Auto-Rotation' : 'Resume Auto-Rotation'}
+            aria-label={isPlaying ? 'Pause Director Loop' : 'Play Director Loop'}
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="w-3 h-3 text-[#f5c542]" />
+                <span className="hidden md:inline">Pause</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3 h-3 text-[#f5c542] fill-[#f5c542]" />
+                <span className="hidden md:inline">Play</span>
+              </>
+            )}
+          </button>
+
+          {/* Prev / Next Steppers */}
+          <div className="flex items-center rounded-full bg-white/[0.04] border border-white/[0.08] p-0.5">
+            <button
+              type="button"
+              onClick={goToPrev}
+              className="p-1 rounded-full text-white/60 hover:text-[#f5c542] hover:bg-white/[0.08] transition-all"
+              title="Previous Director"
+              aria-label="Previous Director"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={goToNext}
+              className="p-1 rounded-full text-white/60 hover:text-[#f5c542] hover:bg-white/[0.08] transition-all"
+              title="Next Director"
+              aria-label="Next Director"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
+
+          {/* All 45+ Directors Link */}
+          <Link
+            to="/directors"
+            className="flex items-center gap-1 text-[11px] font-mono text-[#c9a24b] hover:text-[#f5c542] transition-colors flex-shrink-0"
+          >
+            <span>All 45+ Directors</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
       </div>
 
-      {/* ── Director Switcher Pills (0ms Instant Switch) ── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 sm:mx-0 px-4 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FEATURED_DIRECTORS.map((director) => {
-          const isSelected = director.id === activeId;
-          const lastName = director.name.split(' ').slice(-1)[0];
+      {/* ── Director Switcher Pills (Continuous Scrollable Loop of all 40+ Directors) ── */}
+      <div
+        ref={pillsContainerRef}
+        role="tablist"
+        aria-label="Choose Director"
+        className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 sm:mx-0 px-4 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+      >
+        {directors.map((director, index) => {
+          const isSelected = index === currentIndex;
 
           return (
             <button
               key={director.id}
+              ref={(el) => {
+                pillRefs.current[director.id] = el;
+              }}
+              role="tab"
+              aria-selected={isSelected}
               type="button"
-              onClick={() => setActiveId(director.id)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-mono transition-all flex items-center gap-2 border ${
+              onClick={() => selectDirector(index)}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-mono transition-all duration-300 flex items-center gap-2 border select-none ${
                 isSelected
-                  ? 'bg-[#f5c542] text-[#1c120c] font-bold border-[#f5c542] shadow-[0_0_15px_rgba(245,197,66,0.35)]'
-                  : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:border-[#c9a24b]/40'
+                  ? 'bg-[#f5c542] text-[#1c120c] font-black border-[#f5c542] shadow-[0_0_18px_rgba(245,197,66,0.4)] scale-[1.02]'
+                  : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:border-[#c9a24b]/40 hover:bg-white/[0.06]'
               }`}
             >
-              {director.profilePath && (
+              {director.profilePath ? (
                 <img
                   src={`https://image.tmdb.org/t/p/w92${director.profilePath}`}
                   alt=""
-                  className={`w-4 h-4 rounded-full object-cover ${
-                    isSelected ? 'ring-1 ring-black/40' : 'grayscale opacity-75'
+                  className={`w-4 h-4 rounded-full object-cover transition-all ${
+                    isSelected ? 'ring-1 ring-black/50 grayscale-0' : 'grayscale opacity-75'
                   }`}
                   loading="lazy"
                 />
+              ) : (
+                <div
+                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
+                    isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-white/50'
+                  }`}
+                >
+                  🎬
+                </div>
               )}
               <span>{director.name}</span>
               <span
@@ -92,78 +243,141 @@ export const HomeDirectorsSpotlight: React.FC = () => {
         })}
       </div>
 
-      {/* ── Showcase Card: Exact Figma Director Row ── */}
-      <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#140b10]/60 to-[#0a0608]/90 p-4 sm:p-6 backdrop-blur-sm mt-3">
-        {selectedDirector && (
-          <DirectorRow
-            key={selectedDirector.id}
-            id={selectedDirector.id}
-            fallbackName={selectedDirector.name}
-            era={selectedDirector.era}
-            initialData={{
-              profilePath: selectedDirector.profilePath,
-              totalFilms: selectedDirector.totalFilms,
-              topFilms: selectedDirector.topFilms,
+      {/* ── Showcase Card: Dynamic Cinema Display with Smooth Transitions ── */}
+      <div className="relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#140b10]/80 via-[#10080d]/90 to-[#0a0608] p-4 sm:p-6 backdrop-blur-md mt-2 overflow-hidden shadow-2xl transition-all">
+        {/* Subtle Ambient Radial Gold Glow behind the active director */}
+        <div className="pointer-events-none absolute -top-24 left-1/4 w-96 h-96 bg-[radial-gradient(ellipse_at_center,_rgba(245,197,66,0.08)_0%,_transparent_70%)] blur-2xl" />
+
+        {/* ── Visual Countdown Progress Bar (Fills across 6s during auto-play) ── */}
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-white/[0.05] overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#c9a24b] to-[#f5c542] transition-all ease-linear shadow-[0_0_8px_rgba(245,197,66,0.6)]"
+            style={{
+              width: `${isPlaying && !isHovered ? progress : isPlaying ? progress : 0}%`,
+              transitionDuration: isPlaying && !isHovered ? '50ms' : '300ms',
             }}
           />
-        )}
+        </div>
 
-        {/* ── More Masters Preview Strip ── */}
-        <div className="pt-6 mt-6 border-t border-white/[0.06]">
+        {/* ── Top Bar: Active Director Counter & Next Up Peek ── */}
+        <div className="flex items-center justify-between text-[11px] font-mono text-white/40 pb-2 border-b border-white/[0.05] mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[#f5c542] font-bold">
+              #{String(currentIndex + 1).padStart(2, '0')} of {directors.length}
+            </span>
+            <span className="text-white/20">·</span>
+            <span className="text-white/60">{currentDirector.era}</span>
+          </div>
+
+          {/* Quick Click to Skip to Next Director */}
+          <button
+            type="button"
+            onClick={goToNext}
+            className="group/next flex items-center gap-1.5 hover:text-[#f5c542] transition-colors text-right"
+            title={`Skip to ${nextDirector.name}`}
+          >
+            <span className="hidden sm:inline text-white/30 group-hover/next:text-white/50">
+              Next in loop:
+            </span>
+            <span className="text-white/70 group-hover/next:text-[#f5c542] font-semibold">
+              {nextDirector.name}
+            </span>
+            <ChevronRight className="w-3 h-3 group-hover/next:translate-x-0.5 transition-transform text-[#f5c542]" />
+          </button>
+        </div>
+
+        {/* ── Active Director Row (Key-triggered smooth fade transition) ── */}
+        <div
+          key={currentDirector.id}
+          className="animate-in fade-in zoom-in-[0.99] duration-300"
+        >
+          <DirectorRow
+            id={currentDirector.id}
+            fallbackName={currentDirector.name}
+            era={currentDirector.era}
+            initialData={{
+              profilePath: currentDirector.profilePath,
+              totalFilms: currentDirector.totalFilms,
+              topFilms: currentDirector.topFilms,
+            }}
+          />
+        </div>
+
+        {/* ── Quick Discovery Strip: Direct Jump to Other Curated Masters ── */}
+        <div className="pt-5 mt-4 border-t border-white/[0.06]">
           <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-white/40">
-              More Masters in the Vault
+            <span className="text-[11px] font-mono uppercase tracking-wider text-white/40 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-[#f5c542]" />
+              <span>Explore More Masters in Vault</span>
             </span>
             <Link
               to="/directors"
-              className="text-[11px] font-mono text-[#c9a24b]/70 hover:text-[#f5c542] transition-colors"
+              className="text-[11px] font-mono text-[#c9a24b]/80 hover:text-[#f5c542] transition-colors"
             >
-              Search Any Filmmaker →
+              Search All 45+ Filmmakers →
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {OTHER_MASTERS.map((m) => (
-              <Link
-                key={m.id}
-                to={`/director/${m.id}`}
-                className="group flex items-center gap-3 p-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-[#c9a24b]/40 hover:bg-[#c9a24b]/5 transition-all"
-              >
-                {m.profilePath ? (
-                  <img
-                    src={`https://image.tmdb.org/t/p/w185${m.profilePath}`}
-                    alt={m.name}
-                    loading="lazy"
-                    className="w-10 h-12 rounded-lg object-cover grayscale group-hover:grayscale-0 border border-white/[0.08] group-hover:border-[#f5c542] transition-all"
-                  />
-                ) : (
-                  <div className="w-10 h-12 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.06]">
-                    <Film className="w-4 h-4 text-white/30" />
-                  </div>
-                )}
+            {directors.slice(0, 8).map((m, idx) => {
+              const isCurrent = m.id === currentDirector.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => selectDirector(idx)}
+                  className={`group flex items-center gap-3 p-2 rounded-xl border text-left transition-all ${
+                    isCurrent
+                      ? 'border-[#f5c542] bg-[#c9a24b]/10 shadow-[0_0_15px_rgba(245,197,66,0.15)]'
+                      : 'border-white/[0.06] bg-white/[0.02] hover:border-[#c9a24b]/40 hover:bg-[#c9a24b]/5'
+                  }`}
+                >
+                  {m.profilePath ? (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w185${m.profilePath}`}
+                      alt={m.name}
+                      loading="lazy"
+                      className={`w-9 h-11 rounded-lg object-cover border transition-all ${
+                        isCurrent
+                          ? 'border-[#f5c542] grayscale-0'
+                          : 'border-white/[0.08] grayscale group-hover:grayscale-0'
+                      }`}
+                    />
+                  ) : (
+                    <div className="w-9 h-11 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.06]">
+                      <Film className="w-3.5 h-3.5 text-white/30" />
+                    </div>
+                  )}
 
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-display text-xs font-bold text-white/85 group-hover:text-[#f5c542] truncate transition-colors">
-                    {m.name}
-                  </h4>
-                  <p className="text-[10px] font-mono text-[#c9a24b]/70 truncate mt-0.5">
-                    {m.era}
-                  </p>
-                  <span className="text-[9px] font-mono text-white/30 block truncate mt-0.5">
-                    {m.totalFilms ? `${m.totalFilms} films` : 'Master'}
-                  </span>
-                </div>
-              </Link>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <h4
+                      className={`font-display text-xs font-bold truncate transition-colors ${
+                        isCurrent
+                          ? 'text-[#f5c542]'
+                          : 'text-white/85 group-hover:text-[#f5c542]'
+                      }`}
+                    >
+                      {m.name}
+                    </h4>
+                    <p className="text-[10px] font-mono text-[#c9a24b]/70 truncate mt-0.5">
+                      {m.era}
+                    </p>
+                    <span className="text-[9px] font-mono text-white/30 block truncate mt-0.5">
+                      {m.totalFilms ? `${m.totalFilms} films` : 'Master'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Explore Button Banner */}
-          <div className="mt-5 text-center">
+          {/* Full Archive Link */}
+          <div className="mt-4 text-center">
             <Link
               to="/directors"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-[#c9a24b]/15 border border-[#c9a24b]/30 hover:border-[#f5c542] text-xs font-mono text-[#f5c542] transition-all group shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white/[0.04] hover:bg-[#c9a24b]/15 border border-[#c9a24b]/30 hover:border-[#f5c542] text-xs font-mono text-[#f5c542] transition-all group shadow-sm"
             >
-              <span>Explore All 45+ Curated Directors &amp; Universal Search</span>
+              <span>Explore All 45+ Curated Directors &amp; Complete Filmographies</span>
               <ChevronRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

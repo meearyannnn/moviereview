@@ -228,3 +228,48 @@ DROP TRIGGER IF EXISTS on_collection_like_change ON public.collection_likes;
 CREATE TRIGGER on_collection_like_change
     AFTER INSERT OR DELETE ON public.collection_likes
     FOR EACH ROW EXECUTE FUNCTION public.sync_collection_likes_count();
+
+
+-- 7. USER PROFILE HEALTH & RESTRICTIONS COLUMNS
+ALTER TABLE public.profiles
+    ADD COLUMN IF NOT EXISTS strikes_count INTEGER DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS last_username_change TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS scheduled_delete_at TIMESTAMPTZ;
+
+-- 8. USER CONTRIBUTIONS TABLE (Manage content contribution requests)
+CREATE TABLE IF NOT EXISTS public.user_contributions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    details TEXT,
+    source_url TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('approved', 'pending', 'rejected', 'draft')),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_contributions_user ON public.user_contributions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_contributions_status ON public.user_contributions(status);
+
+ALTER TABLE public.user_contributions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own contributions." ON public.user_contributions;
+CREATE POLICY "Users can view their own contributions."
+    ON public.user_contributions FOR SELECT
+    USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can submit contributions." ON public.user_contributions;
+CREATE POLICY "Users can submit contributions."
+    ON public.user_contributions FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their draft contributions." ON public.user_contributions;
+CREATE POLICY "Users can update their draft contributions."
+    ON public.user_contributions FOR UPDATE
+    USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their contributions." ON public.user_contributions;
+CREATE POLICY "Users can delete their contributions."
+    ON public.user_contributions FOR DELETE
+    USING (auth.uid() = user_id);
+

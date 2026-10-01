@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Search, Clapperboard, Home, Film, Tv, Bookmark, Calendar,
   Bell, User, LogIn, LogOut, X, Users, Settings, PenSquare, Trophy, Compass,
-  Clock, History,
+  Clock, History, ExternalLink, RefreshCw, Newspaper,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MidnightVaultModal } from './MidnightVaultModal';
 import { AuthModal } from './AuthModal';
+import { cinemaNewsService, type CinemaNewsItem } from '@/services/cinemaNews';
 
 const NAV = [
   { path: '/', label: 'Home', icon: Home },
@@ -53,7 +54,33 @@ export const Navbar = () => {
   const [showVault, setShowVault] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [cinemaNews, setCinemaNews] = useState<CinemaNewsItem[]>([]);
+  const [newsCategory, setNewsCategory] = useState<'all' | 'movie' | 'tv'>('all');
+  const [newsLoading, setNewsLoading] = useState(false);
   const keys = useRef('');
+
+  const loadNews = async (cat: 'all' | 'movie' | 'tv' = newsCategory) => {
+    setNewsLoading(true);
+    try {
+      const items = await cinemaNewsService.getNews(cat);
+      setCinemaNews(items);
+    } catch {
+      // safe fallback already handled inside service
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showBell && cinemaNews.length === 0) {
+      loadNews(newsCategory);
+    }
+  }, [showBell]);
+
+  const handleCategoryChange = (cat: 'all' | 'movie' | 'tv') => {
+    setNewsCategory(cat);
+    loadNews(cat);
+  };
 
   const isActive = (p: string) =>
     pathname === p || (p === '/directors' && pathname.startsWith('/director'));
@@ -158,17 +185,92 @@ export const Navbar = () => {
                 <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
               </IconBtn>
               {showBell && (
-                <div className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-2 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
-                  <p className="px-2.5 pb-1.5 pt-1 text-sm font-bold text-white font-display">What's new</p>
-                  {[
-                    ['Reacher Season 3', 'Streaming on Prime Video'],
-                    ['Lanterns Season 1', 'New episode 5 is out'],
-                  ].map(([t, s]) => (
-                    <div key={t} className="rounded-xl px-2.5 py-2 hover:bg-white/[0.05]">
-                      <p className="text-sm font-medium text-white">{t}</p>
-                      <p className="text-xs text-white/50">{s}</p>
+                <div className="absolute right-0 top-11 z-50 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-3 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 text-white">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <Newspaper className="w-4 h-4 text-[#f5c542]" />
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      </div>
+                      <span className="text-sm font-bold font-display text-white">Cinema Scoop</span>
                     </div>
-                  ))}
+
+                    <div className="flex items-center gap-1">
+                      {(['all', 'movie', 'tv'] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => handleCategoryChange(cat)}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md capitalize transition-all ${
+                            newsCategory === cat
+                              ? 'bg-[#f5c542] text-[#1c120c] font-bold'
+                              : 'text-white/40 hover:text-white/80 hover:bg-white/[0.05]'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => loadNews(newsCategory)}
+                        title="Refresh feeds"
+                        className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.05] transition-colors"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${newsLoading ? 'animate-spin text-[#f5c542]' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    {newsLoading && cinemaNews.length === 0 ? (
+                      <div className="py-8 text-center text-xs font-mono text-white/40">
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[#f5c542]" />
+                        Fetching live cinema feeds...
+                      </div>
+                    ) : cinemaNews.length === 0 ? (
+                      <div className="py-6 text-center text-xs font-mono text-white/40">
+                        No headlines found.
+                      </div>
+                    ) : (
+                      cinemaNews.map((item) => (
+                        <a
+                          key={item.id}
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex gap-2.5 p-2 rounded-xl border border-transparent hover:border-white/[0.08] hover:bg-white/[0.04] transition-all"
+                        >
+                          {item.thumbnail && (
+                            <img
+                              src={item.thumbnail}
+                              alt=""
+                              className="w-16 h-14 rounded-lg object-cover shrink-0 bg-white/[0.05] border border-white/[0.06]"
+                              loading="lazy"
+                            />
+                          )}
+                          <div className="min-w-0 flex-1 flex flex-col justify-between">
+                            <p className="text-xs font-medium text-white/90 group-hover:text-[#f5c542] transition-colors line-clamp-2 leading-snug">
+                              {item.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono text-white/40">
+                              <span className="text-[#f5c542] bg-[#f5c542]/10 px-1.5 py-0.5 rounded font-semibold">
+                                {item.source}
+                              </span>
+                              <span>
+                                {item.pubDate
+                                  ? new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                  : 'Today'}
+                              </span>
+                              <ExternalLink className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-white/60" />
+                            </div>
+                          </div>
+                        </a>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-white/30 px-1">
+                    <span>Legal RSS Syndication</span>
+                    <span>Collider • Variety • Deadline</span>
+                  </div>
                 </div>
               )}
             </div>

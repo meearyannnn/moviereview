@@ -571,16 +571,79 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
             </div>
 
             <form onSubmit={handleSaveBanner} className="space-y-4">
+              {/* Image Preview if chosen */}
+              {bannerUrl ? (
+                <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-[#f5c542]/40 bg-black/60 shadow-inner group">
+                  <img
+                    src={bannerUrl}
+                    alt="Banner preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBannerUrl('')}
+                      className="px-3 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-xs font-mono font-medium shadow"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Upload from Device */}
+              <div>
+                <label className="block text-xs font-mono text-white/70 mb-1.5">
+                  Upload Image from Device
+                </label>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/[0.15] hover:border-[#f5c542]/60 rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] transition-all">
+                  <div className="flex flex-col items-center justify-center pt-2 pb-2">
+                    <ImagePlus className="w-6 h-6 text-[#f5c542] mb-1.5" />
+                    <p className="text-xs text-white/80 font-mono">
+                      <span className="font-bold text-[#f5c542]">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-[10px] text-white/40 font-mono mt-0.5">PNG, JPG, WEBP, GIF (Max 10MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!file.type.startsWith('image/')) {
+                        toast.error('Please select an image file');
+                        return;
+                      }
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error('Image size must be under 10MB');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === 'string') {
+                          setBannerUrl(reader.result);
+                          toast.success('Image loaded successfully');
+                        }
+                      };
+                      reader.onerror = () => toast.error('Failed to read image file');
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Or enter URL */}
               <div>
                 <label className="block text-xs font-mono text-white/60 mb-1">
-                  Banner Image URL
+                  Or enter Banner Image URL
                 </label>
                 <input
                   type="url"
                   value={bannerUrl}
                   onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="https://image.tmdb.org/t/p/w1280/..."
-                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white focus:border-[#f5c542] focus:outline-none"
+                  placeholder="https://image.tmdb.org/t/p/w1280/... or direct link"
+                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white focus:border-[#f5c542] focus:outline-none placeholder:text-white/20"
                 />
               </div>
 

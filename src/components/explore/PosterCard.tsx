@@ -57,8 +57,11 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
   const firstGenreId = item.genre_ids?.[0];
   const genreName = firstGenreId ? (GENRE_MAP[firstGenreId] || 'Cinema') : 'Cinema';
 
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
-  const posterUrl = item.poster_path ? tmdb.getImageUrl(item.poster_path, 'w500') : null;
+  const posterPath = item.poster_path || item.backdrop_path;
+  const isExternal = posterPath?.startsWith('http');
+  const posterUrl = posterPath
+    ? (isExternal ? posterPath : tmdb.getImageUrl(posterPath, 'w342'))
+    : '/placeholder.svg';
   const inWatchlist = isInWatchlist(item.id);
 
   // Formatted ticket serial number (e.g. No. 0428)
@@ -143,23 +146,29 @@ export const PosterCard: React.FC<PosterCardProps> = ({ item, typeOverride }) =>
       <div className="relative rounded-2xl overflow-hidden bg-[#140c10] border border-[#c9a24b]/20 shadow-xl group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] group-hover:border-[#c9a24b]/40 transition-all flex flex-col">
         {/* ── Top Portion: 2:3 Movie Poster ── */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#0c090e]">
-          {posterUrl ? (
-            <img
-              src={posterUrl}
-              alt={title}
-              loading="lazy"
-              onLoad={() => setImageLoaded(true)}
-              onError={(e) => {
-                e.currentTarget.src = FALLBACK_POSTER;
-                setImageLoaded(true);
-              }}
-              className={`w-full h-full object-cover transition-all duration-500 group-hover:brightness-105 group-hover:scale-[1.03] ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs font-mono text-white/30">
-              No Poster
+          <img
+            src={posterUrl}
+            srcSet={
+              posterPath && !isExternal
+                ? `${tmdb.getImageUrl(posterPath, 'w185')} 185w, ${tmdb.getImageUrl(posterPath, 'w342')} 342w, ${tmdb.getImageUrl(posterPath, 'w500')} 500w`
+                : undefined
+            }
+            sizes="(max-width: 640px) 160px, (max-width: 1024px) 240px, 320px"
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setImageLoaded(true)}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/placeholder.svg';
+              setImageLoaded(true);
+            }}
+            className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-105 group-hover:scale-[1.03]"
+          />
+
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-[#160b10] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full border-2 border-[#f5c542]/20 border-t-[#f5c542] animate-spin" />
             </div>
           )}
 

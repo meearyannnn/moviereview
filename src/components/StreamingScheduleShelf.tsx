@@ -225,7 +225,7 @@ export const StreamingScheduleShelf: React.FC = () => {
             const rawImg = ep.image?.medium || ep.image?.original || show?.image?.medium || show?.image?.original || '';
             const imgUrl = rawImg
               ? rawImg.replace(/^http:\/\//i, 'https://')
-              : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+              : '/placeholder.svg';
             const meta = getPlatformMeta(channelName);
 
             return (
@@ -252,8 +252,10 @@ export const StreamingScheduleShelf: React.FC = () => {
                     draggable={false}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none select-none"
                     loading="lazy"
+                    decoding="async"
                     onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/placeholder.svg';
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140a0d] via-black/20 to-transparent" />

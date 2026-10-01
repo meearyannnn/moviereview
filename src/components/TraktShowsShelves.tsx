@@ -43,7 +43,7 @@ const TraktShelfRow: React.FC<{
         const poster = show.poster_path
           ? show.poster_path.startsWith('http')
             ? show.poster_path
-            : tmdb.getImageUrl(show.poster_path, 'w500')
+            : tmdb.getImageUrl(show.poster_path, 'w342')
           : '/placeholder.svg';
         const year = show.first_air_date ? show.first_air_date.slice(0, 4) : '';
 
@@ -55,13 +55,24 @@ const TraktShelfRow: React.FC<{
               isDragging ? 'pointer-events-none' : ''
             }`}
           >
-            <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-neutral-900 border border-white/[0.06] group-hover:border-white/25 shadow-xl transition-colors duration-200">
+            <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-[#140a0d] border border-[#c9a24b]/20 group-hover:border-[#f5c542]/60 shadow-xl transition-all duration-300">
               <img
                 src={poster}
+                srcSet={
+                  show.poster_path && !show.poster_path.startsWith('http')
+                    ? `${tmdb.getImageUrl(show.poster_path, 'w185')} 185w, ${tmdb.getImageUrl(show.poster_path, 'w342')} 342w`
+                    : undefined
+                }
+                sizes="(max-width: 640px) 176px, 192px"
                 alt={show.name || show.title}
                 draggable={false}
-                className="w-full h-full object-cover pointer-events-none select-none"
+                className="w-full h-full object-cover pointer-events-none select-none transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
               />
               {show.vote_average > 0 && (
                 <span className="absolute top-2 right-2 flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[#f5c542] border border-[#c9a24b]/20">

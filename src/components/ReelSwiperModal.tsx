@@ -215,6 +215,11 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
                   <img 
                     src={tmdb.getImageUrl(nextMovie.poster_path, 'w500')} 
                     alt={nextMovie.title} 
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                     className="w-full h-full object-cover brightness-50 blur-[2px]"
                   />
                 </div>
@@ -243,8 +248,13 @@ export const ReelSwiperModal = ({ isOpen, onClose }: ReelSwiperModalProps) => {
               >
                 {/* Poster Background */}
                 <img
-                  src={tmdb.getImageUrl(currentMovie.poster_path, 'original')}
+                  src={tmdb.getImageUrl(currentMovie.poster_path, 'w500')}
                   alt={currentMovie.title}
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                   className="w-full h-full object-cover pointer-events-none"
                 />
 

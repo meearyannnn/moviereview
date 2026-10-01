@@ -327,7 +327,15 @@ export default function DiscussionsPage() {
         {/* User avatar circle */}
         <div className="h-9 w-9 shrink-0 rounded-full bg-white/[0.1] border border-white/[0.15] flex items-center justify-center text-xs font-bold text-white/80 overflow-hidden">
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+            <img
+              src={profile.avatar_url}
+              alt=""
+              decoding="async"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+              className="h-full w-full object-cover"
+            />
           ) : (
             (profile?.username || user?.email || 'U')[0].toUpperCase()
           )}
@@ -405,6 +413,10 @@ export default function DiscussionsPage() {
                         <img
                           src={post.avatar_url}
                           alt={post.username}
+                          decoding="async"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                           className="h-full w-full object-cover"
                         />
                       ) : (

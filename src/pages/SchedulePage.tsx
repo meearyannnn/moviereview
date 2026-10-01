@@ -112,7 +112,7 @@ const SchedulePage: React.FC = () => {
     }`;
 
   const renderCard = (item: ScheduleItem) => {
-    const poster = item.poster_path ? tmdb.getImageUrl(item.poster_path, 'w500') : '/placeholder.svg';
+    const poster = item.poster_path ? tmdb.getImageUrl(item.poster_path, 'w342') : '/placeholder.svg';
     const isFallback = item.isRegional === false && item.media_type === 'movie';
 
     return (
@@ -128,6 +128,11 @@ const SchedulePage: React.FC = () => {
             src={poster}
             alt=""
             loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/placeholder.svg';
+            }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />

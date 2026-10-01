@@ -454,20 +454,25 @@ export const LibraryPage: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {filteredWatchLater.map((item) => {
                       const posterUrl = item.poster_path
-                        ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
-                        : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+                        ? tmdb.getImageUrl(item.poster_path, 'w342')
+                        : '/placeholder.svg';
 
                       return (
                         <div
                           key={`${item.media_type}-${item.media_id}`}
                           className="group relative rounded-2xl border border-white/[0.08] bg-[#140a0e] overflow-hidden flex flex-col transition-all hover:border-[#f5c542]/50 hover:-translate-y-1 shadow-md"
                         >
-                          <Link to={`/${item.media_type}/${item.media_id}`} className="block relative aspect-[2/3] overflow-hidden">
+                          <Link to={`/${item.media_type}/${item.media_id}`} className="block relative aspect-[2/3] overflow-hidden bg-[#160b10]">
                             <img
                               src={posterUrl}
                               alt={item.title}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/placeholder.svg';
+                              }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
@@ -625,8 +630,8 @@ export const LibraryPage: React.FC = () => {
                         <div className="space-y-3">
                           {group.items.map((item) => {
                             const posterUrl = item.poster_path
-                              ? `https://image.tmdb.org/t/p/w185${item.poster_path}`
-                              : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
+                              ? tmdb.getImageUrl(item.poster_path, 'w185')
+                              : '/placeholder.svg';
                             const watchedDateStr = new Date(item.watched_at).toLocaleDateString(
                               'en-US',
                               { day: 'numeric', month: 'short', year: 'numeric' }
@@ -645,8 +650,13 @@ export const LibraryPage: React.FC = () => {
                                   <img
                                     src={posterUrl}
                                     alt={item.title}
-                                    className="w-12 h-16 sm:w-14 sm:h-20 rounded-xl object-cover border border-white/[0.08] shrink-0"
+                                    className="w-12 h-16 sm:w-14 sm:h-20 rounded-xl object-cover border border-white/[0.08] shrink-0 bg-[#160b10]"
                                     loading="lazy"
+                                    decoding="async"
+                                    onError={(e) => {
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src = '/placeholder.svg';
+                                    }}
                                   />
 
                                   <div className="min-w-0 pr-3">

@@ -152,11 +152,17 @@ export const Hero = () => {
           {movies.map((m, i) => (
             <img
               key={m.id}
-              src={tmdb.getImageUrl(m.backdrop_path, 'original')}
+              src={tmdb.getImageUrl(m.backdrop_path, 'w1280')}
               alt=""
+              decoding="async"
               aria-hidden={i !== currentIndex}
-              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 motion-reduce:transition-none ${i === currentIndex ? 'opacity-100' : 'opacity-0'
-                }`}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/placeholder.svg';
+              }}
+              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 motion-reduce:transition-none ${
+                i === currentIndex ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           ))}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/40 to-transparent" />
@@ -281,9 +287,14 @@ export const Hero = () => {
                   >
                     {m.poster_path && (
                       <img
-                        src={`https://image.tmdb.org/t/p/w342${m.poster_path}`}
+                        src={tmdb.getImageUrl(m.poster_path, 'w342')}
                         alt=""
                         loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
                         className="h-full w-full object-cover"
                       />
                     )}

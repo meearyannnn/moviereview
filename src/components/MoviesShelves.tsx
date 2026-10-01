@@ -23,7 +23,7 @@ const ShelfCard: React.FC<{ movie: Movie; rank?: number; isDragging?: boolean }>
   const poster = movie.poster_path
     ? movie.poster_path.startsWith('http')
       ? movie.poster_path
-      : tmdb.getImageUrl(movie.poster_path, 'w500')
+      : tmdb.getImageUrl(movie.poster_path, 'w342')
     : '/placeholder.svg';
   const year = movie.release_date ? movie.release_date.slice(0, 4) : '';
 
@@ -39,8 +39,19 @@ const ShelfCard: React.FC<{ movie: Movie; rank?: number; isDragging?: boolean }>
       <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#140a0d] ring-1 ring-[#c9a24b]/20 transition duration-300 group-hover:ring-[#f5c542]/60 motion-safe:group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-black/60">
         <img
           src={poster}
+          srcSet={
+            movie.poster_path && !movie.poster_path.startsWith('http')
+              ? `${tmdb.getImageUrl(movie.poster_path, 'w185')} 185w, ${tmdb.getImageUrl(movie.poster_path, 'w342')} 342w`
+              : undefined
+          }
+          sizes="(max-width: 640px) 160px, 192px"
           alt=""
           loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
+          }}
           draggable={false}
           className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105 pointer-events-none select-none"
         />

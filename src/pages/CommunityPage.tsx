@@ -124,14 +124,18 @@ function HeroPost({ post, currentUserId, onDelete }: {
         {hasPoster && (
           <Link
             to={`/${post.media_type ?? 'movie'}/${post.media_id}`}
-            className="relative shrink-0 overflow-hidden"
-            style={{ width: 160 }}
+            className="relative w-28 sm:w-40 shrink-0 overflow-hidden"
           >
             <img
               src={`https://image.tmdb.org/t/p/w342${post.media_poster}`}
               alt={post.media_title ?? ''}
-              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-              style={{ minHeight: 220 }}
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/placeholder.svg';
+              }}
+              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105 min-h-[160px] sm:min-h-[220px]"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0a0608]/70" />
           </Link>

@@ -59,8 +59,13 @@ export const QuickPeekModal = ({ movie, onClose, type = 'movie' }: QuickPeekModa
         {/* Backdrop Banner */}
         <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-neutral-900">
           <img
-            src={tmdb.getImageUrl(movie.backdrop_path || movie.poster_path, 'original')}
+            src={tmdb.getImageUrl(movie.backdrop_path || movie.poster_path, 'w780')}
             alt={movie.title || movie.name}
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/placeholder.svg';
+            }}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0e1118] via-[#0e1118]/60 to-transparent" />

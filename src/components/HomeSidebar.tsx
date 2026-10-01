@@ -44,8 +44,12 @@ const RankRow = ({ item, rank }: { item: RankedItem; rank: number }) => (
           src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
           alt={item.title}
           loading="lazy"
+          decoding="async"
           className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-white/[0.07] group-hover:border-[#c9a24b]/50 transition-all"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
+          }}
         />
       ) : (
         <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.05]">
@@ -274,6 +278,11 @@ export const HomeSidebar = () => {
                   src={`https://image.tmdb.org/t/p/w92${d.img}`}
                   alt={d.name}
                   loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                   className="w-8 h-8 rounded-full object-cover border border-white/[0.1] grayscale group-hover:grayscale-0 transition-all"
                 />
                 <div className="min-w-0">

@@ -219,8 +219,19 @@ export const tmdb = {
   getMovieReleaseDates: (id: number): Promise<TMDBMovieReleaseDatesResponse> =>
     tmdbFetch(`/movie/${id}/release_dates`),
 
-  getImageUrl: (path: string, size: 'w500' | 'w300' | 'w185' | 'original' = 'w500') =>
-    path ? `${TMDB_IMAGE_BASE}/${size}${path}` : '/placeholder.svg',
+  getReviews: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/reviews`),
+
+  getImageUrl: (
+    path: string | null | undefined,
+    size: 'w92' | 'w154' | 'w185' | 'w342' | 'w300' | 'w500' | 'w780' | 'w1280' | 'original' = 'w500'
+  ): string => {
+    if (!path) return '/placeholder.svg';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const normalizedSize = size === 'w300' ? 'w342' : size;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${TMDB_IMAGE_BASE}/${normalizedSize}${cleanPath}`;
+  },
 };
 
 export interface TMDBReleaseDateItem {

@@ -192,6 +192,11 @@ export const MovieScheduleShelf: React.FC = () => {
                       src={posterUrl}
                       alt={movie.title}
                       loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (

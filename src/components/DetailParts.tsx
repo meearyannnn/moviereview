@@ -44,8 +44,7 @@ export const Rating = ({ value }: { value: string }) => (
 const initials = (name: string) =>
   name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
-const FALLBACK_BACKDROP =
-  'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1280&q=80';
+const FALLBACK_BACKDROP = '/placeholder.svg';
 
 // ── Page layout ────────────────────────────────────────────────────────
 interface DetailLayoutProps {
@@ -103,8 +102,9 @@ export const DetailLayout = ({
           <div className="min-w-0 md:row-span-2">
             <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-[#c9a24b]/30 bg-[#140c10] shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
               <img
-                src={posterFailed ? FALLBACK_BACKDROP : posterSrc}
+                src={posterFailed ? '/placeholder.svg' : posterSrc}
                 alt={posterAlt}
+                decoding="async"
                 className="h-full w-full object-cover"
                 onError={() => setPosterFailed(true)}
               />
@@ -289,7 +289,7 @@ export const UpcomingCard = ({
 // ── Cast row ───────────────────────────────────────────────────────────
 const CastAvatar = ({ m }: { m: CastMember }) => {
   const [failed, setFailed] = useState(false);
-  const photoUrl = m.profile_path ? `https://image.tmdb.org/t/p/w200${m.profile_path}` : null;
+  const photoUrl = m.profile_path ? tmdb.getImageUrl(m.profile_path, 'w185') : null;
 
   return (
     <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-[#c9a24b]/20 bg-[#140c10] transition-all group-hover:border-[#c9a24b]/60 group-hover:scale-105 group-focus-visible:border-[#c9a24b] group-focus-visible:ring-2 group-focus-visible:ring-[#c9a24b]/50 shadow-md">
@@ -298,6 +298,7 @@ const CastAvatar = ({ m }: { m: CastMember }) => {
           src={photoUrl}
           alt={m.name}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover"
           onError={() => setFailed(true)}
         />
@@ -340,7 +341,7 @@ export const CastRow = ({
 // ── Crew row ───────────────────────────────────────────────────────────
 const CrewAvatar = ({ m }: { m: CrewMember }) => {
   const [failed, setFailed] = useState(false);
-  const photoUrl = m.profile_path ? `https://image.tmdb.org/t/p/w200${m.profile_path}` : null;
+  const photoUrl = m.profile_path ? tmdb.getImageUrl(m.profile_path, 'w185') : null;
   const isDirector = m.job.toLowerCase().includes('director');
 
   return (
@@ -356,6 +357,7 @@ const CrewAvatar = ({ m }: { m: CrewMember }) => {
           src={photoUrl}
           alt={m.name}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover"
           onError={() => setFailed(true)}
         />

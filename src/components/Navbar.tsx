@@ -246,6 +246,11 @@ export const Navbar = () => {
                               alt=""
                               className="w-16 h-14 rounded-lg object-cover shrink-0 bg-white/[0.05] border border-white/[0.06]"
                               loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/placeholder.svg';
+                              }}
                             />
                           )}
                           <div className="min-w-0 flex-1 flex flex-col justify-between">

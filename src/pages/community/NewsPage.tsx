@@ -156,6 +156,11 @@ export default function NewsPage() {
                   src={item.thumbnail}
                   alt={item.title}
                   loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                   className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
                 />
               </div>
@@ -178,7 +183,16 @@ export default function NewsPage() {
             className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#140a0e] text-white shadow-2xl"
           >
             <div className="relative h-60 sm:h-72">
-              <img src={activeStory.thumbnail} alt="" className="h-full w-full object-cover" />
+              <img
+                src={activeStory.thumbnail}
+                alt=""
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+                className="h-full w-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-[#140a0e] to-transparent" />
               <button
                 onClick={() => setActiveStory(null)}

@@ -364,8 +364,16 @@ export const SeasonDetailModal = memo(({
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0c0e16]" />
                 <div className="relative flex gap-5 p-5 pb-0 sm:gap-7 sm:p-7 sm:pb-0">
                   <div className="h-36 w-24 shrink-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl sm:h-44 sm:w-[116px]">
-                    <img src={detail.poster_path ? tmdb.getImageUrl(detail.poster_path, "w300") : ""} alt={detail.name}
-                      className="h-full w-full object-cover" />
+                    <img
+                      src={detail.poster_path ? tmdb.getImageUrl(detail.poster_path, "w342") : "/placeholder.svg"}
+                      alt={detail.name}
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="flex flex-col justify-end pb-4 min-w-0">
                     <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-white/40">{showName}</p>
@@ -619,7 +627,17 @@ export const SeasonDetailModal = memo(({
                         <div className="flex gap-3 p-3">
                           <div className="relative h-[60px] w-[106px] shrink-0 overflow-hidden rounded-lg bg-neutral-900 sm:h-[72px] sm:w-[128px]">
                             {ep.still_path ? (
-                              <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" loading="lazy" className="h-full w-full object-cover" />
+                              <img
+                                src={`https://image.tmdb.org/t/p/w300${ep.still_path}`}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = '/placeholder.svg';
+                                }}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               <div className="flex h-full items-center justify-center text-white/15"><Film className="h-6 w-6" /></div>
                             )}

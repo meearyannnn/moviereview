@@ -64,33 +64,39 @@ export const MovieCard = memo(
 
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
     const hasRating = !!rating && Number(rating) > 0;
-    const posterUrl = movie.poster_path
-      ? (movie.poster_path.startsWith('http')
-          ? movie.poster_path
-          : tmdb.getImageUrl(movie.poster_path, 'w500'))
-      : FALLBACK_POSTER;
+    
+    // Check poster_path then backdrop_path
+    const rawPosterPath = movie.poster_path || movie.backdrop_path;
+    const isExternalUrl = rawPosterPath?.startsWith('http');
+    const posterUrl = rawPosterPath
+      ? (isExternalUrl ? rawPosterPath : tmdb.getImageUrl(rawPosterPath, 'w342'))
+      : '/placeholder.svg';
 
     const inWatchlist = isInWatchlist(movie.id);
 
     // Formatted ticket serial number (e.g. No. 5102)
     const ticketNo = `No. ${String(movie.id).slice(-4).padStart(4, '0')}`;
 
-    // 3D tilt calculation on cursor move
+    // 3D tilt calculation on cursor move (desktop only to keep mobile scroll 60fps)
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!cardRef.current) return;
+      if (!cardRef.current || (typeof window !== 'undefined' && window.innerWidth < 768)) return;
       const rect = cardRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
 
-      const rotateX = ((centerY - y) / centerY) * 4.5;
-      const rotateY = ((x - centerX) / centerX) * 4.5;
+      const rotateX = ((centerY - y) / centerY) * 4;
+      const rotateY = ((x - centerX) / centerX) * 4;
 
       setTilt({ x: rotateX, y: rotateY });
     };
 
-    const handleMouseEnter = () => setIsHovered(true);
+    const handleMouseEnter = () => {
+      if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+        setIsHovered(true);
+      }
+    };
     const handleMouseLeave = () => {
       setIsHovered(false);
       setTilt({ x: 0, y: 0 });
@@ -152,22 +158,29 @@ export const MovieCard = memo(
           <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#0c090e]">
             <img
               src={posterUrl}
+              srcSet={
+                rawPosterPath && !isExternalUrl
+                  ? `${tmdb.getImageUrl(rawPosterPath, 'w185')} 185w, ${tmdb.getImageUrl(rawPosterPath, 'w342')} 342w, ${tmdb.getImageUrl(rawPosterPath, 'w500')} 500w`
+                  : undefined
+              }
+              sizes="(max-width: 640px) 160px, (max-width: 1024px) 240px, 320px"
               alt={title}
               loading="lazy"
               decoding="async"
               draggable={false}
               onLoad={() => setImageLoaded(true)}
               onError={(e) => {
-                e.currentTarget.src = FALLBACK_POSTER;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/placeholder.svg';
                 setImageLoaded(true);
               }}
-              className={`w-full h-full object-cover transition-all duration-500 group-hover:brightness-105 group-hover:scale-[1.03] ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
+              className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-105 group-hover:scale-[1.03]"
             />
 
             {!imageLoaded && (
-              <div className="absolute inset-0 animate-pulse bg-white/[0.04]" />
+              <div className="absolute inset-0 bg-[#160b10] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full border-2 border-[#f5c542]/20 border-t-[#f5c542] animate-spin" />
+              </div>
             )}
 
             {/* Vignette Overlay */}

@@ -18,12 +18,12 @@ export function CommunityLayout({ children, rightPanel }: CommunityLayoutProps) 
       <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
 
       <div className="mx-auto max-w-screen-xl px-4 pb-32 pt-20 sm:px-6 sm:pt-24 lg:px-8">
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
           {/* Left Sidebar - Stays 100% stable during scroll */}
           <CommunitySidebar />
 
-          {/* Center Content - Scrolls smoothly */}
-          <main className="min-w-0 flex-1">{children}</main>
+          {/* Center Content - Takes full width on mobile, scrolls smoothly */}
+          <main className="w-full min-w-0 flex-1">{children}</main>
 
           {/* Right Panel - Stays stable during scroll */}
           {rightPanel && (

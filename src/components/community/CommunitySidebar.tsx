@@ -54,7 +54,10 @@ export function CommunitySidebar() {
       </aside>
 
       {/* Mobile / Tablet Horizontal Bar */}
-      <div className="block lg:hidden mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div
+        className="block lg:hidden w-full max-w-full mb-5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none touch-pan-x overscroll-x-contain"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <div className="flex items-center gap-1.5 min-w-max p-1 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
           {COMMUNITY_SIDEBAR_LINKS.map(({ to, label, Icon, exact }) => {
             const active = exact ? pathname === to : pathname.startsWith(to);

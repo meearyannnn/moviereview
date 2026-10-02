@@ -1,7 +1,7 @@
-// src/components/MovieCard.tsx — "The Box Office" Admission Ticket Card
-import React, { useState, useRef, memo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Star, Play, Heart } from 'lucide-react';
+// src/components/MovieCard.tsx — Clean poster card
+import { memo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { Star, Heart } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { toast } from 'sonner';
@@ -13,281 +13,128 @@ export interface MovieCardProps {
 }
 
 const GENRE_MAP: Record<number, string> = {
-  28: 'ACTION',
-  12: 'ADVENTURE',
-  16: 'ANIMATION',
-  35: 'COMEDY',
-  80: 'CRIME',
-  99: 'DOCS',
-  18: 'DRAMA',
-  10751: 'FAMILY',
-  14: 'FANTASY',
-  36: 'HISTORY',
-  27: 'HORROR',
-  10402: 'MUSIC',
-  9648: 'MYSTERY',
-  10749: 'ROMANCE',
-  878: 'SCI-FI',
-  53: 'THRILLER',
-  10752: 'WAR',
-  37: 'WESTERN',
-  10759: 'ACTION',
-  10765: 'SCI-FI',
-  10768: 'WAR',
+  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+  99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+  27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+  53: 'Thriller', 10752: 'War', 37: 'Western', 10759: 'Action', 10762: 'Kids',
+  10764: 'Reality', 10765: 'Sci-Fi', 10768: 'War',
 };
-
-const FALLBACK_POSTER =
-  'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80';
 
 export const MovieCard = memo(
   ({ movie, type = 'movie', className = '' }: MovieCardProps) => {
-    const navigate = useNavigate();
-    const cardRef = useRef<HTMLDivElement>(null);
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [tilt, setTilt] = useState({ x: 0, y: 0 });
-    const [isHovered, setIsHovered] = useState(false);
-
     const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
     const isTV =
-      type === 'tv' ||
-      movie.media_type === 'tv' ||
-      Boolean(movie.first_air_date && !movie.release_date);
+      type === 'tv' || movie.media_type === 'tv' || Boolean(movie.first_air_date && !movie.release_date);
     const mediaType: 'movie' | 'tv' = isTV ? 'tv' : 'movie';
 
     const title = movie.title || movie.name || 'Untitled';
     const releaseDate = movie.release_date || movie.first_air_date || '';
-    const year = releaseDate ? releaseDate.slice(0, 4) : '2026';
+    const year = releaseDate ? releaseDate.slice(0, 4) : ''; // no made-up year when TMDB has none
+    const genre = movie.genre_ids?.[0] ? GENRE_MAP[movie.genre_ids[0]] : undefined;
+    const meta = [year, genre].filter(Boolean).join(' · ');
 
-    const firstGenreId = movie.genre_ids?.[0];
-    const genreName = firstGenreId ? (GENRE_MAP[firstGenreId] || 'CINEMA') : 'CINEMA';
+    const rating = movie.vote_average && movie.vote_average > 0 ? movie.vote_average.toFixed(1) : null;
 
-    const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
-    const hasRating = !!rating && Number(rating) > 0;
-    
-    // Check poster_path then backdrop_path
-    const rawPosterPath = movie.poster_path || movie.backdrop_path;
-    const isExternalUrl = rawPosterPath?.startsWith('http');
-    const posterUrl = rawPosterPath
-      ? (isExternalUrl ? rawPosterPath : tmdb.getImageUrl(rawPosterPath, 'w342'))
-      : '/placeholder.svg';
+    // poster_path first, backdrop as a fallback
+    const rawPath = movie.poster_path || movie.backdrop_path;
+    const isExternal = !!rawPath?.startsWith('http');
+    const posterUrl = rawPath ? (isExternal ? rawPath : tmdb.getImageUrl(rawPath, 'w342')) : '/placeholder.svg';
+    const srcSet =
+      rawPath && !isExternal
+        ? `${tmdb.getImageUrl(rawPath, 'w185')} 185w, ${tmdb.getImageUrl(rawPath, 'w342')} 342w, ${tmdb.getImageUrl(rawPath, 'w500')} 500w`
+        : undefined;
 
-    const inWatchlist = isInWatchlist(movie.id);
+    const saved = isInWatchlist(movie.id);
 
-    // Formatted ticket serial number (e.g. No. 5102)
-    const ticketNo = `No. ${String(movie.id).slice(-4).padStart(4, '0')}`;
-
-    // 3D tilt calculation on cursor move (desktop only to keep mobile scroll 60fps)
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!cardRef.current || (typeof window !== 'undefined' && window.innerWidth < 768)) return;
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const rotateX = ((centerY - y) / centerY) * 4;
-      const rotateY = ((x - centerX) / centerX) * 4;
-
-      setTilt({ x: rotateX, y: rotateY });
-    };
-
-    const handleMouseEnter = () => {
-      if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-        setIsHovered(true);
-      }
-    };
-    const handleMouseLeave = () => {
-      setIsHovered(false);
-      setTilt({ x: 0, y: 0 });
-    };
-
-    const handleClick = useCallback(() => {
-      navigate(`/${mediaType}/${movie.id}`);
-    }, [navigate, mediaType, movie.id]);
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (e.target !== e.currentTarget) return;
-      if (e.key === 'Enter' || e.key === ' ') {
+    const handleSave = useCallback(
+      (e: React.MouseEvent) => {
         e.preventDefault();
-        handleClick();
-      }
-    };
-
-    const handleReserve = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      const added = toggleWatchlist({
-        id: movie.id,
-        title,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        vote_average: movie.vote_average,
-        release_date: releaseDate,
-        media_type: mediaType,
-      });
-
-      if (added) {
-        toast.success(`Saved "${title}" to Watch Later`);
-      } else {
-        toast.info(`Removed "${title}" from Watch Later`);
-      }
-    };
+        e.stopPropagation();
+        const added = toggleWatchlist({
+          id: movie.id,
+          title,
+          poster_path: movie.poster_path,
+          backdrop_path: movie.backdrop_path,
+          vote_average: movie.vote_average,
+          release_date: releaseDate,
+          media_type: mediaType,
+        });
+        if (added) toast.success(`Saved "${title}" to Watch Later`);
+        else toast.info(`Removed "${title}" from Watch Later`);
+      },
+      [toggleWatchlist, movie, title, releaseDate, mediaType]
+    );
 
     return (
-      <div
-        ref={cardRef}
-        role="link"
-        tabIndex={0}
-        aria-label={`${title} (${year})`}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`group cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24b] rounded-2xl transition-all duration-300 ease-out flex flex-col ${className}`}
-        style={{
-          transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${
-            isHovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)'
-          }`,
-          transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.3s ease-out',
-        }}
-      >
-        {/* ── Admission Ticket Container ── */}
-        <div className="relative rounded-2xl overflow-hidden bg-[#140c10] border border-[#c9a24b]/20 shadow-xl group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] group-hover:border-[#c9a24b]/50 transition-all flex flex-col w-full">
-          {/* ── Top Portion: 2:3 Movie Poster ── */}
-          <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#0c090e]">
+      <div className={`group relative ${className}`}>
+        {/* A real link: keyboard, middle-click and "open in new tab" all work */}
+        <Link
+          to={`/${mediaType}/${movie.id}`}
+          aria-label={`${title}${year ? ` (${year})` : ''}`}
+          draggable={false}
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+        >
+          <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1a1116] ring-1 ring-white/[0.08] transition duration-300 group-hover:ring-[#f5c542]/60 motion-safe:group-hover:-translate-y-1">
             <img
               src={posterUrl}
-              srcSet={
-                rawPosterPath && !isExternalUrl
-                  ? `${tmdb.getImageUrl(rawPosterPath, 'w185')} 185w, ${tmdb.getImageUrl(rawPosterPath, 'w342')} 342w, ${tmdb.getImageUrl(rawPosterPath, 'w500')} 500w`
-                  : undefined
-              }
+              srcSet={srcSet}
               sizes="(max-width: 640px) 160px, (max-width: 1024px) 240px, 320px"
-              alt={title}
+              alt=""
               loading="lazy"
               decoding="async"
               draggable={false}
-              onLoad={() => setImageLoaded(true)}
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src = '/placeholder.svg';
-                setImageLoaded(true);
               }}
-              className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-105 group-hover:scale-[1.03]"
+              className="h-full w-full select-none object-cover transition-transform duration-500 group-hover:scale-105"
             />
 
-            {!imageLoaded && (
-              <div className="absolute inset-0 bg-[#160b10] flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full border-2 border-[#f5c542]/20 border-t-[#f5c542] animate-spin" />
-              </div>
+            {isTV && (
+              <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-md">
+                TV
+              </span>
             )}
+          </div>
 
-            {/* Vignette Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-            {/* Rating Chip: Popcorn Yellow in corner */}
-            {hasRating && (
-              <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f5c542] text-[#1c120c] font-mono font-bold text-[10px] shadow-lg shadow-black/60">
-                <Star className="w-2.5 h-2.5 fill-current stroke-none" />
-                <span>{rating}</span>
-              </div>
-            )}
-
-            {/* "Watch Later" Heart Button on hover */}
-            <button
-              type="button"
-              onClick={handleReserve}
-              aria-label={inWatchlist ? 'Remove from Watch Later' : 'Save to Watch Later'}
-              className={`absolute top-2.5 left-2.5 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                inWatchlist
-                  ? 'bg-[#f5c542] text-[#1c120c] shadow-md shadow-[#f5c542]/50'
-                  : 'bg-black/60 text-white/80 hover:text-white hover:bg-black/90 opacity-0 group-hover:opacity-100 backdrop-blur-sm'
-              }`}
+          <div className="mt-3 px-0.5">
+            <h3
+              className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#f5c542] sm:text-base"
+              title={title}
             >
-              <Heart className={`w-3.5 h-3.5 ${inWatchlist ? 'fill-current' : ''}`} />
-            </button>
-
-            {/* Play Icon in center on hover */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-              <div className="w-10 h-10 rounded-full bg-[#c9a24b] text-[#1c120c] flex items-center justify-center shadow-lg shadow-black/60 transform group-hover:scale-105 transition-transform">
-                <Play className="w-4 h-4 ml-0.5 fill-current" />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Perforated Tear Line with Circular Notches ── */}
-          <div className="relative h-4 bg-[#f3e9d2] flex items-center justify-center overflow-hidden shrink-0 border-t border-[#c9a24b]/30">
-            {/* Left Circular Punch Notch */}
-            <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#0a0608] border border-black/40 z-20" />
-
-            {/* Dashed Tear Line */}
-            <div className="w-full border-t border-dashed border-[#2a1a14]/30 mx-4" />
-
-            {/* Right Circular Punch Notch */}
-            <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[#0a0608] border border-black/40 z-20" />
-          </div>
-
-          {/* ── Bottom Portion: Warm Cream Ticket Stub with Espresso Ink ── */}
-          <div className="relative bg-[#f3e9d2] px-3.5 pt-1.5 pb-3 text-[#2a1a14] flex flex-col justify-between min-h-[92px] transition-transform duration-300">
-            {/* Screen & Admit One header */}
-            <div className="flex items-center justify-between text-[9px] font-mono tracking-wider font-extrabold uppercase">
-              <span className="text-[#2a1a14]/70">
-                {isTV ? 'SCREEN 2 · TV' : 'SCREEN 1 · MOVIE'}
-              </span>
-              <span className="border border-[#c9a24b] text-[#8c6b1c] px-1 py-0.2 rounded text-[8px] font-mono font-bold tracking-widest bg-[#c9a24b]/10">
-                ADMIT ONE
-              </span>
-            </div>
-
-            {/* Film Title */}
-            <div className="my-1">
-              <h3 className="font-display font-bold text-xs leading-tight text-[#2a1a14] truncate group-hover:text-black">
-                {title}
-              </h3>
-              <p className="text-[10px] font-mono tracking-wider text-[#2a1a14]/65 uppercase mt-0.5 truncate">
-                {year} · {genreName}
-              </p>
-            </div>
-
-            {/* Ticket Number & Mini Barcode */}
-            <div className="flex items-end justify-between pt-1 border-t border-[#2a1a14]/15 mt-0.5">
-              <span className="text-[9px] font-mono font-medium text-[#2a1a14]/60">
-                {ticketNo}
-              </span>
-
-              {/* Mini SVG Barcode */}
-              <div className="flex items-center gap-[1.5px] opacity-75 h-3">
-                <span className="w-[1.5px] h-3 bg-[#2a1a14]" />
-                <span className="w-[1px] h-3 bg-[#2a1a14]" />
-                <span className="w-[2px] h-3 bg-[#2a1a14]" />
-                <span className="w-[1px] h-2 bg-[#2a1a14]" />
-                <span className="w-[1.5px] h-3 bg-[#2a1a14]" />
-                <span className="w-[1px] h-3 bg-[#2a1a14]" />
-                <span className="w-[2.5px] h-3 bg-[#2a1a14]" />
-                <span className="w-[1px] h-2 bg-[#2a1a14]" />
-                <span className="w-[1.5px] h-3 bg-[#2a1a14]" />
-                <span className="w-[2px] h-3 bg-[#2a1a14]" />
-                <span className="w-[1px] h-3 bg-[#2a1a14]" />
-                <span className="w-[2px] h-3 bg-[#2a1a14]" />
-              </div>
-            </div>
-
-            {/* Reserved Stamp (Shown when added to watchlist) */}
-            {inWatchlist && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-                <span className="border-2 border-[#8c1c2b] text-[#8c1c2b] font-mono font-black text-xs px-2.5 py-0.5 rounded tracking-widest uppercase rotate-[-12deg] bg-[#f3e9d2]/90 shadow-md animate-in zoom-in-90 duration-200">
-                  RESERVED
+              {title}
+            </h3>
+            <p className="mt-0.5 flex items-center justify-between gap-2 text-xs text-white/45">
+              <span className="truncate">{meta || 'Release date TBA'}</span>
+              {rating && (
+                <span className="inline-flex shrink-0 items-center gap-1 text-white/70">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  {rating}
                 </span>
-              </div>
-            )}
+              )}
+            </p>
           </div>
-        </div>
+        </Link>
+
+        {/* Save: beside the link rather than inside it. Always visible once saved, and on touch screens */}
+        <button
+          type="button"
+          onClick={handleSave}
+          aria-label={saved ? 'Remove from Watch Later' : 'Save to Watch Later'}
+          aria-pressed={saved}
+          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition focus-visible:opacity-100 ${saved
+              ? 'bg-[#f5c542] text-[#1c120c]'
+              : 'bg-black/65 text-white opacity-0 hover:bg-white hover:text-black group-hover:opacity-100 [@media(hover:none)]:opacity-100'
+            }`}
+        >
+          <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+        </button>
       </div>
     );
   },
-  (prev, next) => prev.movie.id === next.movie.id && prev.type === next.type
+  (prev, next) =>
+    prev.movie.id === next.movie.id && prev.type === next.type && prev.className === next.className
 );
 
 MovieCard.displayName = 'MovieCard';
-

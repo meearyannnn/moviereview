@@ -1,15 +1,9 @@
-// src/components/HomeNewLaunchesSection.tsx — Unique Cinema Radar Spotlight Drops (Past 14 Days & Coming 60 Days)
+// src/components/HomeNewLaunchesSection.tsx — Spotlight drops (past 14 days & coming 60 days)
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles,
   Play,
-  Film,
-  Tv,
-  Clapperboard,
-  Flame,
   X,
-  Info,
   Calendar,
   Share2,
   Check,
@@ -18,16 +12,63 @@ import {
   Star,
   Bookmark,
   BookmarkCheck,
-  Globe,
   LayoutGrid,
-  Layers,
-  Clock,
+  Rows3,
+  Flame,
 } from 'lucide-react';
-import { newLaunchesService, type NewLaunchItem, type LaunchClass } from '@/services/newLaunches';
+import { newLaunchesService, type NewLaunchItem } from '@/services/newLaunches';
 import { soundEffects } from '@/lib/soundEffects';
 import { useWatchlist } from '@/hooks/useWatchlist';
 
 type FilterTab = 'all' | 'upcoming' | 'trailers' | 'bollywood' | 'hollywood' | 'tv';
+
+const LEGACY_CACHE_KEYS = [
+  'mg_spotlight_launches_v3',
+  'mg_spotlight_launches_v4',
+  'mg_spotlight_launches_curated_v5',
+  'mg_spotlight_launches_v6_latest',
+  'mg_spotlight_launches_v7_latest_only',
+  'mg_spotlight_launches_realtime_v1',
+  'mg_new_launches_feed_v1',
+  'mg_spotlight_launches_window_2w_1m_v1',
+];
+
+/* One accent per meaning, nothing else: gold = upcoming, rose = video, neutral = already out */
+const getLaunchConfig = (type?: string) => {
+  switch (type) {
+    case 'Upcoming Movie':
+    case 'Upcoming Show':
+      return { label: type, dot: 'bg-[#f5c542]' };
+    case 'New Trailer':
+    case 'Trailer':
+      return { label: 'Trailer', dot: 'bg-rose-400' };
+    case 'New Teaser':
+    case 'Teaser':
+      return { label: 'Teaser', dot: 'bg-rose-400' };
+    case 'BTS / First Look':
+    case 'BTS':
+      return { label: 'First look', dot: 'bg-rose-400' };
+    case 'Poster Launched':
+      return { label: 'New poster', dot: 'bg-white/60' };
+    case 'New Show':
+      return { label: 'New show', dot: 'bg-white/60' };
+    default:
+      return { label: 'New movie', dot: 'bg-white/60' };
+  }
+};
+
+const isUpcoming = (it: NewLaunchItem) => Boolean(it.isUpcoming || it.launchClass?.startsWith('Upcoming'));
+const hasVideo = (it: NewLaunchItem) =>
+  ['New Trailer', 'New Teaser', 'BTS / First Look'].includes(it.launchClass) || Boolean(it.trailerKey);
+
+const TABS: { id: FilterTab; label: string; test: (it: NewLaunchItem) => boolean }[] = [
+  { id: 'all', label: 'All', test: () => true },
+  { id: 'upcoming', label: 'Upcoming', test: isUpcoming },
+  { id: 'trailers', label: 'Trailers', test: hasVideo },
+  { id: 'bollywood', label: 'Bollywood', test: (it) => it.industry === 'bollywood' },
+  { id: 'hollywood', label: 'Hollywood', test: (it) => it.industry === 'hollywood' },
+  { id: 'tv', label: 'TV', test: (it) => it.mediaType === 'tv' },
+];
 
 export const HomeNewLaunchesSection = () => {
   const navigate = useNavigate();
@@ -41,207 +82,84 @@ export const HomeNewLaunchesSection = () => {
   const [selectedItem, setSelectedItem] = useState<NewLaunchItem | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
+  const tick = () => soundEffects.playHoverTick();
+
   useEffect(() => {
     let cancelled = false;
-
-    // Purge any stale legacy caches
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      try {
-        [
-          'mg_spotlight_launches_v3',
-          'mg_spotlight_launches_v4',
-          'mg_spotlight_launches_curated_v5',
-          'mg_spotlight_launches_v6_latest',
-          'mg_spotlight_launches_v7_latest_only',
-          'mg_spotlight_launches_realtime_v1',
-          'mg_new_launches_feed_v1',
-          'mg_spotlight_launches_window_2w_1m_v1',
-        ].forEach((k) => {
-          sessionStorage.removeItem(k);
-        });
-      } catch {
-        // Storage cleanup catch
-      }
+    try {
+      LEGACY_CACHE_KEYS.forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      /* storage unavailable */
     }
-
-    async function fetchLaunches() {
+    (async () => {
       setLoading(true);
       try {
         const data = await newLaunchesService.getLaunches();
-        if (!cancelled) {
-          setLaunches(data);
-        }
+        if (!cancelled) setLaunches(data);
       } catch (err) {
         console.error('Failed to load new launches:', err);
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
-
-    fetchLaunches();
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // Close modals with Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (activeTrailerKey) setActiveTrailerKey(null);
+      else setSelectedItem(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeTrailerKey]);
+
   const updateScrollButtons = () => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      setCanScrollLeft(el.scrollLeft > 10);
-      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
   };
 
   useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.addEventListener('scroll', updateScrollButtons, { passive: true });
-      updateScrollButtons();
-      return () => el.removeEventListener('scroll', updateScrollButtons);
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateScrollButtons, { passive: true });
+    updateScrollButtons();
+    return () => el.removeEventListener('scroll', updateScrollButtons);
+  }, [launches, activeTab, viewMode, loading]);
+
+  const handleScroll = (dir: 'left' | 'right') => {
+    tick();
+    const el = scrollRef.current;
+    if (el) el.scrollBy({ left: (dir === 'left' ? -1 : 1) * el.clientWidth * 0.75, behavior: 'smooth' });
+  };
+
+  const filtered = useMemo(() => {
+    const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+    return launches.filter(tab.test);
   }, [launches, activeTab]);
 
-  const handleScroll = (direction: 'left' | 'right') => {
-    soundEffects.playHoverTick();
-    const el = scrollContainerRef.current;
-    if (el) {
-      const scrollAmount = el.clientWidth * 0.75;
-      el.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-    }
-  };
+  const counts = useMemo(
+    () => Object.fromEntries(TABS.map((t) => [t.id, launches.filter(t.test).length])) as Record<FilterTab, number>,
+    [launches]
+  );
 
-  const getLaunchConfig = (type: LaunchClass | string) => {
-    switch (type) {
-      case 'Upcoming Movie':
-        return {
-          label: 'Upcoming Movie',
-          badge: 'Upcoming Movie',
-          style: 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-amber-500/10',
-          dot: 'bg-amber-400',
-        };
-      case 'Upcoming Show':
-        return {
-          label: 'Upcoming Show',
-          badge: 'Upcoming Show',
-          style: 'bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-blue-500/10',
-          dot: 'bg-blue-400',
-        };
-      case 'New Trailer':
-      case 'Trailer':
-        return {
-          label: 'New Trailer',
-          badge: 'New Trailer',
-          style: 'bg-rose-500/15 text-rose-300 border-rose-500/40 shadow-rose-500/10',
-          dot: 'bg-rose-400',
-        };
-      case 'New Teaser':
-      case 'Teaser':
-        return {
-          label: 'New Teaser',
-          badge: 'New Teaser',
-          style: 'bg-orange-500/15 text-orange-300 border-orange-500/40 shadow-orange-500/10',
-          dot: 'bg-orange-400',
-        };
-      case 'BTS / First Look':
-      case 'BTS':
-        return {
-          label: 'BTS / First Look',
-          badge: 'BTS / First Look',
-          style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-cyan-500/10',
-          dot: 'bg-cyan-400',
-        };
-      case 'Poster Launched':
-        return {
-          label: 'Poster Launched',
-          badge: 'Poster Launched',
-          style: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10',
-          dot: 'bg-emerald-400',
-        };
-      case 'New Show':
-        return {
-          label: 'New Show',
-          badge: 'New Show',
-          style: 'bg-sky-500/15 text-sky-300 border-sky-500/40 shadow-sky-500/10',
-          dot: 'bg-sky-400',
-        };
-      case 'New Movie':
-      default:
-        return {
-          label: 'New Movie',
-          badge: 'New Movie',
-          style: 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-purple-500/10',
-          dot: 'bg-purple-400',
-        };
-    }
-  };
-
-  // Filtered items based on active tab
-  const filteredLaunches = useMemo(() => {
-    switch (activeTab) {
-      case 'upcoming':
-        return launches.filter((it) => it.isUpcoming || it.launchClass.startsWith('Upcoming'));
-      case 'trailers':
-        return launches.filter(
-          (it) => it.launchClass === 'New Trailer' || it.launchClass === 'New Teaser' || it.launchClass === 'BTS / First Look' || Boolean(it.trailerKey)
-        );
-      case 'bollywood':
-        return launches.filter((it) => it.industry === 'bollywood');
-      case 'hollywood':
-        return launches.filter((it) => it.industry === 'hollywood');
-      case 'tv':
-        return launches.filter((it) => it.mediaType === 'tv');
-      default:
-        return launches;
-    }
-  }, [launches, activeTab]);
-
-  const counts = useMemo(() => {
-    return {
-      all: launches.length,
-      upcoming: launches.filter((it) => it.isUpcoming || it.launchClass.startsWith('Upcoming')).length,
-      trailers: launches.filter(
-        (it) => it.launchClass === 'New Trailer' || it.launchClass === 'New Teaser' || it.launchClass === 'BTS / First Look' || Boolean(it.trailerKey)
-      ).length,
-      bollywood: launches.filter((it) => it.industry === 'bollywood').length,
-      hollywood: launches.filter((it) => it.industry === 'hollywood').length,
-      tv: launches.filter((it) => it.mediaType === 'tv').length,
-    };
-  }, [launches]);
-
-  const handleCardClick = (item: NewLaunchItem) => {
-    soundEffects.playHoverTick();
-    setSelectedItem(item);
-  };
-
-  const handlePlayTrailer = (e: React.MouseEvent, key: string) => {
-    e.stopPropagation();
-    soundEffects.playHoverTick();
-    setActiveTrailerKey(key);
-  };
-
-  const handleShare = (item: NewLaunchItem) => {
-    soundEffects.playHoverTick();
-    const url = window.location.href.split('#')[0] + `#new-launches`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${item.title} (${item.launchClass}) on MovieGuy: ${url}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  };
+  const savedId = (it: NewLaunchItem) => Number(it.tmdbId || it.id);
 
   const handleWatchlistToggle = (e: React.MouseEvent, item: NewLaunchItem) => {
     e.stopPropagation();
-    soundEffects.playHoverTick();
-    const numId = typeof item.id === 'number' ? item.id : Number(item.tmdbId || 0);
+    tick();
+    const numId = savedId(item);
     if (!numId) return;
-
     if (isInWatchlist(numId)) {
       removeFromWatchlist(numId);
     } else {
@@ -257,210 +175,160 @@ export const HomeNewLaunchesSection = () => {
     }
   };
 
+  const handlePlay = (e: React.MouseEvent, key: string) => {
+    e.stopPropagation();
+    tick();
+    setActiveTrailerKey(key);
+  };
+
+  const handleShare = async (item: NewLaunchItem) => {
+    tick();
+    const url = window.location.href.split('#')[0] + '#new-launches';
+    try {
+      await navigator.clipboard?.writeText(`${item.title} on MovieGuy: ${url}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  const openItem = (item: NewLaunchItem) => {
+    tick();
+    setSelectedItem(item);
+  };
+
+  const renderCard = (item: NewLaunchItem) => (
+    <LaunchCard
+      key={`${item.mediaType}-${item.id}`}
+      item={item}
+      isSaved={isInWatchlist(savedId(item))}
+      onOpen={openItem}
+      onPlay={handlePlay}
+      onToggleSave={handleWatchlistToggle}
+    />
+  );
+
   return (
-    <section className="scroll-mt-20 my-10 relative" id="new-launches">
-      {/* ── Unique Premiere Radar Ambient Header ── */}
-      <div className="relative rounded-3xl p-5 sm:p-7 border border-white/[0.08] bg-gradient-to-br from-[#1b0f16]/90 via-[#120a10]/80 to-[#0a0508]/90 backdrop-blur-xl shadow-2xl mb-7 overflow-hidden">
-        {/* Ambient background glow accents */}
-        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#f5c542]/10 blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-rose-500/10 blur-[100px] pointer-events-none" />
-
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-5">
-          <div>
-            {/* Live Radar Pulsing Badge */}
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/15 text-[#f5c542] border border-[#c9a24b]/40 shadow-sm shadow-[#f5c542]/10">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f5c542] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#f5c542]" />
-                </span>
-                LIVE RADAR • PAST 14D &amp; COMING 60D
-              </span>
-
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold text-white/70 bg-white/[0.04] border border-white/[0.08]">
-                <Globe className="w-3.5 h-3.5 text-[#f5c542]" />
-                Bollywood &amp; Hollywood
-              </span>
-
-              {launches.length > 0 && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {launches.length} Live Drops Tracked
-                </span>
-              )}
-            </div>
-
-            {/* Title & Description */}
-            <h2 className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight leading-tight">
-              <span>Spotlight </span>
-              <span className="bg-gradient-to-r from-[#f5c542] via-amber-200 to-[#c9a24b] bg-clip-text text-transparent">
-                Premieres &amp; Launches
-              </span>
-            </h2>
-            <p className="text-xs sm:text-sm text-white/60 mt-1.5 max-w-2xl leading-relaxed">
-              Realtime dynamic tracker for movies &amp; shows released in the past 2 weeks or upcoming in the next 2 months. Fresh trailers, teasers, poster launches &amp; BTS exclusives.
-            </p>
-          </div>
-
-          {/* Right Controls: View Mode & Scroll Arrows */}
-          <div className="flex items-center gap-2 self-start lg:self-end shrink-0">
-            {/* Shelf / Grid View Toggle */}
-            <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/[0.08]">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setViewMode('shelf');
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                  viewMode === 'shelf'
-                    ? 'bg-[#f5c542] text-[#1c120c] font-bold shadow-md'
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="Shelf View"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Shelf</span>
-              </button>
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setViewMode('grid');
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-[#f5c542] text-[#1c120c] font-bold shadow-md'
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Grid</span>
-              </button>
-            </div>
-
-            {/* Scroll Navigation Arrows (Shelf View only) */}
-            {viewMode === 'shelf' && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => handleScroll('left')}
-                  disabled={!canScrollLeft}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-white transition-all hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none hover:border-[#f5c542]/40"
-                  aria-label="Previous launches"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleScroll('right')}
-                  disabled={!canScrollRight}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-white transition-all hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none hover:border-[#f5c542]/40"
-                  aria-label="Next launches"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
+    <section className="scroll-mt-20 my-12" id="new-launches">
+      {/* ── Header ── */}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
+            Premieres &amp; launches
+          </h2>
+          <p className="mt-1 text-sm text-white/50">
+            Released in the last 2 weeks or arriving in the next 2 months.
+          </p>
         </div>
 
-        {/* ── Filter Tabs ── */}
-        <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {[
-            { id: 'all' as FilterTab, label: 'All Releases', count: counts.all },
-            { id: 'upcoming' as FilterTab, label: 'Upcoming (60 Days)', count: counts.upcoming, accent: 'text-amber-400' },
-            { id: 'trailers' as FilterTab, label: 'Trailers & Teasers', count: counts.trailers, accent: 'text-rose-400' },
-            { id: 'bollywood' as FilterTab, label: '🇮🇳 Bollywood', count: counts.bollywood },
-            { id: 'hollywood' as FilterTab, label: '🌐 Hollywood', count: counts.hollywood },
-            { id: 'tv' as FilterTab, label: 'TV Series', count: counts.tv },
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-full bg-white/[0.05] p-1">
+            {([
+              { id: 'shelf', Icon: Rows3, label: 'Shelf view' },
+              { id: 'grid', Icon: LayoutGrid, label: 'Grid view' },
+            ] as const).map(({ id, Icon, label }) => (
               <button
-                key={tab.id}
+                key={id}
                 onClick={() => {
-                  soundEffects.playHoverTick();
-                  setActiveTab(tab.id);
+                  tick();
+                  setViewMode(id);
                 }}
-                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono font-medium transition-all ${
-                  isActive
-                    ? 'bg-[#f5c542] text-[#1c120c] font-bold shadow-md shadow-[#f5c542]/20'
-                    : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    isActive ? 'bg-[#1c120c]/20 text-[#1c120c]' : 'bg-white/10 text-white/70'
+                aria-label={label}
+                aria-pressed={viewMode === id}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${viewMode === id ? 'bg-white text-black' : 'text-white/50 hover:text-white'
                   }`}
-                >
-                  {tab.count}
-                </span>
+              >
+                <Icon className="h-4 w-4" />
               </button>
-            );
-          })}
+            ))}
+          </div>
+
+          {viewMode === 'shelf' && (
+            <div className="hidden sm:flex gap-1.5">
+              {(['left', 'right'] as const).map((dir) => (
+                <button
+                  key={dir}
+                  onClick={() => handleScroll(dir)}
+                  disabled={dir === 'left' ? !canScrollLeft : !canScrollRight}
+                  aria-label={dir === 'left' ? 'Previous launches' : 'Next launches'}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+                >
+                  {dir === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+      </header>
+
+      {/* ── Tabs: plain text, underline marks the active one ── */}
+      <nav
+        aria-label="Filter launches"
+        className="mt-6 flex gap-6 overflow-x-auto border-b border-white/[0.08] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {TABS.map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                tick();
+                setActiveTab(tab.id);
+              }}
+              aria-current={active}
+              className={`-mb-px shrink-0 border-b-2 pb-3 text-sm font-medium transition-colors ${active
+                ? 'border-[#f5c542] text-white'
+                : 'border-transparent text-white/45 hover:text-white/80'
+                }`}
+            >
+              {tab.label}
+              <span className="ml-1.5 text-xs tabular-nums text-white/35">{counts[tab.id]}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* ── Content ── */}
+      <div className="mt-6">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i}>
+                <div className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
+                <div className="mt-3 h-4 w-3/4 animate-pulse rounded bg-white/[0.05]" />
+                <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-white/[0.04]" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <p className="font-semibold text-white/80">Nothing here yet</p>
+            <p className="mt-1 text-sm text-white/40">Try another tab to see more premieres.</p>
+          </div>
+        ) : viewMode === 'shelf' ? (
+          <div
+            ref={scrollRef}
+            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {filtered.map((item) => (
+              <div key={`${item.mediaType}-${item.id}`} className="w-[160px] shrink-0 snap-start sm:w-[200px] md:w-[220px]">
+                {renderCard(item)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
+            {filtered.map(renderCard)}
+          </div>
+        )}
       </div>
 
-      {/* ── Content View (Shelf or Grid) ── */}
-      {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <div className="aspect-[2/3] w-full rounded-2xl bg-white/[0.03] animate-pulse border border-white/[0.05]" />
-              <div className="h-4 w-3/4 rounded bg-white/[0.04] animate-pulse mt-1" />
-              <div className="h-3 w-1/2 rounded bg-white/[0.03] animate-pulse" />
-            </div>
-          ))}
-        </div>
-      ) : filteredLaunches.length === 0 ? (
-        <div className="rounded-3xl border border-white/[0.06] bg-[#140a0e] p-12 text-center text-white/40">
-          <Clapperboard className="w-10 h-10 mx-auto mb-3 text-[#c9a24b]/40" />
-          <p className="text-base font-semibold text-white/80">No drops found in this category</p>
-          <p className="text-xs text-white/40 mt-1">Try switching tabs above to explore more upcoming premieres.</p>
-        </div>
-      ) : viewMode === 'shelf' ? (
-        /* Shelf Carousel View */
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 pt-1 px-1 -mx-1 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
-        >
-          {filteredLaunches.map((item) => (
-            <div
-              key={`${item.mediaType}-${item.id}`}
-              className="shrink-0 w-[170px] sm:w-[210px] md:w-[230px] snap-start"
-            >
-              <LaunchCard
-                item={item}
-                getLaunchConfig={getLaunchConfig}
-                onCardClick={handleCardClick}
-                onPlayTrailer={handlePlayTrailer}
-                onWatchlistToggle={handleWatchlistToggle}
-                isSaved={isInWatchlist(Number(item.tmdbId || item.id))}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* 5-Column Grid View */
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
-          {filteredLaunches.map((item) => (
-            <div key={`${item.mediaType}-${item.id}`}>
-              <LaunchCard
-                item={item}
-                getLaunchConfig={getLaunchConfig}
-                onCardClick={handleCardClick}
-                onPlayTrailer={handlePlayTrailer}
-                onWatchlistToggle={handleWatchlistToggle}
-                isSaved={isInWatchlist(Number(item.tmdbId || item.id))}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Movie Poster & Rich Details Modal ── */}
+      {/* ── Details modal ── */}
       {selectedItem && (() => {
-        const modalCfg = getLaunchConfig(selectedItem.launchClass || selectedItem.launchType);
-        const isSaved = isInWatchlist(Number(selectedItem.tmdbId || selectedItem.id));
+        const cfg = getLaunchConfig(selectedItem.launchClass || selectedItem.launchType);
+        const saved = isInWatchlist(savedId(selectedItem));
+        const upcoming = isUpcoming(selectedItem);
 
         return (
           <div
@@ -468,130 +336,85 @@ export const HomeNewLaunchesSection = () => {
             aria-modal="true"
             aria-labelledby="spotlight-title"
             onClick={() => setSelectedItem(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-3 sm:p-5 backdrop-blur-xl animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200 sm:p-6"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-[#180d14] via-[#10070c] to-[#0a0407] shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col md:flex-row max-h-[92vh] overflow-y-auto"
+              className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-y-auto rounded-3xl border border-white/10 bg-[#0f0a0d] shadow-2xl md:flex-row"
             >
-              {/* Close Button */}
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute right-3.5 top-3.5 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white transition-colors hover:bg-[#f5c542] hover:text-[#1c120c] focus:outline-none focus:ring-2 focus:ring-[#f5c542]"
                 aria-label="Close details"
+                className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              {/* Left: Movie Poster Column */}
-              <div className="relative md:w-5/12 bg-black shrink-0 flex items-center justify-center overflow-hidden min-h-[320px] md:min-h-[460px]">
+              {/* Poster */}
+              <div className="relative min-h-[320px] shrink-0 bg-black md:min-h-[480px] md:w-5/12">
                 <img
                   src={selectedItem.poster}
                   alt={selectedItem.title}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = '/placeholder.svg';
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#10070c] via-transparent to-transparent md:hidden" />
-
-                {/* Play video overlay on mobile */}
-                {selectedItem.trailerKey && (
-                  <button
-                    onClick={(e) => handlePlayTrailer(e, selectedItem.trailerKey!)}
-                    className="absolute bottom-4 left-4 right-4 md:hidden flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#f5c542] text-[#1c120c] font-black font-display text-sm shadow-xl"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>Watch {modalCfg.label}</span>
-                  </button>
-                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a0d] via-transparent to-transparent md:hidden" />
               </div>
 
-              {/* Right: Movie Details Content */}
-              <div className="p-6 md:p-8 flex flex-col justify-between flex-1">
+              {/* Details */}
+              <div className="flex flex-1 flex-col justify-between p-6 md:p-8">
                 <div>
-                  {/* Badges row */}
-                  <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white/[0.08] text-white/90 border border-white/10">
-                      {selectedItem.industry === 'bollywood' ? '🇮🇳 Bollywood' : '🌐 Hollywood'}
-                    </span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm ${modalCfg.style}`}
-                    >
-                      {modalCfg.label}
-                    </span>
-                    {selectedItem.isHot && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/20 text-[#f5c542] border border-[#f5c542]/30 flex items-center gap-1">
-                        <Flame className="w-3 h-3 fill-current" />
-                        Trending Drop
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2 text-xs text-white/60">
+                    <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                    <span className="font-medium text-white/80">{cfg.label}</span>
+                    <span className="text-white/25">/</span>
+                    <span>{selectedItem.industry === 'bollywood' ? 'Bollywood' : 'Hollywood'}</span>
+                    <span className="text-white/25">/</span>
+                    <span>{selectedItem.mediaType === 'tv' ? 'TV series' : 'Film'}</span>
+                    {selectedItem.isHot && <Flame className="ml-1 h-3.5 w-3.5 fill-[#f5c542] text-[#f5c542]" aria-label="Trending" />}
                   </div>
 
-                  {/* Title */}
-                  <h3 id="spotlight-title" className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight">
+                  <h3 id="spotlight-title" className="mt-3 font-display text-3xl font-black leading-tight tracking-tight text-white">
                     {selectedItem.title}
                   </h3>
 
-                  {/* Release Date & Format */}
-                  <div className="flex items-center gap-2 text-xs font-mono mt-2.5 flex-wrap">
-                    <span className="capitalize px-2.5 py-0.5 rounded-lg bg-white/[0.06] border border-white/10 text-white/70">
-                      {selectedItem.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}
-                    </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/60">
                     {selectedItem.releaseDate && (
-                      <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 font-semibold">
-                        <Calendar className="w-3.5 h-3.5 text-[#f5c542]" />
-                        <span>
-                          {selectedItem.isUpcoming ? 'Releasing: ' : 'Released: '}
-                          {selectedItem.releaseDate}
-                          {selectedItem.releaseTimingLabel ? ` (${selectedItem.releaseTimingLabel})` : ''}
-                        </span>
+                      <span className="flex items-center gap-1.5 text-[#f5c542]">
+                        <Calendar className="h-4 w-4" />
+                        {upcoming ? 'Releasing' : 'Released'} {selectedItem.releaseDate}
+                        {selectedItem.releaseTimingLabel ? ` (${selectedItem.releaseTimingLabel})` : ''}
                       </span>
                     )}
                     {selectedItem.rating !== undefined && selectedItem.rating > 0 && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 font-bold">
-                        <Star className="w-3 h-3 fill-current text-amber-400" />
-                        <span>{selectedItem.rating}</span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        {selectedItem.rating}
                       </span>
                     )}
                   </div>
 
-                  {/* Genre Pills */}
                   {selectedItem.genres && selectedItem.genres.length > 0 && (
-                    <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-                      {selectedItem.genres.map((g) => (
-                        <span
-                          key={g}
-                          className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/[0.04] border border-white/[0.08] text-white/60"
-                        >
-                          {g}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="mt-3 text-sm text-white/45">{selectedItem.genres.join(', ')}</p>
                   )}
 
-                  {/* Story Synopsis */}
-                  <div className="mt-4">
-                    <h4 className="text-[11px] font-mono uppercase tracking-wider text-white/40 mb-1.5 font-semibold">
-                      Story Synopsis &amp; Details
-                    </h4>
-                    <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans line-clamp-5">
-                      {selectedItem.overview || 'Details regarding this premiere are currently updating live on MovieGuy.'}
-                    </p>
-                  </div>
+                  <p className="mt-5 line-clamp-6 max-w-prose text-sm leading-relaxed text-white/70">
+                    {selectedItem.overview || 'The synopsis for this title is still being added.'}
+                  </p>
                 </div>
 
-                {/* Bottom Actions Row */}
-                <div className="mt-6 pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     {selectedItem.trailerKey && (
                       <button
-                        onClick={(e) => handlePlayTrailer(e, selectedItem.trailerKey!)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f5c542] text-[#1c120c] font-display font-black text-xs hover:bg-white transition-all shadow-lg shadow-[#f5c542]/20 transform hover:scale-105"
+                        onClick={(e) => handlePlay(e, selectedItem.trailerKey!)}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#f5c542] px-5 py-2.5 text-sm font-bold text-[#1c120c] transition-colors hover:bg-white"
                       >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Watch {modalCfg.label}</span>
+                        <Play className="h-4 w-4 fill-current" />
+                        Watch {cfg.label.toLowerCase()}
                       </button>
                     )}
                     {selectedItem.tmdbId && (
@@ -600,55 +423,30 @@ export const HomeNewLaunchesSection = () => {
                           setSelectedItem(null);
                           navigate(`/${selectedItem.mediaType}/${selectedItem.tmdbId}`);
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-mono text-xs border border-white/10 transition-all"
+                        className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.14]"
                       >
-                        <span>Explore Page</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        Details
+                        <ChevronRight className="h-4 w-4" />
                       </button>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Watchlist Bookmark */}
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => handleWatchlistToggle(e, selectedItem)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-mono text-xs border transition-all ${
-                        isSaved
-                          ? 'bg-[#f5c542]/20 border-[#f5c542]/40 text-[#f5c542]'
-                          : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-white/70 hover:text-white'
-                      }`}
-                      title={isSaved ? 'In Watchlist' : 'Add to Watchlist'}
+                      aria-pressed={saved}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm transition-colors ${saved ? 'text-[#f5c542]' : 'text-white/60 hover:text-white'
+                        }`}
                     >
-                      {isSaved ? (
-                        <>
-                          <BookmarkCheck className="w-3.5 h-3.5 text-[#f5c542]" />
-                          <span>Saved</span>
-                        </>
-                      ) : (
-                        <>
-                          <Bookmark className="w-3.5 h-3.5" />
-                          <span>Save</span>
-                        </>
-                      )}
+                      {saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+                      {saved ? 'Saved' : 'Save'}
                     </button>
-
-                    {/* Share Button */}
                     <button
                       onClick={() => handleShare(selectedItem)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white font-mono text-xs border border-white/[0.06] transition-all"
-                      title="Share this launch"
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm text-white/60 transition-colors hover:text-white"
                     >
-                      {copied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Share2 className="w-3.5 h-3.5" />
-                          <span>Share</span>
-                        </>
-                      )}
+                      {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}
+                      {copied ? 'Link copied' : 'Share'}
                     </button>
                   </div>
                 </div>
@@ -658,29 +456,29 @@ export const HomeNewLaunchesSection = () => {
         );
       })()}
 
-      {/* ── YouTube Video Player Modal ── */}
+      {/* ── Video modal ── */}
       {activeTrailerKey && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Launch Video"
+          aria-label="Launch video"
           onClick={() => setActiveTrailerKey(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
+            className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl"
           >
             <button
               onClick={() => setActiveTrailerKey(null)}
-              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-[#f5c542]"
               aria-label="Close video"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
             >
               <X className="h-4 w-4" />
             </button>
             <iframe
               src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&rel=0`}
-              title="Launch Video"
+              title="Launch video"
               className="h-full w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -692,124 +490,98 @@ export const HomeNewLaunchesSection = () => {
   );
 };
 
-// ── Unique Cinema Card Component ──
+// ── Card ──
 interface LaunchCardProps {
   item: NewLaunchItem;
-  getLaunchConfig: (type: LaunchClass | string) => {
-    label: string;
-    badge: string;
-    style: string;
-    dot: string;
-  };
-  onCardClick: (item: NewLaunchItem) => void;
-  onPlayTrailer: (e: React.MouseEvent, key: string) => void;
-  onWatchlistToggle: (e: React.MouseEvent, item: NewLaunchItem) => void;
   isSaved: boolean;
+  onOpen: (item: NewLaunchItem) => void;
+  onPlay: (e: React.MouseEvent, key: string) => void;
+  onToggleSave: (e: React.MouseEvent, item: NewLaunchItem) => void;
 }
 
-const LaunchCard = ({
-  item,
-  getLaunchConfig,
-  onCardClick,
-  onPlayTrailer,
-  onWatchlistToggle,
-  isSaved,
-}: LaunchCardProps) => {
+const LaunchCard = ({ item, isSaved, onOpen, onPlay, onToggleSave }: LaunchCardProps) => {
   const cfg = getLaunchConfig(item.launchClass || item.launchType);
+  const upcoming = isUpcoming(item);
 
   return (
-    <div
-      onClick={() => onCardClick(item)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onCardClick(item)}
-      className="group cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] rounded-2xl transition-all duration-300 transform motion-safe:group-hover:-translate-y-1.5"
-    >
-      {/* ── Card Poster Frame (Unique Obsidian Cinema Glass) ── */}
-      <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#1c1017] to-[#0c060a] border border-white/[0.08] group-hover:border-[#f5c542]/50 shadow-xl group-hover:shadow-[0_14px_35px_rgba(245,197,66,0.16)] transition-all duration-300">
-        <img
-          src={item.poster}
-          alt={item.title}
-          loading="lazy"
-          decoding="async"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = '/placeholder.svg';
-          }}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 pointer-events-none select-none"
-        />
+    <div className="group relative">
+      {/* Whole card is one button; the save/play controls sit beside it, not inside it */}
+      <button
+        onClick={() => onOpen(item)}
+        className="block w-full rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+      >
+        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1a1116] ring-1 ring-white/[0.08] transition duration-300 group-hover:ring-[#f5c542]/60 motion-safe:group-hover:-translate-y-1">
+          <img
+            src={item.poster}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/placeholder.svg';
+            }}
+            className="h-full w-full select-none object-cover transition-transform duration-500 group-hover:scale-105"
+          />
 
-        {/* Top Floating Glass Badge Ribbon */}
-        <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none z-10 gap-1.5">
-          {/* Industry tag */}
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-black/70 backdrop-blur-md text-white/90 border border-white/10 shrink-0">
-            {item.industry === 'bollywood' ? '🇮🇳 Bolly' : '🌐 Holly'}
-          </span>
+          {/* Readability scrim, bottom only */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
 
-          {/* Classification Badge */}
-          <span
-            className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider backdrop-blur-md border ${cfg.style} truncate`}
-          >
+          {/* The one badge: what kind of drop this is */}
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-md">
+            <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
             {cfg.label}
           </span>
-        </div>
 
-        {/* Hover Center Beacon / Play button */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/85 via-black/35 to-black/30 backdrop-blur-[2px]">
-          {item.trailerKey ? (
-            <button
-              onClick={(e) => onPlayTrailer(e, item.trailerKey!)}
-              className="w-12 h-12 rounded-full bg-[#f5c542] text-[#1c120c] flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform hover:bg-white"
-              title="Play Trailer"
-            >
-              <Play className="w-5 h-5 ml-0.5 fill-current" />
-            </button>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-white/20 text-white backdrop-blur-md flex items-center justify-center shadow-xl">
-              <Info className="w-5 h-5" />
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Floating Glass Strip (Release Timing & Rating) */}
-        <div className="absolute bottom-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none z-10 gap-1.5">
-          {/* Countdown pill */}
-          <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-black/75 backdrop-blur-md text-[#f5c542] border border-[#f5c542]/30 flex items-center gap-1 shadow-sm">
-            <Clock className="w-2.5 h-2.5" />
-            <span>{item.releaseTimingLabel || item.releaseDate}</span>
+          {/* Release timing */}
+          <span
+            className={`absolute bottom-2 left-2 text-xs font-semibold ${upcoming ? 'text-[#f5c542]' : 'text-white/90'}`}
+          >
+            {item.releaseTimingLabel || item.releaseDate}
           </span>
 
-          {/* Rating pill if available */}
           {item.rating !== undefined && item.rating > 0 && (
-            <span className="px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-black/75 backdrop-blur-md text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-              <Star className="w-2.5 h-2.5 fill-current text-amber-400" />
-              <span>{item.rating}</span>
+            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-xs font-semibold text-white/90">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {item.rating}
             </span>
           )}
         </div>
-      </div>
 
-      {/* ── Title & Meta Info Below Poster ── */}
-      <div className="mt-2.5 px-0.5">
-        <h3
-          className="font-display font-semibold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug"
-          title={item.title}
+        <div className="mt-3 px-0.5">
+          <h3 className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#f5c542] sm:text-base" title={item.title}>
+            {item.title}
+          </h3>
+          <p className="mt-0.5 truncate text-xs text-white/45">
+            {item.genres && item.genres.length > 0
+              ? item.genres.slice(0, 2).join(', ')
+              : item.mediaType === 'tv'
+                ? 'TV series'
+                : 'Film'}
+          </p>
+        </div>
+      </button>
+
+      {/* Hover actions (always visible on touch via focus-within / group-focus) */}
+      <div className="absolute right-2 top-2 flex flex-col gap-1.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+        <button
+          onClick={(e) => onToggleSave(e, item)}
+          aria-label={isSaved ? 'Remove from watchlist' : 'Add to watchlist'}
+          aria-pressed={isSaved}
+          className={`flex h-8 w-8 items-center justify-center rounded-full bg-black/65 backdrop-blur-md transition-colors hover:bg-white hover:text-black ${isSaved ? 'text-[#f5c542]' : 'text-white'
+            }`}
         >
-          {item.title}
-        </h3>
-
-        <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans gap-1.5">
-          <span className="truncate font-medium text-white/70">
-            {item.genres && item.genres.length > 0 ? item.genres.join(' • ') : item.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}
-          </span>
-
-          {item.releaseDate && (
-            <span className="text-[11px] font-mono text-white/40 truncate shrink-0">
-              {item.releaseDate}
-            </span>
-          )}
-        </div>
+          {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+        </button>
+        {item.trailerKey && (
+          <button
+            onClick={(e) => onPlay(e, item.trailerKey!)}
+            aria-label={`Play ${cfg.label.toLowerCase()}`}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5c542] text-[#1c120c] transition-colors hover:bg-white"
+          >
+            <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+          </button>
+        )}
       </div>
     </div>
-  );
-};
+  )
+}; 

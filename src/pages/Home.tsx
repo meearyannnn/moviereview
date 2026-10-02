@@ -71,8 +71,8 @@ const JumpBar = () => {
   };
 
   const jumpChips = [
-    { key: 'directors-spotlight', chip: 'Directors Vault' },
     { key: 'new-launches', chip: 'Spotlight Drops' },
+    { key: 'directors-spotlight', chip: 'Directors Vault' },
     ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, chip: s.chip! })),
   ];
 
@@ -128,10 +128,13 @@ const Home = () => {
             </section>
           )}
 
-          {/* 1. Directors Vault Showcase — Full Width at Top */}
+          {/* 1. Spotlight Drops & Launches (Past 2 Weeks & Coming 1 Month Live Stream) — Top of Home */}
+          <HomeNewLaunchesSection />
+
+          {/* 2. Directors Vault Showcase — Full Width */}
           <HomeDirectorsSpotlight />
 
-          {/* 2. Curated Shelves & Trending paired with Sidebar */}
+          {/* 3. Curated Shelves & Trending paired with Sidebar */}
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
             {/* Shelves column */}
             <div className="min-w-0 space-y-10">
@@ -144,9 +147,6 @@ const Home = () => {
               <HomeSidebar />
             </div>
           </div>
-
-          {/* 3. Spotlight Drops & Launches (Bollywood & Hollywood Realtime Feed) */}
-          <HomeNewLaunchesSection />
 
           {/* 4. Trakt Anticipated Shelf — Full Width */}
           <TraktAnticipatedShelf />

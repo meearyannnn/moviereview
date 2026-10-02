@@ -68,18 +68,31 @@ export const HomeNewLaunchesSection = () => {
     };
   }, []);
 
-  const getLaunchConfig = (type: LaunchClass) => {
+  const getLaunchConfig = (type: LaunchClass | string) => {
     switch (type) {
+      case 'Upcoming Movie':
+        return {
+          label: 'Upcoming Movie',
+          style: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        };
+      case 'Upcoming Show':
+        return {
+          label: 'Upcoming Show',
+          style: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+        };
+      case 'New Trailer':
       case 'Trailer':
         return {
           label: 'New Trailer',
           style: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
         };
+      case 'New Teaser':
       case 'Teaser':
         return {
           label: 'New Teaser',
           style: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
         };
+      case 'BTS / First Look':
       case 'BTS':
         return {
           label: 'BTS / First Look',
@@ -93,8 +106,9 @@ export const HomeNewLaunchesSection = () => {
       case 'New Show':
         return {
           label: 'New Show',
-          style: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+          style: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
         };
+      case 'New Movie':
       default:
         return {
           label: 'New Movie',
@@ -224,11 +238,11 @@ export const HomeNewLaunchesSection = () => {
                   <h3 className="font-display font-semibold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
                     {item.title}
                   </h3>
-                  <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans">
-                    <span className="truncate font-normal">{item.launchClass || item.launchType}</span>
-                    {item.releaseDate && (
-                      <span className="text-[11px] font-mono text-white/40 truncate ml-1 shrink-0">
-                        {item.releaseDate}
+                  <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans gap-1">
+                    <span className="truncate font-medium text-white/70">{cfg.label}</span>
+                    {(item.releaseTimingLabel || item.releaseDate) && (
+                      <span className="text-[11px] font-mono text-white/40 truncate shrink-0">
+                        {item.releaseTimingLabel || item.releaseDate}
                       </span>
                     )}
                   </div>
@@ -323,7 +337,11 @@ export const HomeNewLaunchesSection = () => {
                     {selectedItem.releaseDate && (
                       <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 font-semibold">
                         <Calendar className="w-3.5 h-3.5 text-[#f5c542]" />
-                        <span>Premieres / Releasing: {selectedItem.releaseDate}</span>
+                        <span>
+                          {selectedItem.isUpcoming ? 'Releasing: ' : 'Released: '}
+                          {selectedItem.releaseDate}
+                          {selectedItem.releaseTimingLabel ? ` (${selectedItem.releaseTimingLabel})` : ''}
+                        </span>
                       </span>
                     )}
                     {selectedItem.source && (

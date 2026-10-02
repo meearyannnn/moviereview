@@ -98,7 +98,7 @@ export const HomeFranchiseSection = () => {
   return (
     <section
       id="franchises"
-      className="scroll-mt-20 my-12"
+      className="scroll-mt-20"
       // The active franchise's colour drives hover and focus states below
       style={{ '--accent': franchise.accentColor } as CSSProperties}
     >

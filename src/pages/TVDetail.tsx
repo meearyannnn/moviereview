@@ -12,6 +12,7 @@ import { TitleLogo } from '@/components/TitleLogo';
 import { useOmdb } from '@/services/omdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
+import type { WatchLaterTag } from '@/services/userLibrary';
 import { AddToCollectionModal } from '@/components/library/AddToCollectionModal';
 import { ReviewSection } from '@/components/ReviewSection';
 import { SeasonRatings } from '@/components/SeasonRatings';
@@ -63,7 +64,7 @@ const TVDetailPage = () => {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
-  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater } = useUserLibrary();
+  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater, watchLater, setWatchLaterTag } = useUserLibrary();
   const [showCollectionModal, setShowCollectionModal] = useState(false);
 
   const omdbParams = useMemo(() => {
@@ -194,6 +195,8 @@ const TVDetailPage = () => {
   }
 
   const inWatchLater = isInWatchLater(show.id, 'tv');
+  const currentWatchLaterItem = watchLater.find((l) => l.media_id === show.id && l.media_type === 'tv');
+  const watchLaterTag = currentWatchLaterItem?.tag;
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : null;
   const rating = show.vote_average ? show.vote_average.toFixed(1) : null;
   const isReleased = show.first_air_date ? new Date(show.first_air_date) <= new Date() : true;
@@ -234,6 +237,27 @@ const TVDetailPage = () => {
       release_date: show.first_air_date,
       vote_average: show.vote_average,
     });
+  };
+
+  const handleSelectWatchLaterTag = (tag: WatchLaterTag) => {
+    if (inWatchLater && watchLaterTag === tag) {
+      handleToggleWatchLater();
+    } else if (inWatchLater) {
+      setWatchLaterTag(show.id, 'tv', tag);
+    } else {
+      toggleWatchLater(
+        {
+          media_id: show.id,
+          media_type: 'tv',
+          title: displayTitle,
+          poster_path: show.poster_path,
+          backdrop_path: show.backdrop_path,
+          release_date: show.first_air_date,
+          vote_average: show.vote_average,
+        },
+        tag
+      );
+    }
   };
 
   return (
@@ -284,6 +308,8 @@ const TVDetailPage = () => {
         <ActionBar
           hasTrailer={!!trailer}
           inWatchLater={inWatchLater}
+          watchLaterTag={watchLaterTag}
+          onSelectWatchLaterTag={handleSelectWatchLaterTag}
           isWatched={isWatched(show.id, 'tv')}
           onToggleWatched={() =>
             toggleWatched({

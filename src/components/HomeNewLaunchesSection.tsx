@@ -214,7 +214,7 @@ export const HomeNewLaunchesSection = () => {
   );
 
   return (
-    <section className="scroll-mt-20 my-12" id="new-launches">
+    <section className="scroll-mt-20" id="new-launches">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>

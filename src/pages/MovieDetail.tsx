@@ -12,6 +12,7 @@ import { TitleLogo } from '@/components/TitleLogo';
 import { useOmdb } from '@/services/omdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
+import type { WatchLaterTag } from '@/services/userLibrary';
 import { AddToCollectionModal } from '@/components/library/AddToCollectionModal';
 import { ReviewSection } from '@/components/ReviewSection';
 import { WatchProviders } from '@/components/WatchProviders';
@@ -55,7 +56,7 @@ const MovieDetailPage = () => {
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [selectedActor, setSelectedActor] = useState<{ id: number; name: string } | null>(null);
 
-  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater } = useUserLibrary();
+  const { isWatched, toggleWatched, isInWatchLater, toggleWatchLater, watchLater, setWatchLaterTag } = useUserLibrary();
   const [showCollectionModal, setShowCollectionModal] = useState(false);
 
   const omdbParams = useMemo(() => {
@@ -158,6 +159,8 @@ const MovieDetailPage = () => {
   }
 
   const inWatchLater = isInWatchLater(movie.id, 'movie');
+  const currentWatchLaterItem = watchLater.find((l) => l.media_id === movie.id && l.media_type === 'movie');
+  const watchLaterTag = currentWatchLaterItem?.tag;
   const year = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
   const isReleased = movie.release_date ? new Date(movie.release_date) <= new Date() : true;
@@ -196,6 +199,27 @@ const MovieDetailPage = () => {
       release_date: movie.release_date,
       vote_average: movie.vote_average,
     });
+  };
+
+  const handleSelectWatchLaterTag = (tag: WatchLaterTag) => {
+    if (inWatchLater && watchLaterTag === tag) {
+      handleToggleWatchLater();
+    } else if (inWatchLater) {
+      setWatchLaterTag(movie.id, 'movie', tag);
+    } else {
+      toggleWatchLater(
+        {
+          media_id: movie.id,
+          media_type: 'movie',
+          title: movie.title,
+          poster_path: movie.poster_path,
+          backdrop_path: movie.backdrop_path,
+          release_date: movie.release_date,
+          vote_average: movie.vote_average,
+        },
+        tag
+      );
+    }
   };
 
   return (
@@ -241,6 +265,8 @@ const MovieDetailPage = () => {
         <ActionBar
           hasTrailer={!!trailer}
           inWatchLater={inWatchLater}
+          watchLaterTag={watchLaterTag}
+          onSelectWatchLaterTag={handleSelectWatchLaterTag}
           isWatched={isWatched(movie.id, 'movie')}
           onToggleWatched={() =>
             toggleWatched({

@@ -2,10 +2,11 @@
  * Detailparts.tsx
  * Shared building blocks for MovieDetailPage and TVDetailPage styled with Cinema Box Office elegance.
  */
-import { useEffect, useState, type ElementType, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type ElementType, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock } from 'lucide-react';
+import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock, Eye } from 'lucide-react';
 import { tmdb, type CastMember, type CrewMember } from '@/services/tmdb';
+import type { WatchLaterTag } from '@/services/userLibrary';
 
 // ── Small atoms ────────────────────────────────────────────────────────
 export const SectionTitle = ({ children }: { children: ReactNode }) => (
@@ -131,10 +132,43 @@ const secondaryBtn =
 const idleBtn = 'border-[#c9a24b]/30 bg-[#140c10]/90 text-white hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10';
 const savedBtn = 'border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c542]/30 shadow-md shadow-[#f5c542]/25';
 
+// ── Watch Later Popover Options ─────────────────────────────────────────
+const WATCH_LATER_OPTIONS: Array<{
+  tag: WatchLaterTag;
+  icon: string;
+  label: string;
+  desc: string;
+  textColor: string;
+}> = [
+  {
+    tag: 'asap',
+    icon: '🚀',
+    label: 'ASAP',
+    desc: 'Watch as soon as you can',
+    textColor: 'text-[#f87171]',
+  },
+  {
+    tag: 'weekend',
+    icon: '🥤',
+    label: 'Weekend',
+    desc: 'Save for your next free weekend',
+    textColor: 'text-[#fbbf24]',
+  },
+  {
+    tag: 'someday',
+    icon: '🐌',
+    label: 'Someday',
+    desc: 'No rush — get to it when you can',
+    textColor: 'text-[#38bdf8]',
+  },
+];
+
 interface ActionBarProps {
   hasTrailer: boolean;
   inWatchlist?: boolean;
   inWatchLater?: boolean;
+  watchLaterTag?: WatchLaterTag;
+  onSelectWatchLaterTag?: (tag: WatchLaterTag) => void;
   onReview: () => void;
   onTrailer: () => void;
   onToggleWatchlist?: () => void;
@@ -149,81 +183,175 @@ export const ActionBar = ({
   hasTrailer,
   inWatchlist,
   inWatchLater,
+  watchLaterTag,
+  onSelectWatchLaterTag,
   onReview,
   onTrailer,
   onToggleWatchlist,
   onToggleWatchLater,
+  onShare,
   isWatched = false,
   onToggleWatched,
   onAddToCollections,
 }: ActionBarProps) => {
   const isInLater = inWatchLater ?? inWatchlist ?? false;
   const toggleLater = onToggleWatchLater ?? onToggleWatchlist;
+  const [showWatchLaterMenu, setShowWatchLaterMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowWatchLaterMenu(false);
+      }
+    };
+    if (showWatchLaterMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showWatchLaterMenu]);
 
   return (
-    <div className="mb-8 flex flex-wrap items-center gap-2 sm:gap-2.5">
-      {/* ── 1. Primary Action: Write a Review ── */}
-      <button
-        onClick={onReview}
-        className="flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] px-5 text-xs font-display font-extrabold text-[#1a0f05] shadow-lg shadow-[#f5c542]/25 ring-1 ring-[#f5c542]/50 transition-all hover:brightness-110 active:scale-95"
-      >
-        <PenLine className="h-4 w-4" aria-hidden="true" />
-        <span>Review</span>
-      </button>
-
-      {/* ── 2. Watched Status ── */}
+    <div className="mb-8 flex flex-col gap-3 max-w-sm sm:max-w-md w-full">
+      {/* ── 1. Top Button: Mark as Watched ── */}
       {onToggleWatched && (
         <button
           onClick={onToggleWatched}
           aria-pressed={isWatched}
-          className={`flex h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-mono font-medium transition-all shadow-sm active:scale-95 ${
+          className={`w-full flex h-12 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-semibold transition-all shadow-lg active:scale-[0.98] ${
             isWatched
-              ? 'bg-[#10b981] hover:bg-[#059669] text-white shadow-emerald-500/20 font-bold'
-              : 'border border-white/[0.12] bg-[#140c10]/90 text-white/80 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300'
+              ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-purple-600/30 ring-2 ring-purple-400/50'
+              : 'bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-purple-600/25'
           }`}
         >
-          <Check className={`h-3.5 w-3.5 ${isWatched ? 'stroke-[3]' : 'text-white/40'}`} aria-hidden="true" />
+          <Eye className="h-4 w-4 stroke-[2.2]" aria-hidden="true" />
           <span>{isWatched ? 'Watched' : 'Mark as Watched'}</span>
         </button>
       )}
 
-      {/* ── 3. Watch Later ── */}
-      {toggleLater && (
-        <button
-          onClick={toggleLater}
-          aria-pressed={isInLater}
-          className={`flex h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-mono font-medium transition-all shadow-sm active:scale-95 ${
-            isInLater
-              ? 'border border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c542]/30 font-bold'
-              : 'border border-white/[0.12] bg-[#140c10]/90 text-white/80 hover:border-[#f5c542]/50 hover:bg-[#f5c542]/10 hover:text-[#f5c542]'
-          }`}
-        >
-          <Clock className={`h-3.5 w-3.5 ${isInLater ? 'text-[#f5c542]' : 'text-white/40'}`} aria-hidden="true" />
-          <span>{isInLater ? 'In Watch Later' : 'Watch Later'}</span>
-        </button>
-      )}
+      {/* ── 2. Row: Collections & Watch Later ── */}
+      <div className="grid grid-cols-2 gap-3 relative">
+        {/* Collections Button */}
+        {onAddToCollections && (
+          <button
+            onClick={onAddToCollections}
+            className="flex h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] px-4 text-sm font-medium text-white transition-all active:scale-[0.98] shadow-sm"
+          >
+            <Bookmark className="h-4 w-4 text-white/90" aria-hidden="true" />
+            <span>Collections</span>
+          </button>
+        )}
 
-      {/* ── 4. Add to Collections ── */}
-      {onAddToCollections && (
-        <button
-          onClick={onAddToCollections}
-          className="flex h-10 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-[#140c10]/90 px-4 text-xs font-mono font-medium text-white/85 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 hover:text-[#f5c542] transition-all shadow-sm active:scale-95"
-        >
-          <Bookmark className="h-3.5 w-3.5 text-[#c9a24b]" aria-hidden="true" />
-          <span>Add to Collections</span>
-        </button>
-      )}
+        {/* Watch Later Button with Popover anchor */}
+        <div className="relative">
+          <button
+            onClick={() => setShowWatchLaterMenu((prev) => !prev)}
+            aria-expanded={showWatchLaterMenu}
+            className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-medium transition-all active:scale-[0.98] shadow-sm ${
+              isInLater
+                ? 'border-purple-500/50 bg-[#18181b] text-purple-300 ring-1 ring-purple-500/30'
+                : 'border-white/10 bg-[#18181b] hover:bg-[#27272a] text-white'
+            }`}
+          >
+            <div className="relative inline-flex items-center justify-center">
+              <Clock className="h-4 w-4 text-white/90" aria-hidden="true" />
+              <span className="absolute -bottom-1 -right-1 text-[9px] font-bold leading-none text-white/90">+</span>
+            </div>
+            <span>Watch Later</span>
+          </button>
 
-      {/* ── 5. Trailer (compact cinema pill if available) ── */}
-      {hasTrailer && (
+          {/* Watch Later Dropdown Popover */}
+          {showWatchLaterMenu && (
+            <div
+              ref={menuRef}
+              className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-white/10 bg-[#18181b] p-2.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl"
+            >
+              <div className="space-y-1">
+                {WATCH_LATER_OPTIONS.map((opt) => {
+                  const isSelected = isInLater && watchLaterTag === opt.tag;
+                  return (
+                    <button
+                      key={opt.tag}
+                      type="button"
+                      onClick={() => {
+                        if (onSelectWatchLaterTag) {
+                          onSelectWatchLaterTag(opt.tag);
+                        } else if (toggleLater) {
+                          toggleLater();
+                        }
+                        setShowWatchLaterMenu(false);
+                      }}
+                      className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left group ${
+                        isSelected ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {/* Radio Circle */}
+                      <div className="mt-0.5 shrink-0 flex items-center justify-center">
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'border-purple-400 bg-purple-500/20'
+                              : 'border-zinc-500 group-hover:border-zinc-400'
+                          }`}
+                        >
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-purple-400" />}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{opt.icon}</span>
+                          <span className={`text-sm font-bold ${opt.textColor}`}>
+                            {opt.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-400 mt-0.5 leading-snug">
+                          {opt.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── 3. Auxiliary Actions: Review, Trailer, Share ── */}
+      <div className="flex items-center gap-2.5 pt-1">
         <button
-          onClick={onTrailer}
-          className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 px-3.5 text-xs font-mono font-medium text-white/80 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 hover:text-white transition-all active:scale-95"
+          onClick={onReview}
+          className="flex-1 flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] px-4 text-xs font-display font-extrabold text-[#1a0f05] shadow-md shadow-[#f5c542]/20 hover:brightness-110 active:scale-95 transition-all"
         >
-          <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
-          <span>Trailer</span>
+          <PenLine className="h-4 w-4" aria-hidden="true" />
+          <span>Review</span>
         </button>
-      )}
+
+        {hasTrailer && (
+          <button
+            onClick={onTrailer}
+            className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] px-4 text-xs font-mono font-medium text-white/90 hover:text-white transition-all active:scale-95"
+          >
+            <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
+            <span>Trailer</span>
+          </button>
+        )}
+
+        {onShare && (
+          <button
+            onClick={onShare}
+            aria-label="Share"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] text-white/80 hover:text-white transition-all active:scale-95"
+          >
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

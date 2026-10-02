@@ -72,51 +72,33 @@ export const HomeNewLaunchesSection = () => {
     switch (type) {
       case 'Trailer':
         return {
-          label: 'Trailer',
-          badge: '🍿',
-          color: '#f43f5e',
-          style: 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-rose-950/40',
-          dot: 'bg-rose-400',
+          label: 'New Trailer',
+          style: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
         };
       case 'Teaser':
         return {
-          label: 'Teaser',
-          badge: '⚡',
-          color: '#f59e0b',
-          style: 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-amber-950/40',
-          dot: 'bg-amber-400',
+          label: 'New Teaser',
+          style: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
         };
       case 'BTS':
         return {
-          label: 'BTS',
-          badge: '🎬',
-          color: '#06b6d4',
-          style: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-cyan-950/40',
-          dot: 'bg-cyan-400',
+          label: 'BTS / First Look',
+          style: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
         };
       case 'Poster Launched':
         return {
           label: 'Poster Launched',
-          badge: '🖼️',
-          color: '#10b981',
-          style: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-950/40',
-          dot: 'bg-emerald-400',
+          style: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
         };
       case 'New Show':
         return {
           label: 'New Show',
-          badge: '📺',
-          color: '#3b82f6',
-          style: 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-blue-950/40',
-          dot: 'bg-blue-400',
+          style: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
         };
       default:
         return {
           label: 'New Movie',
-          badge: '🎥',
-          color: '#a855f7',
-          style: 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-purple-950/40',
-          dot: 'bg-purple-400',
+          style: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
         };
     }
   };
@@ -209,7 +191,7 @@ export const HomeNewLaunchesSection = () => {
                 onKeyDown={(e) => e.key === 'Enter' && handleCardClick(item)}
                 className="group cursor-pointer flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] rounded-2xl transition-all"
               >
-                {/* Poster Card */}
+                {/* Poster Card (Clean & Simple, Zero Badge Overlays) */}
                 <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#140a0d] border border-white/[0.08] group-hover:border-[#f5c542]/50 shadow-xl transition-all duration-300 transform motion-safe:group-hover:-translate-y-1">
                   <img
                     src={item.poster}
@@ -223,60 +205,29 @@ export const HomeNewLaunchesSection = () => {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none select-none"
                   />
 
-                  {/* Subtle vignette gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
-
-                  {/* Industry badge in top left */}
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-black/80 backdrop-blur-md border border-white/[0.12] text-white/90 shadow-sm">
-                      {item.industry === 'bollywood' ? 'Bollywood 🇮🇳' : 'Hollywood 🎬'}
-                    </span>
-                  </div>
-
-                  {/* Distinct Classification Badge written on top right */}
-                  <div className="absolute top-2 right-2 z-10">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider backdrop-blur-md border shadow-sm flex items-center gap-1 ${cfg.style}`}
-                    >
-                      <span>{cfg.badge}</span>
-                      <span>{cfg.label}</span>
-                    </span>
-                  </div>
-
-                  {/* Hover Quick Action Buttons */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/55 backdrop-blur-[2px] p-3 text-center">
-                    {item.trailerKey && (
-                      <button
-                        onClick={(e) => handlePlayTrailer(e, item.trailerKey!)}
-                        className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#f5c542] text-[#1c120c] font-display font-black text-xs shadow-lg hover:bg-white transition-all transform hover:scale-105"
-                        title="Play Video"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Watch {cfg.label}</span>
-                      </button>
+                  {/* Subtle hover overlay with play icon if video available */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[1px]">
+                    {item.trailerKey ? (
+                      <div className="w-12 h-12 rounded-full bg-[#f5c542] text-[#1c120c] flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                        <Play className="w-5 h-5 ml-0.5 fill-current" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/20 text-white backdrop-blur-md flex items-center justify-center shadow-xl">
+                        <Info className="w-5 h-5" />
+                      </div>
                     )}
-                    <button
-                      onClick={() => handleCardClick(item)}
-                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs border border-white/20 transition-all backdrop-blur-md"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                      <span>View Details</span>
-                    </button>
                   </div>
                 </div>
 
-                {/* Title & Classification Label Under Poster (Clean & readable like user screenshot) */}
+                {/* Title & Classification Label Under Poster (Clean & Simple like Moctale) */}
                 <div className="mt-2.5 px-0.5">
-                  <h3 className="font-display font-bold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
+                  <h3 className="font-display font-semibold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
                     {item.title}
                   </h3>
-                  <div className="flex items-center justify-between text-xs text-white/50 mt-1 font-sans">
-                    <span className="truncate font-semibold flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                      <span className="text-white/80">{cfg.label}</span>
-                    </span>
+                  <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans">
+                    <span className="truncate font-normal">{item.launchClass || item.launchType}</span>
                     {item.releaseDate && (
-                      <span className="text-[10px] font-mono text-[#f5c542] font-semibold truncate ml-1 shrink-0 bg-[#f5c542]/10 px-1.5 py-0.5 rounded border border-[#f5c542]/20">
+                      <span className="text-[11px] font-mono text-white/40 truncate ml-1 shrink-0">
                         {item.releaseDate}
                       </span>
                     )}
@@ -343,14 +294,13 @@ export const HomeNewLaunchesSection = () => {
                 <div>
                   {/* Badges row */}
                   <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-white border border-white/10">
-                      {selectedItem.industry === 'bollywood' ? 'Bollywood 🇮🇳' : 'Hollywood 🎬'}
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white/[0.08] text-white/90 border border-white/10">
+                      {selectedItem.industry === 'bollywood' ? 'Bollywood' : 'Hollywood'}
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border flex items-center gap-1 shadow-sm ${modalCfg.style}`}
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm ${modalCfg.style}`}
                     >
-                      <span>{modalCfg.badge}</span>
-                      <span>{modalCfg.label}</span>
+                      {modalCfg.label}
                     </span>
                     {selectedItem.isHot && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/20 text-[#f5c542] border border-[#f5c542]/30 flex items-center gap-1">

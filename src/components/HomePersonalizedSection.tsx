@@ -1,62 +1,54 @@
-// src/components/HomePersonalizedSection.tsx
-// Dedicated Collection Showcase Shelf redesigned in a unique, sexy grid form with filter tabs for different collections
-
-import { useState, useEffect, useMemo, useCallback } from 'react';
+// src/components/HomePersonalizedSection.tsx — "Inspired by your collection" (mobile-first)
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  BookmarkCheck,
-  LayoutGrid,
-  Rows3,
-  ArrowRight,
-  FolderHeart,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-} from 'lucide-react';
+import { LayoutGrid, Rows3, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { MovieCard } from '@/components/MovieCard';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
-import { userLibraryService, type UserCollection, type UserCollectionItem } from '@/services/userLibrary';
+import { userLibraryService, type UserCollectionItem } from '@/services/userLibrary';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
 
-async function fetchRecommendationsForCollection(
-  items: UserCollectionItem[]
-): Promise<Movie[]> {
+const INITIAL_LIMIT = 12;
+const LIMIT_STEP = 6;
+
+const ring =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]/70';
+
+// Phone: swipeable carousel. Tablet and up: grid.
+const defaultView = (): 'grid' | 'carousel' =>
+  typeof window !== 'undefined' && window.matchMedia?.('(min-width: 640px)').matches
+    ? 'grid'
+    : 'carousel';
+
+async function fetchRecommendationsForCollection(items: UserCollectionItem[]): Promise<Movie[]> {
   if (!items || items.length === 0) return [];
 
-  // Seed using top 2 items to get a diverse, curated blend
-  const seeds = items.slice(0, 2);
-  const results: Movie[] = [];
   const seenIds = new Set<number>(items.map((i) => i.media_id));
+  const results: Movie[] = [];
 
-  for (const seed of seeds) {
-    try {
-      const res = await tmdb.getRecommendations(seed.media_id, seed.media_type || 'movie');
-      if (res?.results) {
-        for (const m of res.results) {
-          if (!seenIds.has(m.id)) {
-            seenIds.add(m.id);
-            results.push(m);
-          }
-        }
+  const add = (list?: Movie[]) => {
+    for (const m of list ?? []) {
+      if (!seenIds.has(m.id)) {
+        seenIds.add(m.id);
+        results.push(m);
       }
-    } catch {}
-  }
+    }
+  };
 
-  // If fewer than 12 recommendations, supplement with popular
+  // Seed from the top 2 items, fetched in parallel
+  const responses = await Promise.all(
+    items.slice(0, 2).map((seed) =>
+      tmdb.getRecommendations(seed.media_id, seed.media_type || 'movie').catch(() => null)
+    )
+  );
+  responses.forEach((res) => add(res?.results));
+
+  // Top up with popular titles if recommendations are thin
   if (results.length < 12) {
     try {
       const popular = await tmdb.getPopular('movie');
-      if (popular?.results) {
-        for (const m of popular.results) {
-          if (!seenIds.has(m.id)) {
-            seenIds.add(m.id);
-            results.push(m);
-          }
-          if (results.length >= 18) break;
-        }
-      }
-    } catch {}
+      add(popular?.results);
+    } catch { }
   }
 
   return results.slice(0, 18);
@@ -65,7 +57,7 @@ async function fetchRecommendationsForCollection(
 export const HomePersonalizedSection = () => {
   const { collections, savedCollections, loading: libraryLoading } = useUserLibrary();
 
-  // Combine user collections & saved collections (deduplicated)
+  // User + saved collections, deduplicated
   const allCollections = useMemo(() => {
     const list = [...collections, ...savedCollections];
     const seen = new Set<string>();
@@ -76,19 +68,17 @@ export const HomePersonalizedSection = () => {
     });
   }, [collections, savedCollections]);
 
-  // Map of loaded items per collection
-  const [collectionItemsMap, setCollectionItemsMap] = useState<Record<string, UserCollectionItem[]>>({});
+  // Items are loaded lazily, only for the collection being shown, then cached
+  const [itemsMap, setItemsMap] = useState<Record<string, UserCollectionItem[]>>({});
+  const requestedItems = useRef<Set<string>>(new Set());
+  const recsCache = useRef<Record<string, Movie[]>>({});
+
   const [activeCollectionId, setActiveCollectionId] = useState<string>('');
-
-  // View mode: 'grid' (unique 6-col responsive grid) vs 'carousel' (smooth row)
-  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
-  const [displayLimit, setDisplayLimit] = useState<number>(12);
-
-  // Recommendations state for the active collection
+  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>(defaultView);
+  const [displayLimit, setDisplayLimit] = useState<number>(INITIAL_LIMIT);
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
   const [loadingRecs, setLoadingRecs] = useState<boolean>(true);
 
-  // Carousel smooth scroll ref
   const {
     containerRef: carouselRef,
     canScrollLeft,
@@ -102,255 +92,213 @@ export const HomePersonalizedSection = () => {
     scrollStepRatio: 0.75,
   });
 
-  // Load items for all collections to find which ones have content
+  const validCollections = useMemo(
+    () =>
+      allCollections.filter(
+        (col) =>
+          col.items_count > 0 ||
+          (col.preview_posters && col.preview_posters.length > 0) ||
+          (itemsMap[col.id] && itemsMap[col.id].length > 0)
+      ),
+    [allCollections, itemsMap]
+  );
+
+  // Keep the active collection valid
   useEffect(() => {
-    let active = true;
-    const loadItems = async () => {
-      const map: Record<string, UserCollectionItem[]> = {};
-      for (const col of allCollections) {
-        try {
-          const items = await userLibraryService.getCollectionItems(col.id);
-          if (items && items.length > 0) {
-            map[col.id] = items;
-          }
-        } catch {}
-      }
-      if (active) {
-        setCollectionItemsMap(map);
-      }
-    };
-
-    if (allCollections.length > 0) {
-      loadItems();
-    }
-    return () => {
-      active = false;
-    };
-  }, [allCollections]);
-
-  // Collections that have items or preview posters
-  const validCollections = useMemo(() => {
-    return allCollections.filter((col) => {
-      const items = collectionItemsMap[col.id];
-      return (items && items.length > 0) || col.items_count > 0 || (col.preview_posters && col.preview_posters.length > 0);
-    });
-  }, [allCollections, collectionItemsMap]);
-
-  // Set initial active collection
-  useEffect(() => {
-    if (!activeCollectionId && validCollections.length > 0) {
-      setActiveCollectionId(validCollections[0].id);
-    } else if (validCollections.length > 0 && !validCollections.some((c) => c.id === activeCollectionId)) {
+    if (validCollections.length > 0 && !validCollections.some((c) => c.id === activeCollectionId)) {
       setActiveCollectionId(validCollections[0].id);
     }
   }, [validCollections, activeCollectionId]);
 
-  const activeCollection = useMemo(() => {
-    return validCollections.find((c) => c.id === activeCollectionId) || validCollections[0] || null;
-  }, [validCollections, activeCollectionId]);
+  const activeCollection = useMemo(
+    () => validCollections.find((c) => c.id === activeCollectionId) || validCollections[0] || null,
+    [validCollections, activeCollectionId]
+  );
+  const activeId = activeCollection?.id;
+  const activeItems = activeId ? itemsMap[activeId] : undefined;
 
-  // Fetch recommendations when active collection changes
+  // 1) Load items for the active collection (once)
   useEffect(() => {
+    if (!activeId || requestedItems.current.has(activeId)) return;
+    requestedItems.current.add(activeId);
+
+    userLibraryService
+      .getCollectionItems(activeId)
+      .then((items) => setItemsMap((prev) => ({ ...prev, [activeId]: items ?? [] })))
+      .catch(() => setItemsMap((prev) => ({ ...prev, [activeId]: [] })));
+  }, [activeId]);
+
+  // 2) Recommendations for the active collection (cached per collection)
+  useEffect(() => {
+    if (!activeId) {
+      setRecommendations([]);
+      setLoadingRecs(false);
+      return;
+    }
+
+    const cached = recsCache.current[activeId];
+    if (cached) {
+      setRecommendations(cached);
+      setLoadingRecs(false);
+      return;
+    }
+
+    setLoadingRecs(true);
+    if (activeItems === undefined) return; // items still loading
+
     let active = true;
-    const loadRecs = async () => {
-      if (!activeCollection) {
-        setRecommendations([]);
-        setLoadingRecs(false);
-        return;
-      }
-
-      setLoadingRecs(true);
-      const items = collectionItemsMap[activeCollection.id] || [];
-      const recs = await fetchRecommendationsForCollection(items);
-
+    fetchRecommendationsForCollection(activeItems).then((recs) => {
+      recsCache.current[activeId] = recs;
       if (active) {
         setRecommendations(recs);
         setLoadingRecs(false);
       }
-    };
-
-    loadRecs();
+    });
     return () => {
       active = false;
     };
-  }, [activeCollection, collectionItemsMap]);
+  }, [activeId, activeItems]);
 
-  // If user has zero collections yet
-  if (!libraryLoading && validCollections.length === 0) {
-    return null;
-  }
+  // Library finished loading and there is nothing to show
+  if (!libraryLoading && validCollections.length === 0) return null;
+
+  const toggle = (active: boolean) =>
+    `flex h-9 w-9 items-center justify-center rounded-full transition-colors ${ring} ${active ? 'bg-white text-black' : 'text-white/50 hover:text-white'
+    }`;
+
+  const arrow = `flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-[#f5c542] disabled:pointer-events-none disabled:opacity-20 ${ring}`;
+
+  const showSkeleton = libraryLoading || loadingRecs;
+
+  // Shared poster widths for carousel + skeleton (~3.2 visible on a phone, hints at scroll)
+  const posterW = 'w-28 sm:w-32 md:w-36 lg:w-40';
 
   return (
-    <section
-      id="for-you"
-      aria-label="Inspired by your collection"
-      className="scroll-mt-20 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#180e15]/70 via-[#10080e]/80 to-[#0a0508]/90 p-3.5 sm:p-5 backdrop-blur-xl shadow-xl"
-    >
-      {/* ── Section Header ── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-white/[0.06]">
+    <section id="for-you" aria-label="Inspired by your collection" className="scroll-mt-20">
+      {/* Header */}
+      <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-2 font-display text-base sm:text-lg font-bold tracking-tight text-white">
-            <BookmarkCheck className="h-4 w-4 shrink-0 text-[#f5c542]" />
-            <span>Inspired by your collection</span>
-            {activeCollection?.title && (
-              <span className="truncate text-[#f5c542]">{activeCollection.title}</span>
-            )}
-          </h2>
-          <p className="mt-0.5 text-xs text-white/50 truncate">
-            {activeCollection?.description ||
-              `Personalized cinema recommendations matching the mood of "${activeCollection?.title || 'your list'}"`}
-          </p>
+          <p className="text-sm text-white/45">Inspired by your collection</p>
+          {libraryLoading && !activeCollection ? (
+            <div className="mt-1.5 h-7 w-44 animate-pulse rounded-lg bg-white/[0.06] motion-reduce:animate-none" />
+          ) : (
+            <h2 className="mt-0.5 truncate font-display text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              {activeCollection?.title || 'Your list'}
+            </h2>
+          )}
         </div>
 
-        {/* Controls: Grid/Row View Toggle + Manage Lists link */}
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-          <div className="flex items-center rounded-lg border border-white/[0.08] bg-black/40 p-0.5">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              aria-label="Grid View"
-              title="Grid View"
-              className={`flex h-6 w-6 items-center justify-center rounded text-xs transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-[#f5c542] text-[#140c10] shadow-sm font-semibold'
-                  : 'text-white/50 hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="h-3 w-3" />
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {viewMode === 'carousel' && (
+            <div className="hidden items-center gap-2 sm:flex">
+              <button type="button" onClick={() => scrollToDirection('left')} disabled={!canScrollLeft} aria-label="Scroll left" className={arrow}>
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button type="button" onClick={() => scrollToDirection('right')} disabled={!canScrollRight} aria-label="Scroll right" className={arrow}>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-0.5 rounded-full bg-white/[0.06] p-0.5">
+            <button type="button" onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'} className={toggle(viewMode === 'grid')}>
+              <LayoutGrid className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('carousel')}
-              aria-label="Row Carousel View"
-              title="Row Carousel View"
-              className={`flex h-6 w-6 items-center justify-center rounded text-xs transition-colors ${
-                viewMode === 'carousel'
-                  ? 'bg-[#f5c542] text-[#140c10] shadow-sm font-semibold'
-                  : 'text-white/50 hover:text-white'
-              }`}
-            >
-              <Rows3 className="h-3 w-3" />
+            <button type="button" onClick={() => setViewMode('carousel')} aria-label="Carousel view" aria-pressed={viewMode === 'carousel'} className={toggle(viewMode === 'carousel')}>
+              <Rows3 className="h-4 w-4" />
             </button>
           </div>
 
+          {/* Phone: icon only. Larger screens: text link */}
           <Link
             to="/library?tab=collections"
-            className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-white/70 transition-colors hover:border-[#f5c542]/40 hover:text-[#f5c542]"
+            aria-label="Manage collections"
+            className={`flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:text-[#f5c542] sm:h-auto sm:w-auto sm:gap-1 sm:bg-transparent sm:text-sm sm:font-medium sm:text-white/60 ${ring}`}
           >
-            Manage <ArrowRight className="h-3 w-3" />
+            <span className="hidden sm:inline">Manage</span>
+            <ArrowRight className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* ── Collection Filter Pills (User-friendly switching) ── */}
+      {/* Collection switcher — bleeds to the screen edge on phones */}
       {validCollections.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-white/40 mr-1">
-            Collections:
-          </span>
+        <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
           {validCollections.map((col) => {
             const isActive = col.id === activeCollection?.id;
-            const count = (collectionItemsMap[col.id]?.length || col.items_count) ?? 0;
             return (
               <button
                 key={col.id}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => {
                   setActiveCollectionId(col.id);
-                  setDisplayLimit(12);
+                  setDisplayLimit(INITIAL_LIMIT);
                 }}
-                className={`group shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[#f5c542] text-[#140c10] shadow-[0_0_12px_rgba(245,197,66,0.3)] scale-[1.02]'
-                    : 'bg-white/[0.05] text-white/60 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]'
-                }`}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors ${ring} ${isActive
+                    ? 'bg-[#f5c542] font-semibold text-[#140c10]'
+                    : 'bg-white/[0.06] text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
               >
-                <span>{col.title}</span>
-                {count > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.2 text-[9px] font-mono transition-colors ${
-                      isActive ? 'bg-[#140c10]/20 text-[#140c10]' : 'bg-white/10 text-white/50 group-hover:text-white'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
+                {col.title}
               </button>
             );
           })}
         </div>
       )}
 
-      {/* ── Grid Form Display ── */}
+      {/* Content */}
       {viewMode === 'grid' ? (
-        <div className="pt-2 space-y-4">
-          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-            {loadingRecs
-              ? Array.from({ length: 14 }).map((_, i) => (
-                  <div key={i} className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
-                ))
+        <div className="mt-5" aria-busy={showSkeleton}>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+            {showSkeleton
+              ? Array.from({ length: INITIAL_LIMIT }).map((_, i) => (
+                <div key={i} className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.05] motion-reduce:animate-none" />
+              ))
               : recommendations.slice(0, displayLimit).map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
-                ))}
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
           </div>
 
-          {/* Show More / Show Less Button */}
-          {!loadingRecs && recommendations.length > 14 && (
-            <div className="flex justify-center pt-2">
+          {!showSkeleton && recommendations.length > INITIAL_LIMIT && (
+            <div className="mt-5 flex justify-center">
               <button
                 type="button"
-                onClick={() => setDisplayLimit((prev) => (prev >= recommendations.length ? 14 : prev + 7))}
-                className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-white/70 transition-colors hover:border-[#f5c542]/50 hover:bg-white/[0.08] hover:text-[#f5c542]"
+                onClick={() =>
+                  setDisplayLimit((prev) =>
+                    prev >= recommendations.length ? INITIAL_LIMIT : prev + LIMIT_STEP
+                  )
+                }
+                className={`w-full rounded-full bg-white/[0.06] px-5 py-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-[#f5c542] sm:w-auto sm:py-2 ${ring}`}
               >
-                {displayLimit >= recommendations.length ? 'Show Less' : `Show More (${recommendations.length - displayLimit} more)`}
+                {displayLimit >= recommendations.length ? 'Show less' : 'Show more'}
               </button>
             </div>
           )}
         </div>
       ) : (
-        /* ── Carousel Row Track ── */
-        <div className="relative pt-1.5">
-          {/* Scroll arrow buttons for carousel */}
-          <div className="absolute -top-9 right-0 hidden sm:flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => scrollToDirection('left')}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
-            >
-              <ChevronLeft className="h-3 w-3" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToDirection('right')}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
-            >
-              <ChevronRight className="h-3 w-3" />
-            </button>
-          </div>
-
-          <div
-            ref={carouselRef}
-            {...carouselHandlers}
-            className={`scrollbar-hide flex touch-pan-x select-none gap-3 overflow-x-auto overscroll-x-contain pb-2 pt-1 sm:gap-3.5 ${
-              isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        <div
+          ref={carouselRef}
+          {...carouselHandlers}
+          aria-busy={showSkeleton}
+          className={`scrollbar-hide -mx-4 mt-5 flex touch-pan-x snap-x snap-proximity gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 select-none sm:mx-0 sm:scroll-px-0 sm:gap-3.5 sm:px-0 ${isDragging ? 'sm:cursor-grabbing' : 'sm:cursor-grab'
             }`}
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {loadingRecs
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0 aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
-                ))
-              : recommendations.map((movie) => (
-                  <div key={movie.id} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0">
-                    <MovieCard movie={movie} />
-                  </div>
-                ))}
-          </div>
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {showSkeleton
+            ? Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className={`aspect-[2/3] ${posterW} shrink-0 animate-pulse rounded-xl bg-white/[0.05] motion-reduce:animate-none`} />
+            ))
+            : recommendations.map((movie) => (
+              <div key={movie.id} className={`${posterW} shrink-0 snap-start`}>
+                <MovieCard movie={movie} />
+              </div>
+            ))}
         </div>
+      )}
+
+      {!showSkeleton && recommendations.length === 0 && (
+        <p className="mt-5 text-sm text-white/45">No recommendations yet. Add a few titles to this collection.</p>
       )}
     </section>
   );

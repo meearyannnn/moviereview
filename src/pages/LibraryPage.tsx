@@ -138,11 +138,10 @@ export const LibraryPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTab('discover')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${
-                  activeTab === 'discover'
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${activeTab === 'discover'
                     ? 'bg-white/[0.08] text-white shadow-sm'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-                }`}
+                  }`}
               >
                 <Compass className="w-4 h-4 shrink-0 text-[#f5c542]" />
                 <span>Discover</span>
@@ -151,11 +150,10 @@ export const LibraryPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTab('collections')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${
-                  activeTab === 'collections'
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${activeTab === 'collections'
                     ? 'bg-white/[0.08] text-white shadow-sm'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-                }`}
+                  }`}
               >
                 <ListPlus className="w-4 h-4 shrink-0 text-[#c9a24b]" />
                 <span>My Collections</span>
@@ -164,11 +162,10 @@ export const LibraryPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTab('watch-later')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${
-                  activeTab === 'watch-later'
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${activeTab === 'watch-later'
                     ? 'bg-white/[0.08] text-white shadow-sm'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-                }`}
+                  }`}
               >
                 <Clock className="w-4 h-4 shrink-0 text-white/70" />
                 <span>Watch Later</span>
@@ -182,11 +179,10 @@ export const LibraryPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTab('history')}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${
-                  activeTab === 'history'
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-display font-semibold text-sm transition-all whitespace-nowrap text-left ${activeTab === 'history'
                     ? 'bg-white/[0.08] text-white shadow-sm'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-                }`}
+                  }`}
               >
                 <History className="w-4 h-4 shrink-0 text-emerald-400" />
                 <span>Watch History</span>
@@ -257,22 +253,20 @@ export const LibraryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setColSubTab('created')}
-                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${
-                        colSubTab === 'created'
+                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${colSubTab === 'created'
                           ? 'bg-white text-black shadow-md'
                           : 'bg-white/[0.04] text-white/60 hover:text-white border border-white/[0.08]'
-                      }`}
+                        }`}
                     >
                       Created by Me
                     </button>
                     <button
                       type="button"
                       onClick={() => setColSubTab('saved')}
-                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${
-                        colSubTab === 'saved'
+                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${colSubTab === 'saved'
                           ? 'bg-white text-black shadow-md'
                           : 'bg-white/[0.04] text-white/60 hover:text-white border border-white/[0.08]'
-                      }`}
+                        }`}
                     >
                       Saved
                     </button>
@@ -382,11 +376,10 @@ export const LibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLaterTag('all')}
-                    className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${
-                      laterTag === 'all'
+                    className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${laterTag === 'all'
                         ? 'bg-white text-black shadow-md'
                         : 'bg-white/[0.04] text-white/60 hover:text-white border border-white/[0.08]'
-                    }`}
+                      }`}
                   >
                     All
                   </button>
@@ -394,11 +387,10 @@ export const LibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLaterTag('asap')}
-                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${
-                      laterTag === 'asap'
+                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'asap'
                         ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <span>🚀</span>
                     <span>ASAP</span>
@@ -407,11 +399,10 @@ export const LibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLaterTag('weekend')}
-                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${
-                      laterTag === 'weekend'
+                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'weekend'
                         ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <span>🍿</span>
                     <span>Weekend</span>
@@ -420,11 +411,10 @@ export const LibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLaterTag('someday')}
-                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${
-                      laterTag === 'someday'
+                    className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'someday'
                         ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
-                    }`}
+                      }`}
                   >
                     <span>🐌</span>
                     <span>Someday</span>
@@ -548,11 +538,10 @@ export const LibraryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryTypeFilter('all')}
-                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${
-                        historyTypeFilter === 'all'
+                      className={`px-5 py-2 rounded-full text-xs font-mono font-bold transition-all ${historyTypeFilter === 'all'
                           ? 'bg-white text-black shadow-md'
                           : 'bg-white/[0.04] text-white/60 hover:text-white border border-white/[0.08]'
-                      }`}
+                        }`}
                     >
                       All
                     </button>
@@ -560,11 +549,10 @@ export const LibraryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryTypeFilter('movie')}
-                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${
-                        historyTypeFilter === 'movie'
+                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${historyTypeFilter === 'movie'
                           ? 'bg-[#c9a24b]/20 border border-[#f5c542] text-[#f5c542]'
                           : 'bg-white/[0.03] border border-white/[0.08] text-white/60 hover:text-white'
-                      }`}
+                        }`}
                     >
                       Movies
                     </button>
@@ -572,11 +560,10 @@ export const LibraryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryTypeFilter('tv')}
-                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${
-                        historyTypeFilter === 'tv'
+                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${historyTypeFilter === 'tv'
                           ? 'bg-[#c9a24b]/20 border border-[#f5c542] text-[#f5c542]'
                           : 'bg-white/[0.03] border border-white/[0.08] text-white/60 hover:text-white'
-                      }`}
+                        }`}
                     >
                       Shows
                     </button>
@@ -584,11 +571,10 @@ export const LibraryPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryTypeFilter('not-reviewed')}
-                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${
-                        historyTypeFilter === 'not-reviewed'
+                      className={`px-4 py-2 rounded-full text-xs font-mono font-medium transition-all ${historyTypeFilter === 'not-reviewed'
                           ? 'bg-[#c9a24b]/20 border border-[#f5c542] text-[#f5c542]'
                           : 'bg-white/[0.03] border border-white/[0.08] text-white/60 hover:text-white'
-                      }`}
+                        }`}
                     >
                       Not Reviewed
                     </button>

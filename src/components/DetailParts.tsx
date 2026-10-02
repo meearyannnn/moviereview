@@ -18,11 +18,10 @@ export const SectionTitle = ({ children }: { children: ReactNode }) => (
 
 export const Pill = ({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'sky' }) => (
   <span
-    className={`rounded-full border px-3 py-0.5 text-xs font-mono font-medium ${
-      tone === 'sky'
+    className={`rounded-full border px-3 py-0.5 text-xs font-mono font-medium ${tone === 'sky'
         ? 'border-sky-400/30 bg-sky-500/10 text-sky-300'
         : 'border-[#c9a24b]/30 bg-[#c9a24b]/10 text-[#f5c542]'
-    }`}
+      }`}
   >
     {children}
   </span>
@@ -83,9 +82,8 @@ export const DetailLayout = ({
         <img
           src={effectiveBackdrop}
           alt=""
-          className={`h-full w-full object-cover object-center transition-all duration-700 ${
-            effectiveBackdrop === posterSrc ? 'scale-125 blur-2xl opacity-40' : 'opacity-90'
-          }`}
+          className={`h-full w-full object-cover object-center transition-all duration-700 ${effectiveBackdrop === posterSrc ? 'scale-125 blur-2xl opacity-40' : 'opacity-90'
+            }`}
           onError={() => setBackdropFailed(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/75 to-[#0a0608]/30" />
@@ -140,28 +138,28 @@ const WATCH_LATER_OPTIONS: Array<{
   desc: string;
   textColor: string;
 }> = [
-  {
-    tag: 'asap',
-    icon: '🚀',
-    label: 'ASAP',
-    desc: 'Watch as soon as you can',
-    textColor: 'text-rose-400',
-  },
-  {
-    tag: 'weekend',
-    icon: '🥤',
-    label: 'Weekend',
-    desc: 'Save for your next free weekend',
-    textColor: 'text-[#f5c542]',
-  },
-  {
-    tag: 'someday',
-    icon: '🐌',
-    label: 'Someday',
-    desc: 'No rush — get to it when you can',
-    textColor: 'text-sky-400',
-  },
-];
+    {
+      tag: 'asap',
+      icon: '🚀',
+      label: 'ASAP',
+      desc: 'Watch as soon as you can',
+      textColor: 'text-rose-400',
+    },
+    {
+      tag: 'weekend',
+      icon: '🥤',
+      label: 'Weekend',
+      desc: 'Save for your next free weekend',
+      textColor: 'text-[#f5c542]',
+    },
+    {
+      tag: 'someday',
+      icon: '🐌',
+      label: 'Someday',
+      desc: 'No rush — get to it when you can',
+      textColor: 'text-sky-400',
+    },
+  ];
 
 interface ActionBarProps {
   hasTrailer: boolean;
@@ -221,11 +219,10 @@ export const ActionBar = ({
         <button
           onClick={onToggleWatched}
           aria-pressed={isWatched}
-          className={`w-full flex h-11 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-display font-extrabold tracking-wide transition-all active:scale-[0.98] ${
-            isWatched
+          className={`w-full flex h-11 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-display font-extrabold tracking-wide transition-all active:scale-[0.98] ${isWatched
               ? 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/50'
               : 'bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] text-[#1c120c] shadow-lg shadow-[#f5c542]/25 ring-1 ring-[#f5c542]/50 hover:brightness-105'
-          }`}
+            }`}
         >
           {isWatched ? (
             <Check className="h-4 w-4 stroke-[3]" aria-hidden="true" />
@@ -254,11 +251,10 @@ export const ActionBar = ({
           <button
             onClick={() => setShowWatchLaterMenu((prev) => !prev)}
             aria-expanded={showWatchLaterMenu}
-            className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-display font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm ${
-              isInLater
+            className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-display font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm ${isInLater
                 ? 'border-[#f5c542] bg-[#f5c542]/15 text-[#f5c542] ring-1 ring-[#f5c542]/40 shadow-sm shadow-[#f5c542]/20'
                 : 'border-[#c9a24b]/30 bg-[#140c10]/95 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 text-white/90 hover:text-[#f5c542]'
-            }`}
+              }`}
           >
             <div className="relative inline-flex items-center justify-center">
               <Clock className={`h-3.5 w-3.5 ${isInLater ? 'text-[#f5c542]' : 'text-[#c9a24b]'}`} aria-hidden="true" />
@@ -288,20 +284,18 @@ export const ActionBar = ({
                         }
                         setShowWatchLaterMenu(false);
                       }}
-                      className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left group ${
-                        isSelected
+                      className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left group ${isSelected
                           ? 'bg-[#c9a24b]/15 border border-[#c9a24b]/40'
                           : 'hover:bg-[#c9a24b]/10 border border-transparent'
-                      }`}
+                        }`}
                     >
                       {/* Radio Circle */}
                       <div className="mt-0.5 shrink-0 flex items-center justify-center">
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            isSelected
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected
                               ? 'border-[#f5c542] bg-[#f5c542]/20'
                               : 'border-[#c9a24b]/40 group-hover:border-[#c9a24b]/80'
-                          }`}
+                            }`}
                         >
                           {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#f5c542]" />}
                         </div>
@@ -372,9 +366,8 @@ export const Storyline = ({ text, fallback }: { text?: string; fallback: string 
     <section className="mb-10">
       <SectionTitle>Storyline</SectionTitle>
       <p
-        className={`max-w-2xl break-words text-[15px] leading-relaxed text-white/70 sm:text-base ${
-          long && !open ? 'line-clamp-4 md:line-clamp-none' : ''
-        }`}
+        className={`max-w-2xl break-words text-[15px] leading-relaxed text-white/70 sm:text-base ${long && !open ? 'line-clamp-4 md:line-clamp-none' : ''
+          }`}
       >
         {body}
       </p>
@@ -480,11 +473,10 @@ const CrewAvatar = ({ m }: { m: CrewMember }) => {
 
   return (
     <div
-      className={`mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border bg-[#140c10] transition-all group-hover:scale-105 group-focus-visible:ring-2 shadow-md ${
-        isDirector
+      className={`mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border bg-[#140c10] transition-all group-hover:scale-105 group-focus-visible:ring-2 shadow-md ${isDirector
           ? 'border-[#f5c542]/60 ring-2 ring-[#f5c542]/20 group-hover:border-[#f5c542] group-hover:shadow-[0_0_16px_rgba(245,197,66,0.35)]'
           : 'border-[#c9a24b]/20 group-hover:border-[#c9a24b]/60'
-      }`}
+        }`}
     >
       {photoUrl && !failed ? (
         <img
@@ -545,9 +537,8 @@ export const CrewRow = ({
                 {m.name}
               </span>
               <span
-                className={`block truncate text-[10px] font-mono ${
-                  isDirector ? 'text-[#f5c542] font-bold' : 'text-white/40'
-                }`}
+                className={`block truncate text-[10px] font-mono ${isDirector ? 'text-[#f5c542] font-bold' : 'text-white/40'
+                  }`}
               >
                 {m.job}
               </span>

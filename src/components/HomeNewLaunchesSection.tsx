@@ -41,6 +41,17 @@ export const HomeNewLaunchesSection = () => {
   useEffect(() => {
     let cancelled = false;
 
+    // Clean up any stale/corrupted legacy caches
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        ['mg_spotlight_launches_v3', 'mg_spotlight_launches_v4', 'mg_new_launches_feed_v1'].forEach((k) => {
+          sessionStorage.removeItem(k);
+        });
+      } catch {
+        // Storage cleanup catch
+      }
+    }
+
     async function fetchLaunches() {
       setLoading(true);
       try {
@@ -207,7 +218,7 @@ export const HomeNewLaunchesSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
-          {filteredItems.slice(0, 10).map((item) => (
+          {filteredItems.slice(0, 20).map((item) => (
             <div
               key={`${item.mediaType}-${item.id}`}
               onClick={() => handleCardClick(item)}

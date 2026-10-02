@@ -1,14 +1,16 @@
-// src/services/newLaunches.ts — Realtime Automated Bollywood & Hollywood Launches Engine (Zero Hardcoded Data)
+// src/services/newLaunches.ts — Realtime Automated Bollywood & Hollywood Launches with Clear Dynamic Classes
 import { tmdb, type Movie } from './tmdb';
 
-export type LaunchType =
-  | 'New Trailer'
-  | 'New Teaser'
-  | 'BTS / First Look'
+export type LaunchClass =
+  | 'Trailer'
+  | 'Teaser'
+  | 'BTS'
+  | 'Poster Launched'
   | 'New Movie'
-  | 'New Show'
-  | 'New Announcement'
-  | 'Encore Re-release';
+  | 'New Show';
+
+// Backward compatibility alias
+export type LaunchType = LaunchClass;
 
 export interface NewLaunchItem {
   id: number | string;
@@ -16,7 +18,8 @@ export interface NewLaunchItem {
   title: string;
   poster: string;
   backdrop?: string;
-  launchType: LaunchType;
+  launchType: LaunchClass;
+  launchClass: LaunchClass;
   industry: 'bollywood' | 'hollywood';
   mediaType: 'movie' | 'tv';
   releaseDate?: string;
@@ -28,15 +31,20 @@ export interface NewLaunchItem {
   isHot?: boolean;
 }
 
-const CACHE_KEY = 'mg_spotlight_launches_realtime_v1';
+const CACHE_KEY = 'mg_spotlight_launches_classified_v2';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes fresh cache
 
 export const newLaunchesService = {
   /**
    * Dynamically fetches ONLY real-time latest & upcoming movies and TV shows from live TMDB endpoints:
    * - ZERO hardcoded dummy data or old catalog films.
-   * - Strictly filters for upcoming theatricals, brand new in-theaters, and current on-air TV shows.
-   * - Dynamically inspects video streams to detect official trailers, teasers, and BTS clips.
+   * - Classifies into clear, user-friendly categories:
+   *   1. Trailer (Official Trailer Drops)
+   *   2. Teaser (Official Teasers)
+   *   3. BTS (Behind The Scenes / Featurettes)
+   *   4. Poster Launched (Official Poster Reveals)
+   *   5. New Movie (Upcoming & New Theatrical Releases)
+   *   6. New Show (Brand New TV Series Drops)
    */
   async getLaunches(): Promise<NewLaunchItem[]> {
     // 1. Session Storage cache check
@@ -69,19 +77,13 @@ export const newLaunchesService = {
       raw: any;
       mediaType: 'movie' | 'tv';
       industry: 'bollywood' | 'hollywood';
-      defaultType: LaunchType;
+      initialIntent: 'trailer' | 'teaser' | 'bts' | 'poster' | 'movie' | 'show';
     }> = [];
 
     const seenIds = new Set<string>();
 
     try {
-      // 2. Fetch live streams concurrently:
-      // - Hollywood Upcoming (Strictly from today onwards)
-      // - Hollywood Now Playing (Current theatrical releases)
-      // - Hollywood / Global TV On The Air (Currently dropping fresh episodes)
-      // - Bollywood Upcoming Releases (Hindi upcoming from today onwards)
-      // - Bollywood Recent Releases (Hindi releases within the last 90 days only, no old catalog)
-      // - Bollywood Fresh TV Series (Released recently)
+      // 2. Query TMDB live streams concurrently:
       const [
         hollywoodUpcoming,
         hollywoodNowPlaying,
@@ -98,7 +100,7 @@ export const newLaunchesService = {
         tmdb.discoverTV(`with_original_language=hi&first_air_date.gte=${currentYear - 1}-01-01&sort_by=popularity.desc`),
       ]);
 
-      // Process Bollywood Upcoming
+      // Bollywood Upcoming Releases (Poster & Trailer Drops)
       if (bollywoodUpcoming.status === 'fulfilled' && Array.isArray(bollywoodUpcoming.value?.results)) {
         for (const m of bollywoodUpcoming.value.results) {
           if (m.poster_path && (m.title || m.name)) {
@@ -109,14 +111,14 @@ export const newLaunchesService = {
                 raw: m,
                 mediaType: 'movie',
                 industry: 'bollywood',
-                defaultType: 'New Movie',
+                initialIntent: 'poster',
               });
             }
           }
         }
       }
 
-      // Process Bollywood Recent Fresh Releases
+      // Bollywood Recent Fresh Theatrical Drops
       if (bollywoodRecent.status === 'fulfilled' && Array.isArray(bollywoodRecent.value?.results)) {
         for (const m of bollywoodRecent.value.results) {
           if (m.poster_path && (m.title || m.name)) {
@@ -127,14 +129,14 @@ export const newLaunchesService = {
                 raw: m,
                 mediaType: 'movie',
                 industry: 'bollywood',
-                defaultType: 'New Movie',
+                initialIntent: 'movie',
               });
             }
           }
         }
       }
 
-      // Process Hollywood Upcoming
+      // Hollywood Upcoming Releases (Trailers & Teasers)
       if (hollywoodUpcoming.status === 'fulfilled' && Array.isArray(hollywoodUpcoming.value?.results)) {
         for (const m of hollywoodUpcoming.value.results) {
           if (m.poster_path && (m.title || m.name)) {
@@ -145,14 +147,14 @@ export const newLaunchesService = {
                 raw: m,
                 mediaType: 'movie',
                 industry: 'hollywood',
-                defaultType: 'New Trailer',
+                initialIntent: 'trailer',
               });
             }
           }
         }
       }
 
-      // Process Hollywood Now Playing
+      // Hollywood Now Playing (Fresh Theatrical Releases)
       if (hollywoodNowPlaying.status === 'fulfilled' && Array.isArray(hollywoodNowPlaying.value?.results)) {
         for (const m of hollywoodNowPlaying.value.results) {
           if (m.poster_path && (m.title || m.name)) {
@@ -163,14 +165,14 @@ export const newLaunchesService = {
                 raw: m,
                 mediaType: 'movie',
                 industry: 'hollywood',
-                defaultType: 'New Movie',
+                initialIntent: 'movie',
               });
             }
           }
         }
       }
 
-      // Process Bollywood TV Series
+      // Bollywood TV Series
       if (bollywoodTv.status === 'fulfilled' && Array.isArray(bollywoodTv.value?.results)) {
         for (const s of bollywoodTv.value.results) {
           if (s.poster_path && (s.title || s.name)) {
@@ -181,14 +183,14 @@ export const newLaunchesService = {
                 raw: s,
                 mediaType: 'tv',
                 industry: 'bollywood',
-                defaultType: 'New Show',
+                initialIntent: 'show',
               });
             }
           }
         }
       }
 
-      // Process Global TV On The Air
+      // Global TV On The Air
       if (globalTvOnAir.status === 'fulfilled' && Array.isArray(globalTvOnAir.value?.results)) {
         for (const s of globalTvOnAir.value.results) {
           if (s.poster_path && (s.title || s.name)) {
@@ -199,7 +201,7 @@ export const newLaunchesService = {
                 raw: s,
                 mediaType: 'tv',
                 industry: s.original_language === 'hi' ? 'bollywood' : 'hollywood',
-                defaultType: 'New Show',
+                initialIntent: 'show',
               });
             }
           }
@@ -209,14 +211,14 @@ export const newLaunchesService = {
       console.warn('Realtime launches query issue:', e);
     }
 
-    // 3. Select top candidates with healthy balance of Bollywood & Hollywood
-    const bollyCandidates = candidates.filter((c) => c.industry === 'bollywood').slice(0, 12);
-    const hollyCandidates = candidates.filter((c) => c.industry === 'hollywood').slice(0, 14);
+    // 3. Select balanced pool of candidates
+    const bollyCandidates = candidates.filter((c) => c.industry === 'bollywood').slice(0, 14);
+    const hollyCandidates = candidates.filter((c) => c.industry === 'hollywood').slice(0, 16);
     const selectedPool = [...bollyCandidates, ...hollyCandidates];
 
-    // 4. Enrich with live YouTube trailers & video metadata in parallel
+    // 4. Enrich each item with video classification: Trailer, Teaser, BTS, Poster Launched, New Movie, New Show
     const launches: NewLaunchItem[] = await Promise.all(
-      selectedPool.map(async ({ raw, mediaType, industry, defaultType }) => {
+      selectedPool.map(async ({ raw, mediaType, industry, initialIntent }) => {
         const id = raw.id;
         const title = raw.title || raw.name || '';
         const poster = tmdb.getImageUrl(raw.poster_path, 'w500');
@@ -224,35 +226,51 @@ export const newLaunchesService = {
         const rawDate = raw.release_date || raw.first_air_date;
         const overview = raw.overview || 'Latest premiere and launch details currently updating on MovieGuy.';
 
-        let launchType = defaultType;
+        let launchClass: LaunchClass = mediaType === 'tv' ? 'New Show' : 'New Movie';
         let trailerKey: string | undefined = undefined;
 
-        // Try to fetch real YouTube video track
+        // Inspect TMDB videos stream to classify accurately
         try {
           const vRes = await tmdb.getVideos(id, mediaType);
           const videos = vRes?.results || [];
 
-          const officialTrailer = videos.find(
-            (v: any) => v.site === 'YouTube' && v.type === 'Trailer' && v.official
-          ) || videos.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer');
-
-          const teaser = videos.find((v: any) => v.site === 'YouTube' && v.type === 'Teaser');
+          const trailer = videos.find(
+            (v: any) => v.site === 'YouTube' && v.type === 'Trailer'
+          );
+          const teaser = videos.find(
+            (v: any) => v.site === 'YouTube' && v.type === 'Teaser'
+          );
           const bts = videos.find(
-            (v: any) => v.site === 'YouTube' && (v.type === 'Behind the Scenes' || v.type === 'Featurette')
+            (v: any) => v.site === 'YouTube' && (v.type === 'Behind the Scenes' || v.type === 'Featurette' || v.type === 'Clip')
           );
 
-          if (officialTrailer) {
-            trailerKey = officialTrailer.key;
-            if (mediaType === 'movie') launchType = 'New Trailer';
+          if (bts && initialIntent === 'bts') {
+            trailerKey = bts.key;
+            launchClass = 'BTS';
+          } else if (trailer) {
+            trailerKey = trailer.key;
+            launchClass = 'Trailer';
           } else if (teaser) {
             trailerKey = teaser.key;
-            launchType = 'New Teaser';
+            launchClass = 'Teaser';
           } else if (bts) {
             trailerKey = bts.key;
-            launchType = 'BTS / First Look';
+            launchClass = 'BTS';
+          } else if (mediaType === 'tv') {
+            launchClass = 'New Show';
+          } else if (raw.release_date && new Date(raw.release_date) > new Date()) {
+            launchClass = 'Poster Launched';
+          } else {
+            launchClass = 'New Movie';
           }
         } catch {
-          // Video lookup catch
+          if (mediaType === 'tv') {
+            launchClass = 'New Show';
+          } else if (raw.release_date && new Date(raw.release_date) > new Date()) {
+            launchClass = 'Poster Launched';
+          } else {
+            launchClass = 'New Movie';
+          }
         }
 
         // Format clean release date string
@@ -276,12 +294,13 @@ export const newLaunchesService = {
           title,
           poster,
           backdrop,
-          launchType,
+          launchType: launchClass,
+          launchClass,
           industry,
           mediaType,
           releaseDate,
           trailerKey,
-          headline: `Live premiere track: ${title} launches across ${industry === 'bollywood' ? 'Indian' : 'Global'} cinema`,
+          headline: `Live premiere track: ${title} launches as ${launchClass} in ${industry === 'bollywood' ? 'Bollywood' : 'Hollywood'}`,
           overview,
           source: industry === 'bollywood' ? 'Bollywood Theatrical Wire' : 'Hollywood Theatrical Wire',
           isHot: (raw.vote_average || 0) > 7.0 || (raw.popularity || 0) > 40,

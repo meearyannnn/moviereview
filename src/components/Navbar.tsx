@@ -19,7 +19,7 @@ import { cinemaNewsService, type CinemaNewsItem } from '@/services/cinemaNews';
 
 const NAV = [
   { path: '/', label: 'Home', icon: Home },
-  { path: '/explore', label: 'Explore', icon: Compass },
+  { path: '/explore', label: 'Discover', icon: Compass },
   { path: '/community', label: 'Community', icon: Users },
   { path: '/schedule', label: 'Schedule', icon: Calendar },
   { path: '/directors', label: 'Directors', icon: Clapperboard },
@@ -132,8 +132,8 @@ export const Navbar = () => {
             />
           </Link>
 
-          {/* Links: icons in place of text, shifted right */}
-          <nav className="hidden items-center gap-1.5 md:flex ml-auto mr-3" aria-label="Main">
+          {/* Links: icons shifted left with comfortable gaps and hover tooltips */}
+          <nav className="hidden items-center gap-4 lg:gap-5 md:flex ml-auto mr-10 lg:mr-16" aria-label="Main">
             {NAV.map(({ path, label, icon: Icon }) => {
               const active = isActive(path);
               return (
@@ -141,19 +141,24 @@ export const Navbar = () => {
                   key={path}
                   to={path}
                   onClick={tick}
-                  title={label}
                   aria-label={label}
                   aria-current={active ? 'page' : undefined}
                   className={`group relative grid h-9 w-9 place-items-center rounded-xl transition-all duration-200 ${
                     active
                       ? 'bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 shadow-[0_0_12px_rgba(245,197,66,0.2)]'
-                      : 'text-white/60 hover:bg-white/[0.08] hover:text-white border border-transparent'
+                      : 'text-white/60 hover:bg-white/[0.08] hover:text-[#f5c542] hover:border-[#c9a24b]/20 border border-transparent'
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
                   {active && (
                     <span className="absolute -bottom-[9px] h-[2px] w-3.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
                   )}
+
+                  {/* Floating tooltip on hover */}
+                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[#c9a24b]/35 bg-[#120a0e]/98 px-2.5 py-1 text-[11px] font-display font-semibold tracking-wide text-white shadow-2xl shadow-black/90 backdrop-blur-xl opacity-0 scale-95 transition-all duration-150 group-hover:opacity-100 group-hover:scale-100 group-hover:-translate-y-0.5 z-50 ring-1 ring-white/10">
+                    {label}
+                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-b-4 border-x-transparent border-b-[#c9a24b]/40" />
+                  </span>
                 </Link>
               );
             })}

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { UserPlus, UserCheck, Film, Tv, Heart, MessageCircle, Trash2, Grid3X3, List } from 'lucide-react';
-import { CommunityLayout } from '@/components/community/CommunityLayout';
-import { CommunityRightPanel } from '@/components/community/CommunityRightPanel';
+import { Navbar } from '@/components/Navbar';
 import { Avatar, timeAgo, categoryMeta, Spinner } from '@/components/community/communityUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { communityService, type CommunityPost, type CommunityProfile } from '@/services/community';
@@ -165,27 +164,37 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <CommunityLayout>
-        <div className="flex h-64 items-center justify-center">
+      <div className="relative min-h-screen bg-[#0a0608] text-[#f8fafc]">
+        <Navbar />
+        <div className="flex h-96 items-center justify-center pt-20">
           <Spinner size={8} />
         </div>
-      </CommunityLayout>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <CommunityLayout>
-        <div className="flex h-64 flex-col items-center justify-center gap-2 text-white/50">
-          <p className="text-lg font-semibold">User not found</p>
-          <Link to="/community" className="text-sm text-red-400 hover:underline">Back to Feed</Link>
+      <div className="relative min-h-screen bg-[#0a0608] text-[#f8fafc]">
+        <Navbar />
+        <div className="flex h-96 flex-col items-center justify-center gap-3 pt-20 text-white/50">
+          <p className="text-xl font-display font-bold text-white">User not found</p>
+          <Link to="/" className="text-sm font-mono text-[#f5c542] hover:underline">Return to Home</Link>
         </div>
-      </CommunityLayout>
+      </div>
     );
   }
 
   return (
-    <CommunityLayout rightPanel={<CommunityRightPanel />}>
+    <div className="relative min-h-screen overflow-x-clip bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
+      <Navbar />
+
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-32 relative z-10">
       {/* Profile header card */}
       <div className="mb-8 overflow-hidden rounded-3xl border border-[#c9a24b]/20 bg-[#140a0d]">
         {/* Banner gradient */}
@@ -258,6 +267,7 @@ export default function UserProfilePage() {
       </div>
 
       {showEdit && <EditProfileModal profile={profile} onClose={() => setShowEdit(false)} onSave={(u) => setProfile((p) => p ? { ...p, ...u } : p)} />}
-    </CommunityLayout>
+      </main>
+    </div>
   );
 }

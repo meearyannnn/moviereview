@@ -24,7 +24,7 @@ import {
   ExternalLink,
   Info,
 } from 'lucide-react';
-import { CommunityLayout } from '@/components/community/CommunityLayout';
+import { Navbar } from '@/components/Navbar';
 import { Avatar, Spinner } from '@/components/community/communityUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { communityService } from '@/services/community';
@@ -146,12 +146,13 @@ export default function SettingsPage() {
 
   if (!user) {
     return (
-      <CommunityLayout>
-        <div className="flex h-64 flex-col items-center justify-center gap-3 text-white/50">
-          <Shield className="h-8 w-8" />
-          <p>You must be signed in to access settings.</p>
+      <div className="relative min-h-screen bg-[#0a0608] text-[#f8fafc]">
+        <Navbar />
+        <div className="flex h-96 flex-col items-center justify-center gap-3 pt-20 text-white/50">
+          <Shield className="h-8 w-8 text-[#c9a24b]" />
+          <p className="font-display font-medium text-white/70">You must be signed in to access settings.</p>
         </div>
-      </CommunityLayout>
+      </div>
     );
   }
 
@@ -265,8 +266,16 @@ export default function SettingsPage() {
   const countRejected = contributions.filter((c) => c.status === 'rejected').length;
 
   return (
-    <CommunityLayout>
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+    <div className="relative min-h-screen overflow-x-clip bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
+      <Navbar />
+
+      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
+      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-32 relative z-10">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* ── Left Sidebar Navigation (Screenshots 2-5) ── */}
         <aside className="w-full lg:w-64 shrink-0">
           <h1 className="text-2xl font-display font-black text-white mb-6">Settings</h1>
@@ -1075,6 +1084,7 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-    </CommunityLayout>
+      </main>
+    </div>
   );
 }

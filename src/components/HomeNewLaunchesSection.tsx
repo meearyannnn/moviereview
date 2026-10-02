@@ -57,6 +57,10 @@ const getLaunchConfig = (type?: string) => {
   }
 };
 
+/* Name the video by what it is ("trailer"), never by the title's status ("upcoming movie") */
+const VIDEO_NAME = { trailer: 'trailer', teaser: 'teaser', bts: 'first look' } as const;
+const videoName = (it: NewLaunchItem) => VIDEO_NAME[it.videoKind ?? 'trailer'];
+
 const isUpcoming = (it: NewLaunchItem) => Boolean(it.isUpcoming || it.launchClass?.startsWith('Upcoming'));
 const hasVideo = (it: NewLaunchItem) =>
   ['New Trailer', 'New Teaser', 'BTS / First Look'].includes(it.launchClass) || Boolean(it.trailerKey);
@@ -278,8 +282,8 @@ export const HomeNewLaunchesSection = () => {
               }}
               aria-current={active}
               className={`-mb-px shrink-0 border-b-2 pb-3 text-sm font-medium transition-colors ${active
-                ? 'border-[#f5c542] text-white'
-                : 'border-transparent text-white/45 hover:text-white/80'
+                  ? 'border-[#f5c542] text-white'
+                  : 'border-transparent text-white/45 hover:text-white/80'
                 }`}
             >
               {tab.label}
@@ -414,7 +418,7 @@ export const HomeNewLaunchesSection = () => {
                         className="inline-flex items-center gap-2 rounded-full bg-[#f5c542] px-5 py-2.5 text-sm font-bold text-[#1c120c] transition-colors hover:bg-white"
                       >
                         <Play className="h-4 w-4 fill-current" />
-                        Watch {cfg.label.toLowerCase()}
+                        Watch {videoName(selectedItem)}
                       </button>
                     )}
                     {selectedItem.tmdbId && (
@@ -575,7 +579,7 @@ const LaunchCard = ({ item, isSaved, onOpen, onPlay, onToggleSave }: LaunchCardP
         {item.trailerKey && (
           <button
             onClick={(e) => onPlay(e, item.trailerKey!)}
-            aria-label={`Play ${cfg.label.toLowerCase()}`}
+            aria-label={`Play ${videoName(item)}`}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5c542] text-[#1c120c] transition-colors hover:bg-white"
           >
             <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
@@ -583,5 +587,5 @@ const LaunchCard = ({ item, isSaved, onOpen, onPlay, onToggleSave }: LaunchCardP
         )}
       </div>
     </div>
-  )
-}; 
+  );
+};

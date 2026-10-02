@@ -7,6 +7,7 @@ import { TraktAnticipatedShelf } from '@/components/TraktAnticipatedShelf';
 import { HomeCuratedShelves } from '@/components/HomeCuratedShelves';
 import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
 import { HomeNewLaunchesSection } from '@/components/HomeNewLaunchesSection';
+import { HomeFranchiseSection } from '@/components/HomeFranchiseSection';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -73,6 +74,7 @@ const JumpBar = () => {
   const jumpChips = [
     { key: 'new-launches', chip: 'Spotlight Drops' },
     { key: 'directors-spotlight', chip: 'Directors Vault' },
+    { key: 'franchises', chip: 'Mega Franchises' },
     ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, chip: s.chip! })),
   ];
 
@@ -134,7 +136,10 @@ const Home = () => {
           {/* 2. Directors Vault Showcase — Full Width */}
           <HomeDirectorsSpotlight />
 
-          {/* 3. Curated Shelves & Trending paired with Sidebar */}
+          {/* 3. Mega Franchises & Cinematic Universes (Marvel, Harry Potter, DC, Star Wars, LOTR, etc.) */}
+          <HomeFranchiseSection />
+
+          {/* 4. Curated Shelves & Trending paired with Sidebar */}
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
             {/* Shelves column */}
             <div className="min-w-0 space-y-10">

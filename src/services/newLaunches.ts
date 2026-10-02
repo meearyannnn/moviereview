@@ -1,5 +1,5 @@
-// src/services/newLaunches.ts — Realtime Past 2 Weeks & Coming 2 Months Dynamic Launches Engine (Zero Hardcoded Data)
-import { tmdb, type Movie } from './tmdb';
+// src/services/newLaunches.ts — Past 14 days & coming 60 days launches engine
+import { tmdb } from './tmdb';
 
 export type LaunchClass =
   | 'Upcoming Movie'
@@ -29,6 +29,7 @@ export interface NewLaunchItem {
   daysUntilRelease?: number;
   isUpcoming?: boolean;
   trailerKey?: string;
+  videoKind?: 'trailer' | 'teaser' | 'bts'; // what trailerKey actually points to
   headline?: string;
   overview?: string;
   source?: string;
@@ -39,422 +40,347 @@ export interface NewLaunchItem {
   voteCount?: number;
 }
 
+type MediaType = 'movie' | 'tv';
+type Industry = 'bollywood' | 'hollywood';
+type VideoKind = 'trailer' | 'teaser' | 'bts';
+
+interface TmdbRaw {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  overview?: string;
+  release_date?: string;
+  first_air_date?: string;
+  genre_ids?: number[];
+  original_language?: string;
+  vote_average?: number;
+  vote_count?: number;
+  popularity?: number;
+}
+
+interface TmdbVideo {
+  site: string;
+  type: string;
+  key: string;
+  official?: boolean;
+  published_at?: string;
+}
+
+interface Candidate {
+  raw: TmdbRaw;
+  mediaType: MediaType;
+  industry: Industry;
+  date: string; // YYYY-MM-DD
+  days: number; // whole days from today (negative = past)
+  score: number;
+}
+
 const GENRE_MAP: Record<number, string> = {
-  28: 'Action',
-  12: 'Adventure',
-  16: 'Animation',
-  35: 'Comedy',
-  80: 'Crime',
-  99: 'Documentary',
-  18: 'Drama',
-  10751: 'Family',
-  14: 'Fantasy',
-  36: 'History',
-  27: 'Horror',
-  10402: 'Music',
-  9648: 'Mystery',
-  10749: 'Romance',
-  878: 'Sci-Fi',
-  10770: 'TV Movie',
-  53: 'Thriller',
-  10752: 'War',
-  37: 'Western',
-  10759: 'Action & Adventure',
-  10762: 'Kids',
-  10763: 'News',
-  10764: 'Reality',
-  10765: 'Sci-Fi & Fantasy',
-  10766: 'Soap',
-  10767: 'Talk',
-  10768: 'War & Politics',
+  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+  99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+  27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+  10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western',
+  10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News', 10764: 'Reality',
+  10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics',
 };
 
-const CACHE_KEY = 'mg_spotlight_launches_window_2m_v2';
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes fresh cache
+const WINDOW_PAST_DAYS = 14;
+const WINDOW_FUTURE_DAYS = 60;
+const FRESH_VIDEO_DAYS = 14; // a trailer/teaser counts as "new" for this long
+const MIN_POOL = 12; // below this, top up from TMDB's own upcoming / now-playing lists
+const VIDEO_CONCURRENCY = 8;
+
+// Items kept per industry and window, so neither side crowds the other out
+const QUOTA: Record<Industry, { upcoming: number; recent: number }> = {
+  bollywood: { upcoming: 10, recent: 8 },
+  hollywood: { upcoming: 12, recent: 10 },
+};
+
+const CACHE_KEY = 'mg_spotlight_launches_window_v3';
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/* ───────────── Date helpers (all LOCAL time, so "today" matches the viewer's day) ───────────── */
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const startOfToday = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const parseYMD = (s: string) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+const dayDiff = (ymd: string, today: Date) =>
+  Math.round((parseYMD(ymd).getTime() - today.getTime()) / 86_400_000);
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+function timingLabel(days: number): string {
+  if (days === 0) return 'Out today';
+  if (days === 1) return 'Tomorrow';
+  if (days === -1) return 'Yesterday';
+  if (days > 1 && days <= 14) return `In ${days} days`;
+  if (days > 14 && days <= 45) return `In ${plural(Math.round(days / 7), 'week')}`;
+  if (days > 45) return `In ${plural(Math.round(days / 30), 'month')}`;
+  const past = Math.abs(days);
+  return past <= 6 ? `${past} days ago` : `${plural(Math.round(past / 7), 'week')} ago`;
+}
+
+/* ───────────── Small utilities ───────────── */
+
+const q = (...parts: Array<string | false | undefined>) => parts.filter(Boolean).join('&');
+
+/** Run `fn` over items with at most `limit` in flight, keeping result order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
+/* ───────────── Cache ───────────── */
+
+function readCache(todayStr: string): NewLaunchItem[] | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const fresh = Date.now() - parsed.timestamp < CACHE_TTL_MS;
+    // Day check: relative labels ("Tomorrow", "2 days ago") are wrong after midnight
+    if (fresh && parsed.day === todayStr && Array.isArray(parsed.data) && parsed.data.length > 0) {
+      return parsed.data;
+    }
+  } catch {
+    /* storage unavailable or corrupt: fetch fresh */
+  }
+  return null;
+}
+
+function writeCache(todayStr: string, data: NewLaunchItem[]) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, day: todayStr, timestamp: Date.now() }));
+  } catch {
+    /* storage full or unavailable */
+  }
+}
+
+/* ───────────── Video picking ───────────── */
+
+const byOfficialThenNewest = (a: TmdbVideo, b: TmdbVideo) =>
+  Number(!!b.official) - Number(!!a.official) ||
+  (Date.parse(b.published_at || '') || 0) - (Date.parse(a.published_at || '') || 0);
+
+/**
+ * Picks the video to play and decides whether it deserves a "new" label.
+ * The label follows the video: if a fresh teaser is labelled "New Teaser",
+ * the teaser is what plays, not an older trailer.
+ */
+function pickVideo(videos: TmdbVideo[], today: Date) {
+  const yt = videos.filter((v) => v.site === 'YouTube' && v.key);
+  const best = (types: string[]) => yt.filter((v) => types.includes(v.type)).sort(byOfficialThenNewest)[0];
+
+  const ordered: Array<{ video?: TmdbVideo; label: LaunchClass; kind: VideoKind }> = [
+    { video: best(['Trailer']), label: 'New Trailer', kind: 'trailer' },
+    { video: best(['Teaser']), label: 'New Teaser', kind: 'teaser' },
+    { video: best(['Behind the Scenes', 'Featurette']), label: 'BTS / First Look', kind: 'bts' },
+  ];
+
+  const isFresh = (v: TmdbVideo) => {
+    const t = Date.parse(v.published_at || '');
+    return !isNaN(t) && (today.getTime() - t) / 86_400_000 <= FRESH_VIDEO_DAYS;
+  };
+
+  const fresh = ordered.find((o) => o.video && isFresh(o.video));
+  if (fresh) return { key: fresh.video!.key, kind: fresh.kind, freshLabel: fresh.label };
+
+  const fallback = ordered.find((o) => o.video);
+  return { key: fallback?.video?.key, kind: fallback?.kind, freshLabel: undefined };
+}
+
+/* ───────────── Engine ───────────── */
+
+async function load(): Promise<NewLaunchItem[]> {
+  const today = startOfToday();
+  const todayStr = toYMD(today);
+
+  const cached = readCache(todayStr);
+  if (cached) return cached;
+
+  const fromStr = toYMD(addDays(today, -WINDOW_PAST_DAYS));
+  const toStr = toYMD(addDays(today, WINDOW_FUTURE_DAYS));
+
+  // 1. Discover: split into recent and upcoming so each window is guaranteed representation.
+  //    A separate Hindi query keeps Bollywood from being buried by global popularity.
+  const base = 'include_adult=false&sort_by=popularity.desc';
+  const ranges: Array<[string, string]> = [
+    [fromStr, todayStr],
+    [todayStr, toStr],
+  ];
+  const jobs: Array<{ type: MediaType; promise: Promise<unknown> }> = [];
+
+  for (const [gte, lte] of ranges) {
+    for (const lang of [undefined, 'with_original_language=hi']) {
+      jobs.push({
+        type: 'movie',
+        promise: tmdb.discoverMovies(
+          q(base, lang, `primary_release_date.gte=${gte}`, `primary_release_date.lte=${lte}`)
+        ),
+      });
+      jobs.push({
+        type: 'tv',
+        promise: tmdb.discoverTV(
+          // No news or talk shows: they premiere constantly and aren't "launches"
+          q(base, lang, `first_air_date.gte=${gte}`, `first_air_date.lte=${lte}`, 'without_genres=10763,10767')
+        ),
+      });
+    }
+  }
+
+  const raws = new Map<string, { raw: TmdbRaw; mediaType: MediaType }>();
+  const collect = (results: unknown, mediaType: MediaType) => {
+    const list = (results as { results?: TmdbRaw[] } | undefined)?.results;
+    if (!Array.isArray(list)) return;
+    for (const raw of list) {
+      const key = `${mediaType}-${raw.id}`;
+      if (!raws.has(key)) raws.set(key, { raw, mediaType });
+    }
+  };
+
+  const settled = await Promise.allSettled(jobs.map((j) => j.promise));
+  settled.forEach((r, i) => {
+    if (r.status === 'fulfilled') collect(r.value, jobs[i].type);
+    else console.warn('Launch discover query failed:', r.reason);
+  });
+
+  // 2. Top up from TMDB's curated lists when the window is quiet
+  if (raws.size < MIN_POOL) {
+    const [up, now] = await Promise.allSettled([tmdb.getUpcoming(), tmdb.getNowPlaying()]);
+    if (up.status === 'fulfilled') collect(up.value, 'movie');
+    if (now.status === 'fulfilled') collect(now.value, 'movie');
+  }
+
+  // 3. Normalise into candidates. Anything without a poster, title or date, or
+  //    outside the window, is dropped (this also trims the top-up lists).
+  const candidates: Array<Omit<Candidate, 'score'> & { popularity: number }> = [];
+  for (const { raw, mediaType } of raws.values()) {
+    const date = mediaType === 'tv' ? raw.first_air_date : raw.release_date;
+    if (!raw.poster_path || !(raw.title || raw.name) || !date) continue;
+    const days = dayDiff(date, today);
+    if (days < -WINDOW_PAST_DAYS || days > WINDOW_FUTURE_DAYS) continue;
+    candidates.push({
+      raw,
+      mediaType,
+      // Industry from the film's own language, not from which query found it
+      industry: raw.original_language === 'hi' ? 'bollywood' : 'hollywood',
+      date,
+      days,
+      popularity: raw.popularity || 0,
+    });
+  }
+
+  // 4. Select per (industry x window) bucket by popularity, and score for display order.
+  //    Popularity is ranked within each bucket so Bollywood isn't outranked by raw TMDB numbers.
+  const pool: Candidate[] = [];
+  for (const industry of ['bollywood', 'hollywood'] as Industry[]) {
+    for (const window of ['upcoming', 'recent'] as const) {
+      const bucket = candidates
+        .filter((c) => c.industry === industry && (window === 'upcoming' ? c.days > 0 : c.days <= 0))
+        .sort((a, b) => b.popularity - a.popularity)
+        .slice(0, QUOTA[industry][window]);
+
+      bucket.forEach((c, i) => {
+        const percentile = 1 - i / bucket.length;
+        const proximity = 1 / (1 + Math.abs(c.days) / 21); // closer to today ranks higher
+        pool.push({ ...c, score: percentile * 0.6 + proximity * 0.4 });
+      });
+    }
+  }
+
+  // 5. Enrich with videos (bounded concurrency, not 40 requests at once)
+  const launches = await mapLimit(pool, VIDEO_CONCURRENCY, (c) => enrich(c, today));
+
+  // Best first: popular within its bucket AND close to today
+  const scoreOf = new Map(pool.map((c) => [`${c.mediaType}-${c.raw.id}`, c.score]));
+  launches.sort(
+    (a, b) => (scoreOf.get(`${b.mediaType}-${b.id}`) || 0) - (scoreOf.get(`${a.mediaType}-${a.id}`) || 0)
+  );
+
+  if (launches.length > 0) writeCache(todayStr, launches);
+  return launches;
+}
+
+async function enrich(c: Candidate, today: Date): Promise<NewLaunchItem> {
+  const { raw, mediaType, industry, date, days } = c;
+  const title = raw.title || raw.name || '';
+  const isUpcoming = days > 0;
+
+  let launchClass: LaunchClass =
+    mediaType === 'tv' ? (isUpcoming ? 'Upcoming Show' : 'New Show') : isUpcoming ? 'Upcoming Movie' : 'New Movie';
+
+  let trailerKey: string | undefined;
+  let videoKind: VideoKind | undefined;
+  try {
+    const res = (await tmdb.getVideos(raw.id, mediaType)) as { results?: TmdbVideo[] } | undefined;
+    const picked = pickVideo(res?.results || [], today);
+    trailerKey = picked.key;
+    videoKind = picked.kind;
+    // A video that dropped in the last 14 days (trailer, teaser or BTS) wins the label,
+    // whether the title is upcoming or already out. Otherwise the date-based class stays.
+    if (picked.freshLabel) launchClass = picked.freshLabel;
+  } catch {
+    /* no video data: keep the date-based class */
+  }
+
+  const voteCount = raw.vote_count || 0;
+  const hasRating = voteCount >= 5 && !!raw.vote_average; // a 9.0 from 3 votes is noise
+  const rating = hasRating ? Number(raw.vote_average!.toFixed(1)) : undefined;
+
+  return {
+    id: raw.id,
+    tmdbId: raw.id,
+    title,
+    poster: tmdb.getImageUrl(raw.poster_path!, 'w500'),
+    backdrop: raw.backdrop_path ? tmdb.getImageUrl(raw.backdrop_path, 'w780') : undefined,
+    launchType: launchClass,
+    launchClass,
+    industry,
+    mediaType,
+    releaseDate: parseYMD(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    releaseTimingLabel: timingLabel(days),
+    daysUntilRelease: days,
+    isUpcoming,
+    trailerKey,
+    videoKind,
+    headline: `${launchClass}: ${title} (${industry === 'bollywood' ? 'Bollywood' : 'Hollywood'})`,
+    overview: raw.overview?.trim() || undefined, // the UI shows its own fallback text
+    source: industry === 'bollywood' ? 'Bollywood Cinema Wire' : 'Hollywood Theatrical Wire',
+    isHot: (voteCount >= 100 && (raw.vote_average || 0) >= 7.5) || (raw.popularity || 0) > 50,
+    genres: (raw.genre_ids || []).map((g) => GENRE_MAP[g]).filter(Boolean).slice(0, 3),
+    rating,
+    voteCount,
+  };
+}
+
+// Share one request between callers (React StrictMode mounts effects twice in dev)
+let inflight: Promise<NewLaunchItem[]> | null = null;
 
 export const newLaunchesService = {
-  /**
-   * Realtime accurate dynamic engine:
-   * - Queries releases from PAST 2 WEEKS (-14 days) and COMING 2 MONTHS (+60 days).
-   * - Creates proper distinct classes:
-   *   - "Upcoming Movie" (releasing in the coming 2 months)
-   *   - "Upcoming Show" (premiering in the coming 2 months)
-   *   - "New Movie" (released in past 2 weeks)
-   *   - "New Show" (dropped in past 2 weeks)
-   *   - "New Trailer" (fresh official trailer)
-   *   - "New Teaser" (fresh teaser)
-   *   - "BTS / First Look" (on-set making)
-   *   - "Poster Launched" (first look artwork)
-   */
-  async getLaunches(): Promise<NewLaunchItem[]> {
-    // 1. Session Storage cache check
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      try {
-        const raw = sessionStorage.getItem(CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (
-            Date.now() - parsed.timestamp < CACHE_TTL_MS &&
-            Array.isArray(parsed.data) &&
-            parsed.data.length > 0
-          ) {
-            return parsed.data;
-          }
-        }
-      } catch {
-        // Continue to fresh fetch
-      }
+  getLaunches(): Promise<NewLaunchItem[]> {
+    if (!inflight) {
+      inflight = load().finally(() => {
+        inflight = null;
+      });
     }
-
-    const todayDate = new Date();
-    const todayStr = todayDate.toISOString().split('T')[0];
-
-    // Past 2 weeks (-14 days)
-    const pastTwoWeeks = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-    const pastTwoWeeksStr = pastTwoWeeks.toISOString().split('T')[0];
-
-    // Coming 2 months (+60 days)
-    const comingTwoMonths = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-    const comingTwoMonthsStr = comingTwoMonths.toISOString().split('T')[0];
-
-    const candidates: Array<{
-      raw: any;
-      mediaType: 'movie' | 'tv';
-      industry: 'bollywood' | 'hollywood';
-      windowType: 'past_2_weeks' | 'coming_2_months';
-    }> = [];
-
-    const seenIds = new Set<string>();
-
-    try {
-      // 2. Query TMDB live streams strictly within [-14 days, +60 days] window:
-      const [
-        upcomingTwoMonths,
-        recentTwoWeeks,
-        bollywoodUpcomingTwoMonths,
-        bollywoodRecentTwoWeeks,
-        tvAiringWindow,
-        bollywoodTvWindow,
-      ] = await Promise.allSettled([
-        // Hollywood / Global Upcoming (Next 60 days)
-        tmdb.discoverMovies(
-          `primary_release_date.gte=${todayStr}&primary_release_date.lte=${comingTwoMonthsStr}&sort_by=popularity.desc`
-        ),
-        // Hollywood / Global Released in Past 2 Weeks
-        tmdb.discoverMovies(
-          `primary_release_date.gte=${pastTwoWeeksStr}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`
-        ),
-        // Bollywood Upcoming (Next 60 days)
-        tmdb.discoverMovies(
-          `with_original_language=hi&primary_release_date.gte=${todayStr}&primary_release_date.lte=${comingTwoMonthsStr}&sort_by=popularity.desc`
-        ),
-        // Bollywood Released in Past 2 Weeks
-        tmdb.discoverMovies(
-          `with_original_language=hi&primary_release_date.gte=${pastTwoWeeksStr}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`
-        ),
-        // Global TV Shows dropping episodes / premiering within [-14d, +60d] window
-        tmdb.discoverTV(
-          `first_air_date.gte=${pastTwoWeeksStr}&first_air_date.lte=${comingTwoMonthsStr}&sort_by=popularity.desc`
-        ),
-        // Bollywood TV series within window
-        tmdb.discoverTV(
-          `with_original_language=hi&first_air_date.gte=${pastTwoWeeksStr}&first_air_date.lte=${comingTwoMonthsStr}&sort_by=popularity.desc`
-        ),
-      ]);
-
-      // Collect Bollywood Upcoming (Coming 2 Months)
-      if (bollywoodUpcomingTwoMonths.status === 'fulfilled' && Array.isArray(bollywoodUpcomingTwoMonths.value?.results)) {
-        for (const m of bollywoodUpcomingTwoMonths.value.results) {
-          if (m.poster_path && (m.title || m.name)) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'bollywood',
-                windowType: 'coming_2_months',
-              });
-            }
-          }
-        }
-      }
-
-      // Collect Bollywood Recent (Past 2 Weeks)
-      if (bollywoodRecentTwoWeeks.status === 'fulfilled' && Array.isArray(bollywoodRecentTwoWeeks.value?.results)) {
-        for (const m of bollywoodRecentTwoWeeks.value.results) {
-          if (m.poster_path && (m.title || m.name)) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'bollywood',
-                windowType: 'past_2_weeks',
-              });
-            }
-          }
-        }
-      }
-
-      // Collect Hollywood Upcoming (Coming 2 Months)
-      if (upcomingTwoMonths.status === 'fulfilled' && Array.isArray(upcomingTwoMonths.value?.results)) {
-        for (const m of upcomingTwoMonths.value.results) {
-          if (m.poster_path && (m.title || m.name)) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'hollywood',
-                windowType: 'coming_2_months',
-              });
-            }
-          }
-        }
-      }
-
-      // Collect Hollywood Recent (Past 2 Weeks)
-      if (recentTwoWeeks.status === 'fulfilled' && Array.isArray(recentTwoWeeks.value?.results)) {
-        for (const m of recentTwoWeeks.value.results) {
-          if (m.poster_path && (m.title || m.name)) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'hollywood',
-                windowType: 'past_2_weeks',
-              });
-            }
-          }
-        }
-      }
-
-      // Collect Bollywood TV Series
-      if (bollywoodTvWindow.status === 'fulfilled' && Array.isArray(bollywoodTvWindow.value?.results)) {
-        for (const s of bollywoodTvWindow.value.results) {
-          if (s.poster_path && (s.title || s.name)) {
-            const key = `tv-${s.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              const isFuture = s.first_air_date && new Date(s.first_air_date) > todayDate;
-              candidates.push({
-                raw: s,
-                mediaType: 'tv',
-                industry: 'bollywood',
-                windowType: isFuture ? 'coming_2_months' : 'past_2_weeks',
-              });
-            }
-          }
-        }
-      }
-
-      // Collect Global TV Series
-      if (tvAiringWindow.status === 'fulfilled' && Array.isArray(tvAiringWindow.value?.results)) {
-        for (const s of tvAiringWindow.value.results) {
-          if (s.poster_path && (s.title || s.name)) {
-            const key = `tv-${s.id}`;
-            if (!seenIds.has(key)) {
-              seenIds.add(key);
-              const isFuture = s.first_air_date && new Date(s.first_air_date) > todayDate;
-              candidates.push({
-                raw: s,
-                mediaType: 'tv',
-                industry: s.original_language === 'hi' ? 'bollywood' : 'hollywood',
-                windowType: isFuture ? 'coming_2_months' : 'past_2_weeks',
-              });
-            }
-          }
-        }
-      }
-
-      // Backup fallback: if window is quiet, supplement with tmdb.getUpcoming() and getNowPlaying()
-      if (candidates.length < 12) {
-        const [upBackup, npBackup] = await Promise.allSettled([tmdb.getUpcoming(), tmdb.getNowPlaying()]);
-        if (upBackup.status === 'fulfilled' && Array.isArray(upBackup.value?.results)) {
-          for (const m of upBackup.value.results) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key) && m.poster_path) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'hollywood',
-                windowType: 'coming_2_months',
-              });
-            }
-          }
-        }
-        if (npBackup.status === 'fulfilled' && Array.isArray(npBackup.value?.results)) {
-          for (const m of npBackup.value.results) {
-            const key = `movie-${m.id}`;
-            if (!seenIds.has(key) && m.poster_path) {
-              seenIds.add(key);
-              candidates.push({
-                raw: m,
-                mediaType: 'movie',
-                industry: 'hollywood',
-                windowType: 'past_2_weeks',
-              });
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Realtime 2-week & 2-month window query issue:', e);
-    }
-
-    // 3. Select balanced pool of candidates (Bollywood & Hollywood)
-    const bollyCandidates = candidates.filter((c) => c.industry === 'bollywood').slice(0, 18);
-    const hollyCandidates = candidates.filter((c) => c.industry === 'hollywood').slice(0, 22);
-    const selectedPool = [...bollyCandidates, ...hollyCandidates];
-
-    // 4. Enrich each item with YouTube video and compute exact class
-    const launches: NewLaunchItem[] = await Promise.all(
-      selectedPool.map(async ({ raw, mediaType, industry, windowType }) => {
-        const id = raw.id;
-        const title = raw.title || raw.name || '';
-        const poster = tmdb.getImageUrl(raw.poster_path, 'w500');
-        const backdrop = raw.backdrop_path ? tmdb.getImageUrl(raw.backdrop_path, 'w780') : undefined;
-        const rawDate = raw.release_date || raw.first_air_date;
-        const overview = raw.overview || 'Latest premiere and launch details currently updating on MovieGuy.';
-
-        const isUpcoming = windowType === 'coming_2_months' || (rawDate && new Date(rawDate) > todayDate);
-
-        let launchClass: LaunchClass = mediaType === 'tv'
-          ? (isUpcoming ? 'Upcoming Show' : 'New Show')
-          : (isUpcoming ? 'Upcoming Movie' : 'New Movie');
-
-        let trailerKey: string | undefined = undefined;
-
-        // Inspect TMDB videos stream to classify accurately
-        try {
-          const vRes = await tmdb.getVideos(id, mediaType);
-          const videos = vRes?.results || [];
-
-          const trailer = videos.find(
-            (v: any) => v.site === 'YouTube' && v.type === 'Trailer'
-          );
-          const teaser = videos.find(
-            (v: any) => v.site === 'YouTube' && v.type === 'Teaser'
-          );
-          const bts = videos.find(
-            (v: any) => v.site === 'YouTube' && (v.type === 'Behind the Scenes' || v.type === 'Featurette')
-          );
-
-          if (bts) {
-            trailerKey = bts.key;
-            launchClass = 'BTS / First Look';
-          } else if (trailer) {
-            trailerKey = trailer.key;
-            launchClass = isUpcoming ? 'New Trailer' : (mediaType === 'tv' ? 'New Show' : 'New Movie');
-          } else if (teaser) {
-            trailerKey = teaser.key;
-            launchClass = 'New Teaser';
-          } else if (isUpcoming && raw.poster_path && !trailerKey) {
-            launchClass = mediaType === 'tv' ? 'Upcoming Show' : 'Upcoming Movie';
-          }
-        } catch {
-          // Fallback based on mediaType & date window
-          if (mediaType === 'tv') {
-            launchClass = isUpcoming ? 'Upcoming Show' : 'New Show';
-          } else {
-            launchClass = isUpcoming ? 'Upcoming Movie' : 'New Movie';
-          }
-        }
-
-        // Map genres
-        const genres = Array.isArray(raw.genre_ids)
-          ? raw.genre_ids.map((gid: number) => GENRE_MAP[gid]).filter(Boolean).slice(0, 3)
-          : [];
-
-        // Format clean release date & timing label
-        let releaseDate = rawDate;
-        let releaseTimingLabel = isUpcoming ? 'Coming Soon' : 'Recently Released';
-        let daysUntilRelease: number | undefined = undefined;
-
-        if (rawDate) {
-          try {
-            const d = new Date(rawDate);
-            if (!isNaN(d.getTime())) {
-              releaseDate = d.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              });
-
-              const diffDays = Math.round((d.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
-              daysUntilRelease = diffDays;
-
-              if (diffDays > 0) {
-                if (diffDays === 1) {
-                  releaseTimingLabel = 'In 1 day';
-                } else if (diffDays <= 7) {
-                  releaseTimingLabel = `In ${diffDays} days`;
-                } else if (diffDays <= 30) {
-                  releaseTimingLabel = `In ${Math.ceil(diffDays / 7)} weeks`;
-                } else {
-                  const months = Math.round(diffDays / 30 * 10) / 10;
-                  releaseTimingLabel = `In ~${months} mo`;
-                }
-              } else if (diffDays === 0) {
-                releaseTimingLabel = 'Releasing Today';
-              } else {
-                const pastDays = Math.abs(diffDays);
-                if (pastDays === 1) {
-                  releaseTimingLabel = 'Yesterday';
-                } else if (pastDays <= 7) {
-                  releaseTimingLabel = `${pastDays} days ago`;
-                } else {
-                  releaseTimingLabel = `${Math.ceil(pastDays / 7)} weeks ago`;
-                }
-              }
-            }
-          } catch {}
-        }
-
-        return {
-          id,
-          tmdbId: id,
-          title,
-          poster,
-          backdrop,
-          launchType: launchClass,
-          launchClass,
-          industry,
-          mediaType,
-          releaseDate,
-          releaseTimingLabel,
-          daysUntilRelease,
-          isUpcoming,
-          trailerKey,
-          headline: `${launchClass}: ${title} (${industry === 'bollywood' ? 'Bollywood' : 'Hollywood'})`,
-          overview,
-          source: industry === 'bollywood' ? 'Bollywood Cinema Wire' : 'Hollywood Theatrical Wire',
-          isHot: (raw.vote_average || 0) > 7.0 || (raw.popularity || 0) > 30,
-          genres,
-          rating: raw.vote_average ? Number(raw.vote_average.toFixed(1)) : undefined,
-          voteCount: raw.vote_count || 0,
-        };
-      })
-    );
-
-    // 5. Cache result
-    if (launches.length > 0 && typeof window !== 'undefined' && window.sessionStorage) {
-      try {
-        sessionStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ data: launches, timestamp: Date.now() })
-        );
-      } catch {
-        // Storage catch
-      }
-    }
-
-    return launches;
+    return inflight;
   },
 };

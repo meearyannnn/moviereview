@@ -1,4 +1,4 @@
-// src/components/HomeNewLaunchesSection.tsx — Spotlight Drops with Clear Dynamic Classes: BTS, Poster Launched, Teaser, Trailer, New Movie & New Show
+// src/components/HomeNewLaunchesSection.tsx — Clean, Uncluttered Spotlight Drops Shelf (Zero Filter Clutter)
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,47 +9,19 @@ import {
   Clapperboard,
   Flame,
   X,
-  ExternalLink,
   Info,
   Calendar,
   Share2,
   Check,
   ChevronRight,
-  Zap,
-  Image as ImageIcon,
-  Video,
 } from 'lucide-react';
 import { newLaunchesService, type NewLaunchItem, type LaunchClass } from '@/services/newLaunches';
 import { soundEffects } from '@/lib/soundEffects';
-
-type FilterTab =
-  | 'all'
-  | 'trailer'
-  | 'teaser'
-  | 'bts'
-  | 'poster'
-  | 'movie'
-  | 'show'
-  | 'bollywood'
-  | 'hollywood';
-
-const FILTER_TABS: { id: FilterTab; label: string; badge?: string }[] = [
-  { id: 'all', label: 'All Launches' },
-  { id: 'trailer', label: 'Trailers', badge: '🍿' },
-  { id: 'teaser', label: 'Teasers', badge: '⚡' },
-  { id: 'bts', label: 'BTS', badge: '🎬' },
-  { id: 'poster', label: 'Poster Launched', badge: '🖼️' },
-  { id: 'movie', label: 'New Movies', badge: '🎥' },
-  { id: 'show', label: 'New Shows', badge: '📺' },
-  { id: 'bollywood', label: 'Bollywood', badge: '🇮🇳' },
-  { id: 'hollywood', label: 'Hollywood', badge: '🎬' },
-];
 
 export const HomeNewLaunchesSection = () => {
   const navigate = useNavigate();
   const [launches, setLaunches] = useState<NewLaunchItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<NewLaunchItem | null>(null);
   const [copied, setCopied] = useState(false);
@@ -149,21 +121,6 @@ export const HomeNewLaunchesSection = () => {
     }
   };
 
-  const matchesTab = (item: NewLaunchItem, tab: FilterTab) => {
-    const c = item.launchClass || item.launchType;
-    if (tab === 'bollywood') return item.industry === 'bollywood';
-    if (tab === 'hollywood') return item.industry === 'hollywood';
-    if (tab === 'trailer') return c === 'Trailer';
-    if (tab === 'teaser') return c === 'Teaser';
-    if (tab === 'bts') return c === 'BTS';
-    if (tab === 'poster') return c === 'Poster Launched';
-    if (tab === 'movie') return c === 'New Movie';
-    if (tab === 'show') return c === 'New Show';
-    return true;
-  };
-
-  const filteredItems = launches.filter((item) => matchesTab(item, activeTab));
-
   const handleCardClick = (item: NewLaunchItem) => {
     soundEffects.playHoverTick();
     setSelectedItem(item);
@@ -186,21 +143,18 @@ export const HomeNewLaunchesSection = () => {
   };
 
   return (
-    <section className="scroll-mt-20 my-12" id="new-launches">
-      {/* ── Section Header ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+    <section className="scroll-mt-20 my-10" id="new-launches">
+      {/* ── Sleek, Uncluttered Section Header (No Filter Bar Crowding) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/15 text-[#f5c542] border border-[#c9a24b]/30">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] animate-pulse" />
               SPOTLIGHT DROPS
             </span>
             <span className="text-xs text-[#c9a24b] font-mono font-semibold flex items-center gap-1">
               <Flame className="w-3.5 h-3.5 fill-[#c9a24b]" />
-              Realtime Cinema Wire
-            </span>
-            <span className="text-[11px] text-white/40 font-mono hidden sm:inline">
-              • Filter by Trailers, Teasers, BTS, Poster Drops, Movies &amp; Shows
+              Bollywood &amp; Hollywood
             </span>
           </div>
 
@@ -211,46 +165,20 @@ export const HomeNewLaunchesSection = () => {
             </span>
           </h2>
           <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-xl">
-            Realtime updates across Bollywood and Hollywood: brand-new trailers, teasers, BTS exclusives, poster launches &amp; premiere announcements. Click any poster for full details &amp; trailers.
+            Realtime updates across Bollywood and Hollywood: brand-new trailers, teasers, BTS exclusives, poster launches &amp; premiere announcements.
           </p>
         </div>
 
-        {/* ── Filter Tabs ── */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
-          {FILTER_TABS.map((tab) => {
-            const count = launches.filter((item) => matchesTab(item, tab.id)).length;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  setActiveTab(tab.id);
-                }}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/20'
-                    : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
-                }`}
-              >
-                {tab.badge && <span>{tab.badge}</span>}
-                <span>{tab.label}</span>
-                {count > 0 && (
-                  <span
-                    className={`ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full ${
-                      activeTab === tab.id ? 'bg-[#1c120c]/20 text-[#1c120c]' : 'bg-white/10 text-white/50'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {/* Live counter indicator */}
+        {launches.length > 0 && (
+          <div className="shrink-0 flex items-center gap-2 text-xs font-mono text-white/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{launches.length} Live Drops</span>
+          </div>
+        )}
       </div>
 
-      {/* ── Cards Grid (Matches user screenshot 5-col layout) ── */}
+      {/* ── Uncluttered Cards Grid (5-col layout matching user reference) ── */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -261,15 +189,15 @@ export const HomeNewLaunchesSection = () => {
             </div>
           ))}
         </div>
-      ) : filteredItems.length === 0 ? (
+      ) : launches.length === 0 ? (
         <div className="rounded-2xl border border-white/[0.06] bg-[#140a0e] p-10 text-center text-white/40">
           <Clapperboard className="w-8 h-8 mx-auto mb-2 text-[#c9a24b]/40" />
-          <p className="text-sm font-semibold text-white/70">No launch updates found for this category</p>
-          <p className="text-xs text-white/40 mt-0.5">Switch to All Launches to see all global drops.</p>
+          <p className="text-sm font-semibold text-white/70">No launch updates found right now</p>
+          <p className="text-xs text-white/40 mt-0.5">Please check back soon for breaking drops.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
-          {filteredItems.slice(0, 20).map((item) => {
+          {launches.slice(0, 20).map((item) => {
             const cfg = getLaunchConfig(item.launchClass || item.launchType);
 
             return (
@@ -305,7 +233,7 @@ export const HomeNewLaunchesSection = () => {
                     </span>
                   </div>
 
-                  {/* Distinct Classification Badge in top right */}
+                  {/* Distinct Classification Badge written on top right */}
                   <div className="absolute top-2 right-2 z-10">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider backdrop-blur-md border shadow-sm flex items-center gap-1 ${cfg.style}`}
@@ -321,10 +249,10 @@ export const HomeNewLaunchesSection = () => {
                       <button
                         onClick={(e) => handlePlayTrailer(e, item.trailerKey!)}
                         className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#f5c542] text-[#1c120c] font-display font-black text-xs shadow-lg hover:bg-white transition-all transform hover:scale-105"
-                        title="Play Trailer"
+                        title="Play Video"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Watch Video</span>
+                        <span>Watch {cfg.label}</span>
                       </button>
                     )}
                     <button
@@ -337,7 +265,7 @@ export const HomeNewLaunchesSection = () => {
                   </div>
                 </div>
 
-                {/* Title & Classification Label */}
+                {/* Title & Classification Label Under Poster (Clean & readable like user screenshot) */}
                 <div className="mt-2.5 px-0.5">
                   <h3 className="font-display font-bold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
                     {item.title}

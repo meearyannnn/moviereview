@@ -1,4 +1,4 @@
-// src/components/HomeNewLaunchesSection.tsx — Dedicated realtime Bollywood & Hollywood launches grid matching user screenshot
+// src/components/HomeNewLaunchesSection.tsx — Realtime Bollywood & Hollywood Spotlight Drops with Rich Poster & Details
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,6 +10,11 @@ import {
   Flame,
   X,
   ExternalLink,
+  Info,
+  Calendar,
+  Share2,
+  Check,
+  ChevronRight,
 } from 'lucide-react';
 import { newLaunchesService, type NewLaunchItem, type LaunchType } from '@/services/newLaunches';
 import { soundEffects } from '@/lib/soundEffects';
@@ -30,6 +35,8 @@ export const HomeNewLaunchesSection = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<NewLaunchItem | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,19 +75,50 @@ export const HomeNewLaunchesSection = () => {
 
   const handleCardClick = (item: NewLaunchItem) => {
     soundEffects.playHoverTick();
-    if (item.trailerKey && (item.launchType === 'New Trailer' || item.launchType === 'New Teaser')) {
-      setActiveTrailerKey(item.trailerKey);
-    } else {
-      navigate(`/${item.mediaType}/${item.id}`);
+    setSelectedItem(item);
+  };
+
+  const handlePlayTrailer = (e: React.MouseEvent, key: string) => {
+    e.stopPropagation();
+    soundEffects.playHoverTick();
+    setActiveTrailerKey(key);
+  };
+
+  const handleShare = (item: NewLaunchItem) => {
+    soundEffects.playHoverTick();
+    const url = window.location.href.split('#')[0] + `#new-launches`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(`${item.title} — ${item.launchType} on MovieGuy: ${url}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const getLaunchBadgeStyle = (type: LaunchType) => {
+    switch (type) {
+      case 'New Trailer':
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      case 'New Teaser':
+        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+      case 'BTS / First Look':
+        return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+      case 'New Announcement':
+        return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+      case 'Encore Re-release':
+        return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+      case 'New Show':
+        return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+      default:
+        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
     }
   };
 
   return (
-    <section className="scroll-mt-20 my-10" id="new-launches">
+    <section className="scroll-mt-20 my-12" id="new-launches">
       {/* ── Section Header ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/15 text-[#f5c542] border border-[#c9a24b]/30">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] animate-pulse" />
               LIVE LAUNCHES &amp; BUZZ
@@ -89,38 +127,64 @@ export const HomeNewLaunchesSection = () => {
               <Flame className="w-3.5 h-3.5 fill-[#c9a24b]" />
               Bollywood &amp; Hollywood
             </span>
+            <span className="text-[11px] text-white/40 font-mono hidden sm:inline">
+              • Curated from Variety, Deadline &amp; Bollywood Hungama
+            </span>
           </div>
 
           <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight">
             <span>Spotlight </span>
             <span className="bg-gradient-to-r from-[#f5c542] via-white to-[#c9a24b] bg-clip-text text-transparent">
-              Drops &amp; Announcemnts
+              Drops &amp; Announcements
             </span>
           </h2>
           <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-xl">
-            Realtime updates across Bollywood and Hollywood: brand-new trailers, posters, teasers, re-releases &amp; movie announcements.
+            Realtime updates across Bollywood and Hollywood: brand-new trailers, posters, teasers, re-releases &amp; movie announcements. Click any poster for full details &amp; trailers.
           </p>
         </div>
 
         {/* ── Filter Tabs ── */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
-          {FILTER_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                soundEffects.playHoverTick();
-                setActiveTab(tab.id);
-              }}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all ${
-                activeTab === tab.id
-                  ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/20'
-                  : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
-              }`}
-            >
-              {tab.badge && <span>{tab.badge}</span>}
-              <span>{tab.label}</span>
-            </button>
-          ))}
+          {FILTER_TABS.map((tab) => {
+            const count = launches.filter((item) => {
+              if (tab.id === 'bollywood') return item.industry === 'bollywood';
+              if (tab.id === 'hollywood') return item.industry === 'hollywood';
+              if (tab.id === 'trailers') {
+                return item.launchType === 'New Trailer' || item.launchType === 'New Teaser';
+              }
+              if (tab.id === 'announcements') {
+                return item.launchType === 'New Announcement' || item.launchType === 'BTS / First Look';
+              }
+              return true;
+            }).length;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  soundEffects.playHoverTick();
+                  setActiveTab(tab.id);
+                }}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/20'
+                    : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+                }`}
+              >
+                {tab.badge && <span>{tab.badge}</span>}
+                <span>{tab.label}</span>
+                {count > 0 && (
+                  <span
+                    className={`ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full ${
+                      activeTab === tab.id ? 'bg-[#1c120c]/20 text-[#1c120c]' : 'bg-white/10 text-white/50'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -167,23 +231,46 @@ export const HomeNewLaunchesSection = () => {
                 />
 
                 {/* Subtle vignette gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
 
-                {/* Industry chip in top left (Bollywood 🇮🇳 / Hollywood 🎬) */}
+                {/* Industry badge in top left (Bollywood 🇮🇳 / Hollywood 🎬) */}
                 <div className="absolute top-2 left-2 z-10">
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-black/75 backdrop-blur-md border border-white/[0.1] text-white/90">
-                    {item.industry === 'bollywood' ? 'Bollywood' : 'Hollywood'}
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-black/80 backdrop-blur-md border border-white/[0.12] text-white/90 shadow-sm">
+                    {item.industry === 'bollywood' ? 'Bollywood 🇮🇳' : 'Hollywood 🎬'}
                   </span>
                 </div>
 
-                {/* Play action icon overlay if trailer available */}
-                {item.trailerKey && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                    <div className="w-11 h-11 rounded-full bg-[#f5c542] text-[#1c120c] flex items-center justify-center shadow-xl shadow-black/80 transform group-hover:scale-110 transition-transform">
-                      <Play className="w-5 h-5 ml-0.5 fill-current" />
-                    </div>
-                  </div>
-                )}
+                {/* Launch type pill top right */}
+                <div className="absolute top-2 right-2 z-10">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider backdrop-blur-md border shadow-sm ${getLaunchBadgeStyle(
+                      item.launchType
+                    )}`}
+                  >
+                    {item.launchType.replace('New ', '')}
+                  </span>
+                </div>
+
+                {/* Hover Quick Action Buttons */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/55 backdrop-blur-[2px] p-3 text-center">
+                  {item.trailerKey && (
+                    <button
+                      onClick={(e) => handlePlayTrailer(e, item.trailerKey!)}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#f5c542] text-[#1c120c] font-display font-black text-xs shadow-lg hover:bg-white transition-all transform hover:scale-105"
+                      title="Play Trailer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Watch Trailer</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleCardClick(item)}
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs border border-white/20 transition-all backdrop-blur-md"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                    <span>View Details</span>
+                  </button>
+                </div>
               </div>
 
               {/* Title & Launch Type Label (Exactly like screenshot) */}
@@ -191,12 +278,195 @@ export const HomeNewLaunchesSection = () => {
                 <h3 className="font-display font-bold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
                   {item.title}
                 </h3>
-                <p className="text-xs text-white/50 mt-0.5 font-sans truncate font-medium">
-                  {item.launchType}
-                </p>
+                <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans">
+                  <span className="truncate font-medium">{item.launchType}</span>
+                  {item.source && (
+                    <span className="text-[10px] font-mono text-[#c9a24b]/70 truncate ml-1 shrink-0">
+                      {item.source.split(' ')[0]}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Movie Poster & Rich Details Modal ("Show the movie poster with detail here") ── */}
+      {selectedItem && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="spotlight-title"
+          onClick={() => setSelectedItem(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-5 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-[#120a0e] shadow-2xl flex flex-col md:flex-row max-h-[90vh] overflow-y-auto"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedItem(null)}
+              className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-[#f5c542]"
+              aria-label="Close details"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Left: Movie Poster Column */}
+            <div className="relative md:w-5/12 bg-black shrink-0 flex items-center justify-center overflow-hidden min-h-[300px] md:min-h-[440px]">
+              <img
+                src={selectedItem.poster}
+                alt={selectedItem.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#120a0e] via-transparent to-transparent md:hidden" />
+
+              {/* Play trailer overlay if key exists */}
+              {selectedItem.trailerKey && (
+                <button
+                  onClick={(e) => handlePlayTrailer(e, selectedItem.trailerKey!)}
+                  className="absolute bottom-4 left-4 right-4 md:hidden flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#f5c542] text-[#1c120c] font-black font-display text-sm shadow-xl"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Watch Trailer</span>
+                </button>
+              )}
+            </div>
+
+            {/* Right: Movie Details Content */}
+            <div className="p-6 md:p-8 flex flex-col justify-between flex-1">
+              <div>
+                {/* Badges row */}
+                <div className="flex items-center gap-2 flex-wrap mb-3">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white/10 text-white border border-white/10">
+                    {selectedItem.industry === 'bollywood' ? 'Bollywood 🇮🇳' : 'Hollywood 🎬'}
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${getLaunchBadgeStyle(
+                      selectedItem.launchType
+                    )}`}
+                  >
+                    {selectedItem.launchType}
+                  </span>
+                  {selectedItem.isHot && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#f5c542]/20 text-[#f5c542] border border-[#f5c542]/30 flex items-center gap-1">
+                      <Flame className="w-3 h-3 fill-current" />
+                      Trending Drop
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h3 id="spotlight-title" className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight">
+                  {selectedItem.title}
+                </h3>
+
+                {/* Release Date & Format */}
+                <div className="flex items-center gap-3 text-xs text-white/50 font-mono mt-1.5">
+                  <span className="capitalize">{selectedItem.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}</span>
+                  {selectedItem.releaseDate && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-[#c9a24b]" />
+                        {selectedItem.releaseDate}
+                      </span>
+                    </>
+                  )}
+                  {selectedItem.source && (
+                    <>
+                      <span>•</span>
+                      <span className="text-[#c9a24b]">{selectedItem.source}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Breaking Pop News Headline */}
+                {selectedItem.headline && (
+                  <div className="mt-4 p-3.5 rounded-2xl bg-[#f5c542]/5 border border-[#f5c542]/20 text-xs sm:text-sm text-white/90">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#f5c542] uppercase tracking-wider mb-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Entertainment Wire Buzz
+                    </div>
+                    <p className="italic leading-relaxed font-sans">&ldquo;{selectedItem.headline}&rdquo;</p>
+                    {selectedItem.sourceUrl && (
+                      <a
+                        href={selectedItem.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-[#f5c542] hover:underline font-mono mt-2"
+                      >
+                        <span>Read full article on {selectedItem.source || 'Wire'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Plot / Overview */}
+                <div className="mt-4">
+                  <h4 className="text-[11px] font-mono uppercase tracking-wider text-white/40 mb-1.5 font-semibold">
+                    Synopsis &amp; Details
+                  </h4>
+                  <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans line-clamp-5">
+                    {selectedItem.overview || 'Details regarding this premiere are currently breaking across entertainment publications. Check back soon for updated streaming dates, cast announcements, and official press kits.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Actions Row */}
+              <div className="mt-6 pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {selectedItem.trailerKey && (
+                    <button
+                      onClick={(e) => handlePlayTrailer(e, selectedItem.trailerKey!)}
+                      className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f5c542] text-[#1c120c] font-display font-black text-xs hover:bg-white transition-all shadow-lg shadow-[#f5c542]/20 transform hover:scale-105"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Watch Trailer</span>
+                    </button>
+                  )}
+                  {selectedItem.tmdbId && (
+                    <button
+                      onClick={() => {
+                        setSelectedItem(null);
+                        navigate(`/${selectedItem.mediaType}/${selectedItem.tmdbId}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-mono text-xs border border-white/10 transition-all"
+                    >
+                      <span>Explore Movie Page</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Share Button */}
+                <button
+                  onClick={() => handleShare(selectedItem)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white font-mono text-xs border border-white/[0.06] transition-all"
+                  title="Share this launch"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -215,7 +485,7 @@ export const HomeNewLaunchesSection = () => {
           >
             <button
               onClick={() => setActiveTrailerKey(null)}
-              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-[#f5c542]"
               aria-label="Close video"
             >
               <X className="h-4 w-4" />

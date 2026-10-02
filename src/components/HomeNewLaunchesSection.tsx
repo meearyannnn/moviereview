@@ -44,7 +44,12 @@ export const HomeNewLaunchesSection = () => {
     // Clean up any stale/corrupted legacy caches
     if (typeof window !== 'undefined' && window.sessionStorage) {
       try {
-        ['mg_spotlight_launches_v3', 'mg_spotlight_launches_v4', 'mg_new_launches_feed_v1'].forEach((k) => {
+        [
+          'mg_spotlight_launches_v3',
+          'mg_spotlight_launches_v4',
+          'mg_spotlight_launches_curated_v5',
+          'mg_new_launches_feed_v1',
+        ].forEach((k) => {
           sessionStorage.removeItem(k);
         });
       } catch {
@@ -289,11 +294,11 @@ export const HomeNewLaunchesSection = () => {
                 <h3 className="font-display font-bold text-sm sm:text-base text-white group-hover:text-[#f5c542] transition-colors truncate leading-snug">
                   {item.title}
                 </h3>
-                <div className="flex items-center justify-between text-xs text-white/50 mt-0.5 font-sans">
-                  <span className="truncate font-medium">{item.launchType}</span>
-                  {item.source && (
-                    <span className="text-[10px] font-mono text-[#c9a24b]/70 truncate ml-1 shrink-0">
-                      {item.source.split(' ')[0]}
+                <div className="flex items-center justify-between text-xs text-white/50 mt-1 font-sans">
+                  <span className="truncate font-medium text-white/70">{item.launchType}</span>
+                  {item.releaseDate && (
+                    <span className="text-[10px] font-mono text-[#f5c542] font-semibold truncate ml-1 shrink-0 bg-[#f5c542]/10 px-1.5 py-0.5 rounded border border-[#f5c542]/20">
+                      {item.releaseDate}
                     </span>
                   )}
                 </div>
@@ -379,22 +384,20 @@ export const HomeNewLaunchesSection = () => {
                 </h3>
 
                 {/* Release Date & Format */}
-                <div className="flex items-center gap-3 text-xs text-white/50 font-mono mt-1.5">
-                  <span className="capitalize">{selectedItem.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}</span>
+                <div className="flex items-center gap-2.5 text-xs font-mono mt-2 flex-wrap">
+                  <span className="capitalize px-2.5 py-0.5 rounded-lg bg-white/[0.06] border border-white/10 text-white/70">
+                    {selectedItem.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}
+                  </span>
                   {selectedItem.releaseDate && (
-                    <>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-[#c9a24b]" />
-                        {selectedItem.releaseDate}
-                      </span>
-                    </>
+                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 font-semibold">
+                      <Calendar className="w-3.5 h-3.5 text-[#f5c542]" />
+                      <span>Premieres / Releasing: {selectedItem.releaseDate}</span>
+                    </span>
                   )}
                   {selectedItem.source && (
-                    <>
-                      <span>•</span>
-                      <span className="text-[#c9a24b]">{selectedItem.source}</span>
-                    </>
+                    <span className="text-[#c9a24b]/80 text-[11px] font-mono">
+                      Via {selectedItem.source}
+                    </span>
                   )}
                 </div>
 

@@ -1,5 +1,3 @@
-// src/pages/Home.tsx
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { MovieRow } from '@/components/MovieRow';
@@ -9,9 +7,9 @@ import { HomeCuratedShelves } from '@/components/HomeCuratedShelves';
 import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
 import { HomeNewLaunchesSection } from '@/components/HomeNewLaunchesSection';
 import { HomeFranchiseSection } from '@/components/HomeFranchiseSection';
+import { HomePersonalizedSection } from '@/components/HomePersonalizedSection';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
-import { useWatchlist } from '@/hooks/useWatchlist';
 import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy } from 'lucide-react';
 
 type MediaType = 'movie' | 'tv';
@@ -64,6 +62,7 @@ const Row = ({ s }: { s: Section }) => (
 );
 
 const JUMP_CHIPS = [
+  { key: 'for-you', label: 'For You' },
   { key: 'new-launches', label: 'New releases' },
   { key: 'directors-spotlight', label: 'Directors' },
   { key: 'franchises', label: 'Franchises' },
@@ -98,15 +97,6 @@ const JumpBar = () => {
 };
 
 const Home = () => {
-  const { watchlist } = useWatchlist();
-  const last = watchlist?.[0];
-  const lastType: MediaType = (last?.media_type as MediaType) || 'movie';
-
-  const fetchRecommended = useMemo(
-    () => (last?.id ? () => tmdb.getRecommendations(last.id, lastType) : null),
-    [last?.id, lastType]
-  );
-
   return (
     // overflow-x-clip, not -hidden: "hidden" turns this div into a scroll container
     // and silently breaks the sticky sidebar below
@@ -118,9 +108,7 @@ const Home = () => {
         <div className="space-y-14 pb-28 pt-24 sm:pt-28 md:pb-16">
           <JumpBar />
 
-          {fetchRecommended && last?.title && (
-            <MovieRow icon={Sparkles} title="Because you saved" accent={last.title} fetchData={fetchRecommended} />
-          )}
+          <HomePersonalizedSection />
 
           <HomeNewLaunchesSection />
           <HomeDirectorsSpotlight />

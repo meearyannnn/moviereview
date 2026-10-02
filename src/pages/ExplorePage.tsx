@@ -11,7 +11,7 @@ import {
   type ExploreType,
   type ExploreSort,
 } from '@/components/explore/FilterRail';
-import { PosterCard } from '@/components/explore/PosterCard';
+import { MovieCard } from '@/components/MovieCard';
 import { ActiveFilterChips } from '@/components/explore/ActiveFilterChips';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { WEB_CHANNELS } from '@/services/webChannels';
@@ -398,7 +398,7 @@ export const ExplorePage: React.FC = () => {
                     return isFeature ? (
                       <FeatureCard key={itemKey(item)} item={item} typeOverride={typeOverride} />
                     ) : (
-                      <PosterCard key={itemKey(item)} item={item} typeOverride={typeOverride} />
+                      <MovieCard key={itemKey(item)} movie={item} type={typeOverride} />
                     );
                   })}
                 </div>

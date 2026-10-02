@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { WEB_CHANNELS, type WebChannel } from '@/services/webChannels';
-import { PosterCard } from './PosterCard';
+import { MovieCard } from '@/components/MovieCard';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
 
 // ── Generic Horizontal Shelf Row ─────────────────────────────────────────────
@@ -125,7 +125,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
               renderItem(item, index)
             ) : (
               <div key={`${item.media_type || 'm'}_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
-                <PosterCard item={item} typeOverride={typeOverride} />
+                <MovieCard movie={item} type={typeOverride} />
               </div>
             )
           )}
@@ -300,7 +300,7 @@ export const ExploreSmartShelves: React.FC = () => {
               {index + 1}
             </span>
             <div className="w-[136px] sm:w-44 md:w-48 shrink-0">
-              <PosterCard item={item} />
+              <MovieCard movie={item} />
             </div>
           </div>
         )}
@@ -415,7 +415,7 @@ export const ExploreSmartShelves: React.FC = () => {
           >
             {streamingItems.map((item, index) => (
               <div key={`streaming_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
-                <PosterCard item={item} />
+                <MovieCard movie={item} />
               </div>
             ))}
           </div>

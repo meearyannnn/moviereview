@@ -2,15 +2,21 @@
 // Simple, clean personalized recommendation shelves based on:
 // 1. Watch Later / Marked as Interested ("Because you saved [Title]" / "Top priority in Watch Later [Title]")
 // 2. User Watch History ("Because you watched [Title]")
-// 3. User Collections ("Inspired by your collection [Collection Name]")
+// 3. User Collections ("Inspired by your collection [Collection Name]") - displays all user collections with items
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Sparkles, History, BookmarkCheck, Flame, Clock } from 'lucide-react';
+import { Sparkles, History, BookmarkCheck, Flame } from 'lucide-react';
 import { MovieRow } from '@/components/MovieRow';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { userLibraryService, type UserCollectionItem } from '@/services/userLibrary';
+
+interface CollectionSeed {
+  collectionId: string;
+  collectionTitle: string;
+  item: UserCollectionItem;
+}
 
 async function fetchRecommendations(
   mediaId: number,
@@ -32,14 +38,29 @@ async function fetchRecommendations(
   }
 }
 
+// Stable row for each collection
+const CollectionRow = ({ seed }: { seed: CollectionSeed }) => {
+  const fetchFn = useCallback(
+    () => fetchRecommendations(seed.item.media_id, seed.item.media_type),
+    [seed.item.media_id, seed.item.media_type]
+  );
+
+  return (
+    <MovieRow
+      icon={BookmarkCheck}
+      title="Inspired by your collection"
+      accent={seed.collectionTitle}
+      fetchData={fetchFn}
+      type={seed.item.media_type}
+    />
+  );
+};
+
 export const HomePersonalizedSection = () => {
   const { history, watchLater, collections, savedCollections } = useUserLibrary();
   const { watchlist } = useWatchlist();
 
-  const [collectionSeedItem, setCollectionSeedItem] = useState<{
-    collectionTitle: string;
-    item: UserCollectionItem;
-  } | null>(null);
+  const [collectionSeeds, setCollectionSeeds] = useState<CollectionSeed[]>([]);
 
   // 1. Watch Later / Marked as Interested Seed
   const savedSeed = useMemo(() => {
@@ -63,31 +84,39 @@ export const HomePersonalizedSection = () => {
     return diff || history[0];
   }, [history, savedSeed?.media_id]);
 
-  // 3. User Collection Seed
+  // 3. User Collections Seeds — Loads all collections that have items
   useEffect(() => {
     let active = true;
-    const findCollectionSeed = async () => {
+    const loadAllCollectionSeeds = async () => {
       const allCols = [...collections, ...savedCollections];
+      const seenIds = new Set<string>();
+      const seeds: CollectionSeed[] = [];
+
       for (const col of allCols) {
+        if (seenIds.has(col.id)) continue;
+        seenIds.add(col.id);
+
         if (col.items_count > 0 || col.preview_posters?.length) {
           try {
             const items = await userLibraryService.getCollectionItems(col.id);
             if (items && items.length > 0) {
-              if (active) {
-                setCollectionSeedItem({
-                  collectionTitle: col.title,
-                  item: items[0],
-                });
-              }
-              return;
+              seeds.push({
+                collectionId: col.id,
+                collectionTitle: col.title,
+                item: items[0],
+              });
+              if (seeds.length >= 4) break; // Support up to 4 collections simultaneously
             }
           } catch {}
         }
       }
-      if (active) setCollectionSeedItem(null);
+
+      if (active) {
+        setCollectionSeeds(seeds);
+      }
     };
 
-    findCollectionSeed();
+    loadAllCollectionSeeds();
     return () => {
       active = false;
     };
@@ -104,21 +133,13 @@ export const HomePersonalizedSection = () => {
     return fetchRecommendations(watchedSeed.media_id, watchedSeed.media_type);
   }, [watchedSeed?.media_id, watchedSeed?.media_type]);
 
-  const fetchCollection = useCallback(() => {
-    if (!collectionSeedItem) return Promise.resolve({ results: [] });
-    return fetchRecommendations(
-      collectionSeedItem.item.media_id,
-      collectionSeedItem.item.media_type
-    );
-  }, [collectionSeedItem?.item.media_id, collectionSeedItem?.item.media_type]);
-
   const fetchFallback = useCallback(() => tmdb.getPopular('movie'), []);
 
   // Title & Icon for saved / interested item
   const savedTitle = savedSeed?.tag === 'asap' ? 'Top priority in Watch Later' : 'Because you saved';
   const SavedIcon = savedSeed?.tag === 'asap' ? Flame : Sparkles;
 
-  const hasAnyData = Boolean(savedSeed || watchedSeed || collectionSeedItem);
+  const hasAnyData = Boolean(savedSeed || watchedSeed || collectionSeeds.length > 0);
 
   return (
     <div id="for-you" className="scroll-mt-20 space-y-14">
@@ -144,16 +165,10 @@ export const HomePersonalizedSection = () => {
         />
       )}
 
-      {/* 3. User Collection Shelf */}
-      {collectionSeedItem && (
-        <MovieRow
-          icon={BookmarkCheck}
-          title="Inspired by your collection"
-          accent={collectionSeedItem.collectionTitle}
-          fetchData={fetchCollection}
-          type={collectionSeedItem.item.media_type}
-        />
-      )}
+      {/* 3. User Collections Shelves — All collections with items */}
+      {collectionSeeds.map((seed) => (
+        <CollectionRow key={seed.collectionId} seed={seed} />
+      ))}
 
       {/* 4. Clean Fallback for new visitors with zero library data */}
       {!hasAnyData && (

@@ -94,6 +94,7 @@ const App = () => (
               <Route path="/community/user/:userId" element={<UserProfilePage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/collections" element={<LibraryPage />} />
+              <Route path="/profile" element={<Navigate to="/library?tab=collections" replace />} />
               <Route path="/watch-later" element={<Navigate to="/library?tab=watch-later" replace />} />
               <Route path="/history" element={<Navigate to="/library?tab=history" replace />} />
               <Route path="/settings" element={<SettingsPage />} />

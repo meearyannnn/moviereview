@@ -234,7 +234,7 @@ export const HomePersonalizedSection = () => {
           </div>
 
           <Link
-            to="/profile"
+            to="/library?tab=collections"
             className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-[#f5c542]/40 hover:text-[#f5c542]"
           >
             Manage <ArrowRight className="h-3 w-3" />

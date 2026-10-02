@@ -145,21 +145,21 @@ const WATCH_LATER_OPTIONS: Array<{
     icon: '🚀',
     label: 'ASAP',
     desc: 'Watch as soon as you can',
-    textColor: 'text-[#f87171]',
+    textColor: 'text-rose-400',
   },
   {
     tag: 'weekend',
     icon: '🥤',
     label: 'Weekend',
     desc: 'Save for your next free weekend',
-    textColor: 'text-[#fbbf24]',
+    textColor: 'text-[#f5c542]',
   },
   {
     tag: 'someday',
     icon: '🐌',
     label: 'Someday',
     desc: 'No rush — get to it when you can',
-    textColor: 'text-[#38bdf8]',
+    textColor: 'text-sky-400',
   },
 ];
 
@@ -216,31 +216,35 @@ export const ActionBar = ({
 
   return (
     <div className="mb-8 flex flex-col gap-3 max-w-sm sm:max-w-md w-full">
-      {/* ── 1. Top Button: Mark as Watched ── */}
+      {/* ── 1. Top Button: Mark as Watched (Cinema Box Office styling) ── */}
       {onToggleWatched && (
         <button
           onClick={onToggleWatched}
           aria-pressed={isWatched}
-          className={`w-full flex h-12 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-semibold transition-all shadow-lg active:scale-[0.98] ${
+          className={`w-full flex h-11 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-display font-extrabold tracking-wide transition-all active:scale-[0.98] ${
             isWatched
-              ? 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-purple-600/30 ring-2 ring-purple-400/50'
-              : 'bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-purple-600/25'
+              ? 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/50'
+              : 'bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] text-[#1c120c] shadow-lg shadow-[#f5c542]/25 ring-1 ring-[#f5c542]/50 hover:brightness-105'
           }`}
         >
-          <Eye className="h-4 w-4 stroke-[2.2]" aria-hidden="true" />
+          {isWatched ? (
+            <Check className="h-4 w-4 stroke-[3]" aria-hidden="true" />
+          ) : (
+            <Eye className="h-4 w-4 stroke-[2.2]" aria-hidden="true" />
+          )}
           <span>{isWatched ? 'Watched' : 'Mark as Watched'}</span>
         </button>
       )}
 
-      {/* ── 2. Row: Collections & Watch Later ── */}
+      {/* ── 2. Row: Collections & Watch Later (Cinema Dark with Gold Accents) ── */}
       <div className="grid grid-cols-2 gap-3 relative">
         {/* Collections Button */}
         {onAddToCollections && (
           <button
             onClick={onAddToCollections}
-            className="flex h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] px-4 text-sm font-medium text-white transition-all active:scale-[0.98] shadow-sm"
+            className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/95 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 px-4 text-xs font-display font-bold uppercase tracking-wider text-white/90 hover:text-[#f5c542] transition-all active:scale-[0.98] shadow-sm"
           >
-            <Bookmark className="h-4 w-4 text-white/90" aria-hidden="true" />
+            <Bookmark className="h-3.5 w-3.5 text-[#c9a24b]" aria-hidden="true" />
             <span>Collections</span>
           </button>
         )}
@@ -250,15 +254,15 @@ export const ActionBar = ({
           <button
             onClick={() => setShowWatchLaterMenu((prev) => !prev)}
             aria-expanded={showWatchLaterMenu}
-            className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-medium transition-all active:scale-[0.98] shadow-sm ${
+            className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-display font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm ${
               isInLater
-                ? 'border-purple-500/50 bg-[#18181b] text-purple-300 ring-1 ring-purple-500/30'
-                : 'border-white/10 bg-[#18181b] hover:bg-[#27272a] text-white'
+                ? 'border-[#f5c542] bg-[#f5c542]/15 text-[#f5c542] ring-1 ring-[#f5c542]/40 shadow-sm shadow-[#f5c542]/20'
+                : 'border-[#c9a24b]/30 bg-[#140c10]/95 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 text-white/90 hover:text-[#f5c542]'
             }`}
           >
             <div className="relative inline-flex items-center justify-center">
-              <Clock className="h-4 w-4 text-white/90" aria-hidden="true" />
-              <span className="absolute -bottom-1 -right-1 text-[9px] font-bold leading-none text-white/90">+</span>
+              <Clock className={`h-3.5 w-3.5 ${isInLater ? 'text-[#f5c542]' : 'text-[#c9a24b]'}`} aria-hidden="true" />
+              <span className="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold leading-none text-[#f5c542]">+</span>
             </div>
             <span>Watch Later</span>
           </button>
@@ -267,7 +271,7 @@ export const ActionBar = ({
           {showWatchLaterMenu && (
             <div
               ref={menuRef}
-              className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-white/10 bg-[#18181b] p-2.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl"
+              className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-[#c9a24b]/35 bg-[#120a0e]/98 p-2.5 shadow-2xl shadow-black/90 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl ring-1 ring-white/5"
             >
               <div className="space-y-1">
                 {WATCH_LATER_OPTIONS.map((opt) => {
@@ -285,7 +289,9 @@ export const ActionBar = ({
                         setShowWatchLaterMenu(false);
                       }}
                       className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left group ${
-                        isSelected ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'
+                        isSelected
+                          ? 'bg-[#c9a24b]/15 border border-[#c9a24b]/40'
+                          : 'hover:bg-[#c9a24b]/10 border border-transparent'
                       }`}
                     >
                       {/* Radio Circle */}
@@ -293,11 +299,11 @@ export const ActionBar = ({
                         <div
                           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                             isSelected
-                              ? 'border-purple-400 bg-purple-500/20'
-                              : 'border-zinc-500 group-hover:border-zinc-400'
+                              ? 'border-[#f5c542] bg-[#f5c542]/20'
+                              : 'border-[#c9a24b]/40 group-hover:border-[#c9a24b]/80'
                           }`}
                         >
-                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-purple-400" />}
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#f5c542]" />}
                         </div>
                       </div>
 
@@ -305,11 +311,11 @@ export const ActionBar = ({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm">{opt.icon}</span>
-                          <span className={`text-sm font-bold ${opt.textColor}`}>
+                          <span className={`text-sm font-display font-bold ${opt.textColor}`}>
                             {opt.label}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-400 mt-0.5 leading-snug">
+                        <p className="text-xs font-mono text-white/60 mt-0.5 leading-snug">
                           {opt.desc}
                         </p>
                       </div>
@@ -326,16 +332,16 @@ export const ActionBar = ({
       <div className="flex items-center gap-2.5 pt-1">
         <button
           onClick={onReview}
-          className="flex-1 flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] px-4 text-xs font-display font-extrabold text-[#1a0f05] shadow-md shadow-[#f5c542]/20 hover:brightness-110 active:scale-95 transition-all"
+          className="flex-1 flex h-10 items-center justify-center gap-2 rounded-full border border-[#c9a24b]/40 bg-[#140c10]/90 hover:border-[#f5c542] hover:bg-[#c9a24b]/15 text-[#f5c542] text-xs font-display font-extrabold transition-all shadow-sm active:scale-95"
         >
-          <PenLine className="h-4 w-4" aria-hidden="true" />
+          <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Review</span>
         </button>
 
         {hasTrailer && (
           <button
             onClick={onTrailer}
-            className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] px-4 text-xs font-mono font-medium text-white/90 hover:text-white transition-all active:scale-95"
+            className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/15 px-4 text-xs font-mono font-medium text-white/90 hover:text-white transition-all active:scale-95"
           >
             <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
             <span>Trailer</span>
@@ -346,7 +352,7 @@ export const ActionBar = ({
           <button
             onClick={onShare}
             aria-label="Share"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#18181b] hover:bg-[#27272a] text-white/80 hover:text-white transition-all active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/15 text-white/80 hover:text-[#f5c542] transition-all active:scale-95"
           >
             <Share2 className="h-4 w-4" aria-hidden="true" />
           </button>

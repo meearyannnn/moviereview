@@ -62,10 +62,10 @@ const Row = ({ s }: { s: Section }) => (
 );
 
 const JUMP_CHIPS = [
-  { key: 'for-you', label: 'For You' },
   { key: 'new-launches', label: 'New releases' },
   { key: 'directors-spotlight', label: 'Directors' },
   { key: 'franchises', label: 'Franchises' },
+  { key: 'for-you', label: 'For You' },
   ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, label: s.chip! })),
 ];
 
@@ -108,11 +108,11 @@ const Home = () => {
         <div className="space-y-14 pb-28 pt-24 sm:pt-28 md:pb-16">
           <JumpBar />
 
-          <HomePersonalizedSection />
-
           <HomeNewLaunchesSection />
           <HomeDirectorsSpotlight />
           <HomeFranchiseSection />
+
+          <HomePersonalizedSection />
 
           {/*
             Shelves and sidebar share one grid. The sidebar spans every shelf row and is sticky,

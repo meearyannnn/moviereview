@@ -41,13 +41,15 @@ export const HomeNewLaunchesSection = () => {
   useEffect(() => {
     let cancelled = false;
 
-    // Clean up any stale/corrupted legacy caches
+    // Clean up any stale legacy caches
     if (typeof window !== 'undefined' && window.sessionStorage) {
       try {
         [
           'mg_spotlight_launches_v3',
           'mg_spotlight_launches_v4',
           'mg_spotlight_launches_curated_v5',
+          'mg_spotlight_launches_v6_latest',
+          'mg_spotlight_launches_v7_latest_only',
           'mg_new_launches_feed_v1',
         ].forEach((k) => {
           sessionStorage.removeItem(k);
@@ -81,10 +83,15 @@ export const HomeNewLaunchesSection = () => {
     if (activeTab === 'bollywood') return item.industry === 'bollywood';
     if (activeTab === 'hollywood') return item.industry === 'hollywood';
     if (activeTab === 'trailers') {
-      return item.launchType === 'New Trailer' || item.launchType === 'New Teaser';
+      return item.launchType === 'New Trailer' || item.launchType === 'New Teaser' || Boolean(item.trailerKey);
     }
     if (activeTab === 'announcements') {
-      return item.launchType === 'New Announcement' || item.launchType === 'BTS / First Look';
+      return (
+        item.launchType === 'New Announcement' ||
+        item.launchType === 'BTS / First Look' ||
+        item.launchType === 'New Movie' ||
+        item.launchType === 'New Show'
+      );
     }
     return true;
   });
@@ -166,10 +173,15 @@ export const HomeNewLaunchesSection = () => {
               if (tab.id === 'bollywood') return item.industry === 'bollywood';
               if (tab.id === 'hollywood') return item.industry === 'hollywood';
               if (tab.id === 'trailers') {
-                return item.launchType === 'New Trailer' || item.launchType === 'New Teaser';
+                return item.launchType === 'New Trailer' || item.launchType === 'New Teaser' || Boolean(item.trailerKey);
               }
               if (tab.id === 'announcements') {
-                return item.launchType === 'New Announcement' || item.launchType === 'BTS / First Look';
+                return (
+                  item.launchType === 'New Announcement' ||
+                  item.launchType === 'BTS / First Look' ||
+                  item.launchType === 'New Movie' ||
+                  item.launchType === 'New Show'
+                );
               }
               return true;
             }).length;

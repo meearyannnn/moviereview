@@ -1,4 +1,4 @@
-// src/services/newLaunches.ts — 100% Latest & Upcoming 2025-2027 Bollywood & Hollywood Spotlight Drops
+// src/services/newLaunches.ts — Realtime Automated Bollywood & Hollywood Launches Engine (Zero Hardcoded Data)
 import { tmdb, type Movie } from './tmdb';
 
 export type LaunchType =
@@ -19,7 +19,7 @@ export interface NewLaunchItem {
   launchType: LaunchType;
   industry: 'bollywood' | 'hollywood';
   mediaType: 'movie' | 'tv';
-  releaseDate: string; // Strictly latest / upcoming (2025 - 2027)
+  releaseDate?: string;
   trailerKey?: string;
   headline?: string;
   overview?: string;
@@ -28,343 +28,15 @@ export interface NewLaunchItem {
   isHot?: boolean;
 }
 
-// 100% Latest, Fresh & Upcoming (2025 - 2027) Major Drops Only — Zero Outdated Catalog
-const CURATED_LAUNCHES: NewLaunchItem[] = [
-  // ── HOLLYWOOD LATEST & UPCOMING (2025 - 2027) ──
-  {
-    id: 575265,
-    tmdbId: 575265,
-    title: 'Mission: Impossible – The Final Reckoning',
-    poster: 'https://image.tmdb.org/t/p/w500/iKPsC9EFUafRP9SrUznI61getVP.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/538U9snNc2fpnOmYXAPUh3zn31H.jpg',
-    launchType: 'New Trailer',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'May 23, 2025',
-    trailerKey: 'Wd3fzHu1UlY',
-    headline: 'Paramount Pictures releases the explosive official teaser trailer for Tom Cruise’s cinematic culmination',
-    overview: 'Our lives are the sum of our choices. Tom Cruise returns as Ethan Hunt in a heart-stopping global confrontation that brings every choice and enemy from his past back into the line of fire.',
-    source: 'Deadline Hollywood',
-    sourceUrl: 'https://deadline.com',
-    isHot: true,
-  },
-  {
-    id: 986056,
-    tmdbId: 986056,
-    title: 'Thunderbolts*',
-    poster: 'https://image.tmdb.org/t/p/w500/hqcexYHbiTBfDIdDWxrxPtVndBX.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/rthMuZfFv4fqEU4JVbgSW9wQ8rs.jpg',
-    launchType: 'New Trailer',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'May 2, 2025',
-    trailerKey: 'W_qQ3lV8GzQ',
-    headline: 'Marvel Studios drops official trailer showcasing Florence Pugh and Sebastian Stan assembling a rogue strike team',
-    overview: 'An irreverent team of reformed villains and antiheroes—including Yelena Belova, Bucky Barnes, US Agent, and Ghost—are forced to unite for a dangerous covert mission that tests their loyalty.',
-    source: 'Variety Film',
-    sourceUrl: 'https://variety.com',
-    isHot: true,
-  },
-  {
-    id: 83533,
-    tmdbId: 83533,
-    title: 'Avatar: Fire and Ash',
-    poster: 'https://image.tmdb.org/t/p/w500/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/iN41Ccw4DctL8npfmYg1j5Tr1eb.jpg',
-    launchType: 'New Announcement',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'December 19, 2025',
-    trailerKey: '3ThgcAj0UyE',
-    headline: 'James Cameron and 20th Century Studios unveil the title, concept art, and ruthless Ash Na’vi tribe at D23',
-    overview: 'Following the devastating war against the RDA, Jake Sully and Neytiri face an unprecedented threat on Pandora: the Ash People, a fire-worshipping Na’vi clan led by the ruthless Varang that pushes them to their emotional limits.',
-    source: 'Variety Film',
-    sourceUrl: 'https://variety.com',
-    isHot: true,
-  },
-  {
-    id: 533533,
-    tmdbId: 533533,
-    title: 'TRON: Ares',
-    poster: 'https://image.tmdb.org/t/p/w500/chpWmskl3aKm1aTZqUHRCtviwPy.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/pUNfHmVqfwRdILhCkU8TdysVOXo.jpg',
-    launchType: 'New Teaser',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'October 10, 2025',
-    trailerKey: '1AEPAyQ9Tz0',
-    headline: 'Disney releases laser teaser scored by Nine Inch Nails with Jared Leto crossing from the digital grid into the real world',
-    overview: 'A highly sophisticated Program named Ares is dispatched from the digital world into physical reality on a high-stakes mission, marking humankind’s first encounter with sentient artificial intelligence.',
-    source: 'Collider',
-    sourceUrl: 'https://collider.com',
-    isHot: true,
-  },
-  {
-    id: 202555,
-    tmdbId: 202555,
-    title: 'Daredevil: Born Again',
-    poster: 'https://image.tmdb.org/t/p/w500/xDUoAsU8lQHOOoRkFiBuarmACDN.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/m291MEBjhuRqb0nh9ojnm9gzScq.jpg',
-    launchType: 'New Trailer',
-    industry: 'hollywood',
-    mediaType: 'tv',
-    releaseDate: 'March 4, 2025',
-    trailerKey: '0Ra-SCvk0Oo',
-    headline: 'Marvel Television releases full trailer showing Charlie Cox and Vincent D’Onofrio locked in a gritty war for New York',
-    overview: 'Matt Murdock, a blind attorney with superhuman senses, fights for justice in the courtroom while Wilson Fisk uses political power to tighten his grip on New York City, leading to an inevitable collision.',
-    source: 'Variety Film',
-    sourceUrl: 'https://variety.com',
-    isHot: true,
-  },
-  {
-    id: 66732,
-    tmdbId: 66732,
-    title: 'Stranger Things (Final Season 5)',
-    poster: 'https://image.tmdb.org/t/p/w500/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/9P4IIMYY3HifqeruZq0ZZ9g7YUi.jpg',
-    launchType: 'BTS / First Look',
-    industry: 'hollywood',
-    mediaType: 'tv',
-    releaseDate: 'Late 2025',
-    trailerKey: 'mnd7sFt5c3A',
-    headline: 'The Duffer Brothers share behind-the-scenes set footage as Hawkins gears up for the final season showdown against Vecna',
-    overview: 'With the Upside Down cracking open Hawkins, Eleven, Mike, Dustin, and their allies prepare for their ultimate, darkest battle to close the tear once and for all and save everyone they love.',
-    source: 'Deadline Hollywood',
-    sourceUrl: 'https://deadline.com',
-    isHot: true,
-  },
-  {
-    id: 110492,
-    tmdbId: 110492,
-    title: 'Peacemaker (Season 2)',
-    poster: 'https://image.tmdb.org/t/p/w500/yb4F1Oocq8GfQt6iIuAgYEBokhG.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/aJcUU3LMlqMKBi8L3eaxGfAbd4G.jpg',
-    launchType: 'New Teaser',
-    industry: 'hollywood',
-    mediaType: 'tv',
-    releaseDate: 'August 2025',
-    trailerKey: 'O9DAiLI7Cn8',
-    headline: 'James Gunn confirms Season 2 integration into the new DC Universe with John Cena returning as Christopher Smith',
-    overview: 'Christopher Smith returns to action under the newly configured DC Universe, navigating the aftermath of Project Butterfly alongside Emilia Harcourt, Economos, and Vigilante.',
-    source: 'Collider',
-    sourceUrl: 'https://collider.com',
-  },
-  {
-    id: 1003596,
-    tmdbId: 1003596,
-    title: 'Avengers: Doomsday',
-    poster: 'https://image.tmdb.org/t/p/w500/jzPwsojjFStf5lR5Nm07w2hH56G.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/s4v0UX1anfXm0UvloLsTTJ4v222.jpg',
-    launchType: 'New Announcement',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'May 1, 2026',
-    trailerKey: 'nxDMRvDr4AQ',
-    headline: 'Russo Brothers return to direct Robert Downey Jr. as Victor Von Doom in Marvel’s Phase 6 culmination',
-    overview: 'Earth’s Mightiest Heroes confront the supreme intellect and mystical mastery of Doctor Doom in a reality-shattering multiverse showdown that reshapes the Marvel Cinematic Universe.',
-    source: 'Deadline Hollywood',
-    sourceUrl: 'https://deadline.com',
-    isHot: true,
-  },
-  {
-    id: 806704,
-    tmdbId: 806704,
-    title: 'The Batman: Part II',
-    poster: 'https://image.tmdb.org/t/p/w500/r5fl4aMsmTjgc8DdDqQaM84roWp.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/4uaHnYDDpUTj0nCg6YqBKab50YW.jpg',
-    launchType: 'BTS / First Look',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'October 2, 2026',
-    trailerKey: 'mqqft2x_Aa4',
-    headline: 'Matt Reeves locks Warner Bros. soundstages for Robert Pattinson’s dark detective sequel',
-    overview: 'Bruce Wayne delves deeper into Gotham City’s frozen underworld in the aftermath of the seawall flood as a shadowy criminal elite challenges his newfound identity as a symbol of hope.',
-    source: 'Deadline Hollywood',
-    sourceUrl: 'https://deadline.com',
-  },
-  {
-    id: 911916,
-    tmdbId: 911916,
-    title: 'Spider-Man: Beyond the Spider-Verse',
-    poster: 'https://image.tmdb.org/t/p/w500/9KAe39xqyZnv9J4W3DRGdQqX82h.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/fUcT8bcJD3SZsy84Z9QRP6kOS7v.jpg',
-    launchType: 'New Announcement',
-    industry: 'hollywood',
-    mediaType: 'movie',
-    releaseDate: 'June 2027',
-    trailerKey: 'cqGjhVJWtEg',
-    headline: 'Sony Pictures Animation confirms production status and jaw-dropping multiverse dimensions for Miles Morales',
-    overview: 'Hunted by Miguel O’Hara’s Spider Society and separated from his allies, Miles finds himself in the darkest corners of the Spider-Verse racing against the clock to fight for and reunite everything he holds dear.',
-    source: 'Variety Film',
-    sourceUrl: 'https://variety.com',
-    isHot: true,
-  },
-
-  // ── BOLLYWOOD LATEST & UPCOMING (2025 - 2027) ──
-  {
-    id: 1109086,
-    tmdbId: 1109086,
-    title: 'War 2',
-    poster: 'https://image.tmdb.org/t/p/w500/fxxVbjhIOl8ZPS69dH8xeeuxvmh.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/pKIRUTnwY3YYU9urSdsuobdcliP.jpg',
-    launchType: 'New Movie',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'August 14, 2025',
-    trailerKey: 'dK1W-AViQ-M',
-    headline: 'Hrithik Roshan and Jr NTR wrap climactic action choreography for Ayan Mukerji’s explosive YRF Spy Universe sequel',
-    overview: 'When rogue agent Major Kabir descends into the shadows, India sends its deadliest, most lethal combat specialist, Agent Vikram, to execute an impossible takedown in a high-octane global manhunt.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-  {
-    id: 1122030,
-    tmdbId: 1122030,
-    title: 'Alpha',
-    poster: 'https://image.tmdb.org/t/p/w500/bPtRt3ajQ0EkyeQ1O6iJwAIi9Py.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/b4WXm5ahmtubYXy3wqHUG2nUKoM.jpg',
-    launchType: 'New Teaser',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'December 25, 2025',
-    trailerKey: 'YP1uSAggr6Y',
-    headline: 'Yash Raj Films drops high-octane title teaser for Alia Bhatt and Sharvari in the first female-led spy espionage spectacle',
-    overview: 'Two highly trained lethal operatives raised in isolation as super-soldiers discover the dark truth about their stolen childhoods and team up to take down their rogue creator.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-  {
-    id: 1257960,
-    tmdbId: 1257960,
-    title: 'Sikandar',
-    poster: 'https://image.tmdb.org/t/p/w500/41s42CRXafa3OuRGvCtfYPEBmse.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/4MNRH73XmwBK2ycv3qvLpa07O5F.jpg',
-    launchType: 'New Trailer',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'March 30, 2025',
-    trailerKey: 'cxA2y9TgdEU',
-    headline: 'Salman Khan and AR Murugadoss lock Eid 2025 theatrical release with massive high-budget action sequence reveal',
-    overview: 'A charismatic champion takes on a ruthless political empire in a clash of ideals and brute force to protect marginalized communities from systemic exploitation.',
-    source: 'Koimoi Bollywood',
-    sourceUrl: 'https://www.koimoi.com',
-    isHot: true,
-  },
-  {
-    id: 1195430,
-    tmdbId: 1195430,
-    title: 'Deva',
-    poster: 'https://image.tmdb.org/t/p/w500/8KGVSYfwLQMdAUgtuiXMl7ohg1a.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/lqHt4icP1GTaNBeVTxTrwTZdoAW.jpg',
-    launchType: 'New Movie',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'January 31, 2025',
-    trailerKey: 'DBCy-fo9eSQ',
-    headline: 'Shahid Kapoor and Pooja Hegde star in Rosshan Andrrews’ pulsating cop investigation thriller',
-    overview: 'Dev Ambre, a ruthless and brilliant cop, suffers memory loss in an accident right after cracking a high-profile case and must secretly reinvestigate the conspiracy from scratch.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-  {
-    id: 1235057,
-    tmdbId: 1235057,
-    title: 'Love & War',
-    poster: 'https://image.tmdb.org/t/p/w500/eNNsYveQyZduWb37KG8WMOlaVgJ.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/svGHaToRKhlxwTBslsOxuntz0D7.jpg',
-    launchType: 'New Announcement',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'March 20, 2026',
-    trailerKey: 'cxA2y9TgdEU',
-    headline: 'Sanjay Leela Bhansali sets grand romantic war epic starring Ranbir Kapoor, Alia Bhatt, and Vicky Kaushal',
-    overview: 'Two courageous armed forces officers find their lives, sworn loyalties, and brotherhood tested when they both fall deeply in love with the same remarkable woman against the tempest of war.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-  {
-    id: 801688,
-    tmdbId: 801688,
-    title: 'Kalki 2898 AD: Part 2',
-    poster: 'https://image.tmdb.org/t/p/w500/rstcAnBeCkxNQjNp3YXrF6IP1tW.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/o8XSR1SONnjcsv84NRu6Mwsl5io.jpg',
-    launchType: 'New Announcement',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'September 2026',
-    trailerKey: 'eWI9voiOt_k',
-    headline: 'Vyjayanthi Movies and Nag Ashwin confirm pre-production schedule for Part 2 with Kamal Haasan as supreme adversary',
-    overview: 'In the aftermath of the battle for Shambala, Supreme Yaskin prepares to unleash the devastating celestial power of the Complex, forcing Bhairava and Ashwatthama to forge an unprecedented alliance.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-  {
-    id: 656908,
-    tmdbId: 656908,
-    title: 'Ramayana: Part 1',
-    poster: 'https://image.tmdb.org/t/p/w500/gOWnXaBxqT6k2y40hKfYU6c0Ym.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/svGHaToRKhlxwTBslsOxuntz0D7.jpg',
-    launchType: 'BTS / First Look',
-    industry: 'bollywood',
-    mediaType: 'movie',
-    releaseDate: 'November 4, 2026',
-    trailerKey: '74nF-FWAS6M',
-    headline: 'Namit Malhotra and Nitesh Tiwari reveal visual effects milestone and global IMAX release plan with Ranbir Kapoor and Sai Pallavi',
-    overview: 'An ancient epic brought to life with state-of-the-art VFX: Prince Rama’s sacred exile, Sita’s abduction, and the ultimate battle against the ten-headed demon king Ravana.',
-    source: 'Koimoi Bollywood',
-    sourceUrl: 'https://www.koimoi.com',
-    isHot: true,
-  },
-  {
-    id: 101352,
-    tmdbId: 101352,
-    title: 'Panchayat (Season 4)',
-    poster: 'https://image.tmdb.org/t/p/w500/xrfvAhrMdT6Uwg5fyTyQAZBYyiu.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/iZ8EtGAqKWZdRJPzWfFseNfVxjh.jpg',
-    launchType: 'New Show',
-    industry: 'bollywood',
-    mediaType: 'tv',
-    releaseDate: 'May 2025',
-    trailerKey: 'AHMEtNAZTP4',
-    headline: 'TVF and Prime Video commence production on Season 4 following the dramatic Phulera village election cliffhanger',
-    overview: 'Abhishek Tripathi continues his bittersweet journey as secretary of a quirky village panchayat in rural Uttar Pradesh, balancing local politics with his aspirations.',
-    source: 'Koimoi Bollywood',
-    sourceUrl: 'https://www.koimoi.com',
-    isHot: true,
-  },
-  {
-    id: 84105,
-    tmdbId: 84105,
-    title: 'Mirzapur: The Film',
-    poster: 'https://image.tmdb.org/t/p/w500/1rxLUFVrtTo82OxhbDXJDiJVkwL.jpg',
-    backdrop: 'https://image.tmdb.org/t/p/w780/3dV7pWAdwIPKR2lMIACMfObXdgK.jpg',
-    launchType: 'New Announcement',
-    industry: 'bollywood',
-    mediaType: 'tv',
-    releaseDate: 'March 2026',
-    trailerKey: '33o3s4Vs4Sw',
-    headline: 'Excel Entertainment officially announces Mirzapur The Film for grand theatrical release starring Pankaj Tripathi and Ali Fazal',
-    overview: 'The iron-fisted Akhandanand Tripathi and Guddu Pandit take their vicious war for the throne of Purvanchal to the silver screen in an unprecedented cinematic spectacle.',
-    source: 'Bollywood Hungama',
-    sourceUrl: 'https://www.bollywoodhungama.com',
-    isHot: true,
-  },
-];
-
-const CACHE_KEY = 'mg_spotlight_launches_v7_latest_only';
-const CACHE_TTL_MS = 15 * 60 * 1000;
+const CACHE_KEY = 'mg_spotlight_launches_realtime_v1';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes fresh cache
 
 export const newLaunchesService = {
   /**
-   * Returns curated, strictly latest (2025-2027) Bollywood & Hollywood launches:
-   * - 100% verified official posters, backdrops, trailers, and synopses.
-   * - Zero outdated catalog releases or last year's dates.
-   * - Dynamically supplements with fresh 2025+ upcoming TMDB releases when available.
+   * Dynamically fetches ONLY real-time latest & upcoming movies and TV shows from live TMDB endpoints:
+   * - ZERO hardcoded dummy data or old catalog films.
+   * - Strictly filters for upcoming theatricals, brand new in-theaters, and current on-air TV shows.
+   * - Dynamically inspects video streams to detect official trailers, teasers, and BTS clips.
    */
   async getLaunches(): Promise<NewLaunchItem[]> {
     // 1. Session Storage cache check
@@ -376,7 +48,7 @@ export const newLaunchesService = {
           if (
             Date.now() - parsed.timestamp < CACHE_TTL_MS &&
             Array.isArray(parsed.data) &&
-            parsed.data.length >= 10
+            parsed.data.length > 0
           ) {
             return parsed.data;
           }
@@ -386,61 +58,249 @@ export const newLaunchesService = {
       }
     }
 
-    const items: NewLaunchItem[] = [...CURATED_LAUNCHES];
-    const seenTitles = new Set<string>(CURATED_LAUNCHES.map((c) => c.title.toLowerCase().trim()));
+    const todayDate = new Date();
+    const todayStr = todayDate.toISOString().split('T')[0];
 
-    // 2. Safely enrich with fresh upcoming theatrical movies from TMDB (strictly 2025 onwards)
+    // 90 days window for freshly released movies
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const currentYear = todayDate.getFullYear();
+
+    const candidates: Array<{
+      raw: any;
+      mediaType: 'movie' | 'tv';
+      industry: 'bollywood' | 'hollywood';
+      defaultType: LaunchType;
+    }> = [];
+
+    const seenIds = new Set<string>();
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-      const [upcomingRes] = await Promise.allSettled([
-        tmdb.getUpcoming().finally(() => clearTimeout(timeoutId)),
+      // 2. Fetch live streams concurrently:
+      // - Hollywood Upcoming (Strictly from today onwards)
+      // - Hollywood Now Playing (Current theatrical releases)
+      // - Hollywood / Global TV On The Air (Currently dropping fresh episodes)
+      // - Bollywood Upcoming Releases (Hindi upcoming from today onwards)
+      // - Bollywood Recent Releases (Hindi releases within the last 90 days only, no old catalog)
+      // - Bollywood Fresh TV Series (Released recently)
+      const [
+        hollywoodUpcoming,
+        hollywoodNowPlaying,
+        globalTvOnAir,
+        bollywoodUpcoming,
+        bollywoodRecent,
+        bollywoodTv,
+      ] = await Promise.allSettled([
+        tmdb.getUpcoming(),
+        tmdb.getNowPlaying(),
+        tmdb.getOnTheAir(),
+        tmdb.discoverMovies(`with_original_language=hi&primary_release_date.gte=${todayStr}&sort_by=popularity.desc`),
+        tmdb.discoverMovies(`with_original_language=hi&primary_release_date.gte=${ninetyDaysAgo}&sort_by=primary_release_date.desc`),
+        tmdb.discoverTV(`with_original_language=hi&first_air_date.gte=${currentYear - 1}-01-01&sort_by=popularity.desc`),
       ]);
 
-      if (upcomingRes.status === 'fulfilled' && Array.isArray(upcomingRes.value?.results)) {
-        for (const m of (upcomingRes.value.results as Movie[]).slice(0, 4)) {
-          const title = m.title;
-          if (!title || !m.poster_path) continue;
-          const key = title.toLowerCase().trim();
-
-          // Strictly filter for 2025+ dates only!
-          const isUpcoming2025Plus = m.release_date && new Date(m.release_date) >= new Date('2025-01-01');
-          if (!seenTitles.has(key) && isUpcoming2025Plus && m.poster_path) {
-            seenTitles.add(key);
-            items.push({
-              id: m.id,
-              tmdbId: m.id,
-              title,
-              poster: tmdb.getImageUrl(m.poster_path, 'w500'),
-              backdrop: m.backdrop_path ? tmdb.getImageUrl(m.backdrop_path, 'w780') : undefined,
-              launchType: 'New Trailer',
-              industry: 'hollywood',
-              mediaType: 'movie',
-              releaseDate: m.release_date,
-              overview: m.overview,
-              source: 'Hollywood Theatrical Wire',
-              isHot: (m.vote_average || 0) > 7.0,
-            });
+      // Process Bollywood Upcoming
+      if (bollywoodUpcoming.status === 'fulfilled' && Array.isArray(bollywoodUpcoming.value?.results)) {
+        for (const m of bollywoodUpcoming.value.results) {
+          if (m.poster_path && (m.title || m.name)) {
+            const key = `movie-${m.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: m,
+                mediaType: 'movie',
+                industry: 'bollywood',
+                defaultType: 'New Movie',
+              });
+            }
           }
         }
       }
-    } catch {
-      // Graceful fallback to verified curated items
+
+      // Process Bollywood Recent Fresh Releases
+      if (bollywoodRecent.status === 'fulfilled' && Array.isArray(bollywoodRecent.value?.results)) {
+        for (const m of bollywoodRecent.value.results) {
+          if (m.poster_path && (m.title || m.name)) {
+            const key = `movie-${m.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: m,
+                mediaType: 'movie',
+                industry: 'bollywood',
+                defaultType: 'New Movie',
+              });
+            }
+          }
+        }
+      }
+
+      // Process Hollywood Upcoming
+      if (hollywoodUpcoming.status === 'fulfilled' && Array.isArray(hollywoodUpcoming.value?.results)) {
+        for (const m of hollywoodUpcoming.value.results) {
+          if (m.poster_path && (m.title || m.name)) {
+            const key = `movie-${m.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: m,
+                mediaType: 'movie',
+                industry: 'hollywood',
+                defaultType: 'New Trailer',
+              });
+            }
+          }
+        }
+      }
+
+      // Process Hollywood Now Playing
+      if (hollywoodNowPlaying.status === 'fulfilled' && Array.isArray(hollywoodNowPlaying.value?.results)) {
+        for (const m of hollywoodNowPlaying.value.results) {
+          if (m.poster_path && (m.title || m.name)) {
+            const key = `movie-${m.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: m,
+                mediaType: 'movie',
+                industry: 'hollywood',
+                defaultType: 'New Movie',
+              });
+            }
+          }
+        }
+      }
+
+      // Process Bollywood TV Series
+      if (bollywoodTv.status === 'fulfilled' && Array.isArray(bollywoodTv.value?.results)) {
+        for (const s of bollywoodTv.value.results) {
+          if (s.poster_path && (s.title || s.name)) {
+            const key = `tv-${s.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: s,
+                mediaType: 'tv',
+                industry: 'bollywood',
+                defaultType: 'New Show',
+              });
+            }
+          }
+        }
+      }
+
+      // Process Global TV On The Air
+      if (globalTvOnAir.status === 'fulfilled' && Array.isArray(globalTvOnAir.value?.results)) {
+        for (const s of globalTvOnAir.value.results) {
+          if (s.poster_path && (s.title || s.name)) {
+            const key = `tv-${s.id}`;
+            if (!seenIds.has(key)) {
+              seenIds.add(key);
+              candidates.push({
+                raw: s,
+                mediaType: 'tv',
+                industry: s.original_language === 'hi' ? 'bollywood' : 'hollywood',
+                defaultType: 'New Show',
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Realtime launches query issue:', e);
     }
 
-    // 3. Save to session storage
-    if (typeof window !== 'undefined' && window.sessionStorage) {
+    // 3. Select top candidates with healthy balance of Bollywood & Hollywood
+    const bollyCandidates = candidates.filter((c) => c.industry === 'bollywood').slice(0, 12);
+    const hollyCandidates = candidates.filter((c) => c.industry === 'hollywood').slice(0, 14);
+    const selectedPool = [...bollyCandidates, ...hollyCandidates];
+
+    // 4. Enrich with live YouTube trailers & video metadata in parallel
+    const launches: NewLaunchItem[] = await Promise.all(
+      selectedPool.map(async ({ raw, mediaType, industry, defaultType }) => {
+        const id = raw.id;
+        const title = raw.title || raw.name || '';
+        const poster = tmdb.getImageUrl(raw.poster_path, 'w500');
+        const backdrop = raw.backdrop_path ? tmdb.getImageUrl(raw.backdrop_path, 'w780') : undefined;
+        const rawDate = raw.release_date || raw.first_air_date;
+        const overview = raw.overview || 'Latest premiere and launch details currently updating on MovieGuy.';
+
+        let launchType = defaultType;
+        let trailerKey: string | undefined = undefined;
+
+        // Try to fetch real YouTube video track
+        try {
+          const vRes = await tmdb.getVideos(id, mediaType);
+          const videos = vRes?.results || [];
+
+          const officialTrailer = videos.find(
+            (v: any) => v.site === 'YouTube' && v.type === 'Trailer' && v.official
+          ) || videos.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer');
+
+          const teaser = videos.find((v: any) => v.site === 'YouTube' && v.type === 'Teaser');
+          const bts = videos.find(
+            (v: any) => v.site === 'YouTube' && (v.type === 'Behind the Scenes' || v.type === 'Featurette')
+          );
+
+          if (officialTrailer) {
+            trailerKey = officialTrailer.key;
+            if (mediaType === 'movie') launchType = 'New Trailer';
+          } else if (teaser) {
+            trailerKey = teaser.key;
+            launchType = 'New Teaser';
+          } else if (bts) {
+            trailerKey = bts.key;
+            launchType = 'BTS / First Look';
+          }
+        } catch {
+          // Video lookup catch
+        }
+
+        // Format clean release date string
+        let releaseDate = rawDate;
+        if (rawDate) {
+          try {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+              releaseDate = d.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              });
+            }
+          } catch {}
+        }
+
+        return {
+          id,
+          tmdbId: id,
+          title,
+          poster,
+          backdrop,
+          launchType,
+          industry,
+          mediaType,
+          releaseDate,
+          trailerKey,
+          headline: `Live premiere track: ${title} launches across ${industry === 'bollywood' ? 'Indian' : 'Global'} cinema`,
+          overview,
+          source: industry === 'bollywood' ? 'Bollywood Theatrical Wire' : 'Hollywood Theatrical Wire',
+          isHot: (raw.vote_average || 0) > 7.0 || (raw.popularity || 0) > 40,
+        };
+      })
+    );
+
+    // 5. Cache result
+    if (launches.length > 0 && typeof window !== 'undefined' && window.sessionStorage) {
       try {
         sessionStorage.setItem(
           CACHE_KEY,
-          JSON.stringify({ data: items, timestamp: Date.now() })
+          JSON.stringify({ data: launches, timestamp: Date.now() })
         );
       } catch {
         // Storage catch
       }
     }
 
-    return items;
+    return launches;
   },
 };

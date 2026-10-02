@@ -1,13 +1,7 @@
 // src/components/HomeDirectorsSpotlight.tsx — Dynamic 40+ Directors Showcase Section for Home Page
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Clapperboard,
-  ArrowRight,
-  ChevronRight,
-  Sparkles,
-  Film,
-} from 'lucide-react';
+import { Clapperboard, ArrowRight } from 'lucide-react';
 import { DirectorRow } from '@/components/directors/DirectorRow';
 import { CURATED_DIRECTORS, type CuratedDirector } from '@/config/directors';
 
@@ -224,86 +218,6 @@ export const HomeDirectorsSpotlight: React.FC = () => {
               topFilms: currentDirector.topFilms,
             }}
           />
-        </div>
-
-        {/* ── Quick Discovery Strip: Direct Jump to Other Curated Masters ── */}
-        <div className="pt-3 mt-3 border-t border-white/[0.06]">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-              <Sparkles className="w-2.5 h-2.5 text-[#f5c542]" />
-              <span>Explore More Masters in Vault</span>
-            </span>
-            <Link
-              to="/directors"
-              className="text-[10px] font-mono text-[#c9a24b]/80 hover:text-[#f5c542] transition-colors"
-            >
-              Search All 45+ Filmmakers →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-            {directors.slice(0, 8).map((m, idx) => {
-              const isCurrent = m.id === currentDirector.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => selectDirector(idx)}
-                  className={`group flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all ${
-                    isCurrent
-                      ? 'border-[#f5c542] bg-[#c9a24b]/10 shadow-[0_0_10px_rgba(245,197,66,0.15)]'
-                      : 'border-white/[0.06] bg-white/[0.02] hover:border-[#c9a24b]/40 hover:bg-[#c9a24b]/5'
-                  }`}
-                >
-                  {m.profilePath ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w185${m.profilePath}`}
-                      alt={m.name}
-                      loading="lazy"
-                      className={`w-7 h-9 rounded object-cover border transition-all ${
-                        isCurrent
-                          ? 'border-[#f5c542] grayscale-0'
-                          : 'border-white/[0.08] grayscale group-hover:grayscale-0'
-                      }`}
-                    />
-                  ) : (
-                    <div className="w-9 h-11 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.06]">
-                      <Film className="w-3.5 h-3.5 text-white/30" />
-                    </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <h4
-                      className={`font-display text-xs font-bold truncate transition-colors ${
-                        isCurrent
-                          ? 'text-[#f5c542]'
-                          : 'text-white/85 group-hover:text-[#f5c542]'
-                      }`}
-                    >
-                      {m.name}
-                    </h4>
-                    <p className="text-[10px] font-mono text-[#c9a24b]/70 truncate mt-0.5">
-                      {m.era}
-                    </p>
-                    <span className="text-[9px] font-mono text-white/30 block truncate mt-0.5">
-                      {m.totalFilms ? `${m.totalFilms} films` : 'Master'}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Full Archive Link */}
-          <div className="mt-4 text-center">
-            <Link
-              to="/directors"
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white/[0.04] hover:bg-[#c9a24b]/15 border border-[#c9a24b]/30 hover:border-[#f5c542] text-xs font-mono text-[#f5c542] transition-all group shadow-sm"
-            >
-              <span>Explore All 45+ Curated Directors &amp; Complete Filmographies</span>
-              <ChevronRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
-// src/components/directors/DirectorTopFilms.tsx — Top Films Admission Ticket Carousel
+// src/components/directors/DirectorTopFilms.tsx — Top Films Carousel (simplified)
 import React from 'react';
-import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { MovieCard } from '@/components/MovieCard';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
 import { type DirectorMovie } from '@/hooks/useDirector';
@@ -10,74 +10,60 @@ interface DirectorTopFilmsProps {
   directorName: string;
 }
 
+const arrowClass =
+  'w-9 h-9 rounded-full bg-white/[0.06] text-white/70 hover:text-[#f5c542] hover:bg-white/10 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] disabled:opacity-20 disabled:pointer-events-none';
+
 export const DirectorTopFilms: React.FC<DirectorTopFilmsProps> = ({ movies, directorName }) => {
-  const {
-    containerRef,
-    canScrollLeft,
-    canScrollRight,
-    scrollToDirection,
-    handlers,
-  } = useSmoothScroll<HTMLDivElement>({
-    enableWheel: true,
-    enableDrag: true,
-    scrollStepRatio: 0.75,
-  });
+  const { containerRef, canScrollLeft, canScrollRight, scrollToDirection, handlers } =
+    useSmoothScroll<HTMLDivElement>({
+      enableWheel: true,
+      enableDrag: true,
+      scrollStepRatio: 0.75,
+    });
 
   if (!movies || movies.length === 0) return null;
 
   return (
     <section className="w-full">
-      {/* ── Section Header with Rounded-Square Gold Badge & Carousel Controls ── */}
-      <div className="flex items-center justify-between mb-4 px-0.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center shadow-[0_0_12px_rgba(245,197,66,0.2)] shrink-0">
-            <Trophy className="w-3.5 h-3.5" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="font-display font-black text-lg sm:text-xl tracking-tight text-white flex items-baseline gap-2">
-              <span>Top Films</span>
-              <span className="text-[#f5c542] hidden sm:inline">Signature Works</span>
-            </h2>
-            <p className="text-[11px] text-[#c9a24b]/70 font-mono mt-0.5 truncate">
-              Highest rated masterpieces directed by {directorName}
-            </p>
-          </div>
+      <div className="flex items-end justify-between gap-4 mb-4">
+        <div className="min-w-0">
+          <h2 className="font-display font-extrabold tracking-tight text-2xl sm:text-3xl text-white">
+            Top films
+          </h2>
+          <p className="mt-1 text-sm text-white/45 truncate">
+            Highest rated by {directorName}
+          </p>
         </div>
 
-        {/* Carousel Prev/Next Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => scrollToDirection('left')}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
-            className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/60 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all"
+            className={arrowClass}
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => scrollToDirection('right')}
             disabled={!canScrollRight}
             aria-label="Scroll right"
-            className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/60 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all"
+            className={arrowClass}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* ── Carousel Scroll Track ── */}
       <div
         ref={containerRef}
         {...handlers}
         className="flex gap-3.5 sm:gap-4 overflow-x-auto scrollbar-hide select-none touch-pan-x overscroll-x-contain pb-3 pt-0.5"
       >
         {movies.map((movie) => (
-          <div
-            key={movie.id}
-            className="w-[155px] sm:w-[175px] md:w-[195px] shrink-0"
-          >
+          <div key={movie.id} className="w-[155px] sm:w-[175px] md:w-[195px] shrink-0">
             <MovieCard movie={movie} type="movie" />
           </div>
         ))}

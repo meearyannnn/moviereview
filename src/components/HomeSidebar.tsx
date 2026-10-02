@@ -1,9 +1,7 @@
+// src/components/HomeSidebar.tsx — Charts, community and genres
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Film, Tv, Trophy, Flame, Compass, ArrowUpRight,
-  MessageSquare, Star, Sparkles, Crown, Moon, Clapperboard,
-} from 'lucide-react';
+import { Film, Star, ArrowRight, MessageSquare } from 'lucide-react';
 import { tmdb } from '@/services/tmdb';
 
 interface RankedItem {
@@ -15,6 +13,44 @@ interface RankedItem {
   type: 'movie' | 'tv';
 }
 
+interface ChartTab {
+  id: string;
+  label: string;
+  type: 'movie' | 'tv';
+  link: string;
+  load: () => Promise<{ results?: any[] }>;
+}
+
+// One chart at a time instead of seven stacked cards
+const TABS: ChartTab[] = [
+  { id: 'movies', label: 'Top movies', type: 'movie', link: '/movies', load: () => tmdb.getTrending('movie', 'week') },
+  { id: 'shows', label: 'Trending shows', type: 'tv', link: '/tv', load: () => tmdb.getTrending('tv', 'week') },
+  { id: 'top-tv', label: 'Top rated TV', type: 'tv', link: '/tv', load: () => tmdb.getTopRated('tv') },
+  {
+    id: 'gems',
+    label: 'Hidden gems',
+    type: 'movie',
+    link: '/explore',
+    load: () => tmdb.discover('movie', 'vote_average.gte=8.0&vote_count.gte=300&vote_count.lte=4000&sort_by=vote_average.desc'),
+  },
+  {
+    id: 'classics',
+    label: 'Classics',
+    type: 'movie',
+    link: '/explore',
+    load: () =>
+      tmdb.discover('movie', 'primary_release_date.lte=2002-01-01&vote_average.gte=8.2&vote_count.gte=1000&sort_by=vote_average.desc'),
+  },
+  { id: 'thrills', label: 'Thrillers', type: 'movie', link: '/explore', load: () => tmdb.discover('movie', 'with_genres=27|53&sort_by=popularity.desc') },
+  {
+    id: 'binge',
+    label: 'Binge-worthy',
+    type: 'tv',
+    link: '/tv',
+    load: () => tmdb.discover('tv', 'vote_average.gte=8.2&vote_count.gte=500&sort_by=popularity.desc'),
+  },
+];
+
 const GENRES = [
   { id: 28, name: 'Action' }, { id: 878, name: 'Sci-Fi' },
   { id: 27, name: 'Horror' }, { id: 35, name: 'Comedy' },
@@ -22,101 +58,69 @@ const GENRES = [
   { id: 18, name: 'Drama' }, { id: 14, name: 'Fantasy' },
 ];
 
-/* ─── Shared ranked-list row ─────────────────────────────────────────────── */
+const toItem = (m: any, type: 'movie' | 'tv'): RankedItem => ({
+  id: m.id,
+  title: m.title || m.name || m.original_title || m.original_name || 'Untitled',
+  poster_path: m.poster_path,
+  year: (m.release_date || m.first_air_date)?.slice(0, 4),
+  rating: m.vote_average,
+  type,
+});
+
+/* ─── Ranked row ─── */
 const RankRow = ({ item, rank }: { item: RankedItem; rank: number }) => (
   <li>
     <Link
       to={`/${item.type}/${item.id}`}
-      className="group flex items-center gap-3 rounded-xl px-2 py-1.5 -mx-2 transition-all hover:bg-white/[0.04]"
+      className="group -mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.05] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
     >
-      {/* Ghost rank number */}
-      <span
-        className="w-8 flex-shrink-0 font-display text-4xl font-black leading-none text-transparent select-none text-right"
-        style={{ WebkitTextStroke: '1.5px rgba(201,162,75,0.45)' }}
-        aria-hidden
-      >
+      <span className="w-5 shrink-0 text-center font-display text-lg font-black tabular-nums text-white/30 transition-colors group-hover:text-[#f5c542]">
         {rank}
       </span>
 
-      {/* Poster */}
       {item.poster_path ? (
         <img
-          src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
-          alt={item.title}
+          src={tmdb.getImageUrl(item.poster_path, 'w185')}
+          alt=""
           loading="lazy"
           decoding="async"
-          className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-white/[0.07] group-hover:border-[#c9a24b]/50 transition-all"
+          className="h-14 w-10 shrink-0 rounded-lg object-cover ring-1 ring-white/[0.08]"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = '/placeholder.svg';
           }}
         />
       ) : (
-        <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.05]">
-          <Film className="w-4 h-4 text-white/20" />
+        <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/[0.08]">
+          <Film className="h-4 w-4 text-white/20" />
         </div>
       )}
 
-      {/* Info */}
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-white/85 group-hover:text-[#f5c542] truncate transition-colors leading-snug">
-          {item.title}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-white/35">
-          <span>{item.year || '—'}</span>
-          {item.rating && item.rating > 0 && (
-            <span className="flex items-center gap-0.5 text-[#e5b95a]">
-              <Star className="w-2.5 h-2.5 fill-current stroke-none" />
+        <p className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#f5c542]">{item.title}</p>
+        <p className="mt-0.5 flex items-center gap-2 text-xs text-white/45">
+          {item.year && <span>{item.year}</span>}
+          {!!item.rating && item.rating > 0 && (
+            <span className="inline-flex items-center gap-1 text-white/65">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
               {item.rating.toFixed(1)}
             </span>
           )}
-        </div>
+        </p>
       </div>
     </Link>
   </li>
 );
 
-/* ─── Sidebar section card ───────────────────────────────────────────────── */
-const SideCard = ({
-  icon: Icon,
-  label,
-  link,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  link: string;
-  children: React.ReactNode;
-}) => (
-  <div className="rounded-2xl border border-white/[0.07] bg-gradient-to-b from-[#150a11]/80 to-[#0c0609]/80 overflow-hidden">
-    {/* Card header strip */}
-    <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/[0.05]">
-      <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-lg bg-[#c9a24b]/12 border border-[#c9a24b]/20 flex items-center justify-center text-[#f5c542]">
-          <Icon className="w-3 h-3" />
-        </div>
-        <span className="font-display text-sm font-black text-white tracking-tight">{label}</span>
-      </div>
-      <Link
-        to={link}
-        className="flex items-center gap-0.5 text-[10px] font-mono font-bold text-[#c9a24b]/55 hover:text-[#f5c542] transition-colors"
-      >
-        All <ArrowUpRight className="w-2.5 h-2.5" />
-      </Link>
-    </div>
-    <div className="px-4 py-3">{children}</div>
-  </div>
-);
-
-const Skeleton = () => (
-  <div className="space-y-3">
-    {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center gap-3 animate-pulse">
-        <div className="w-8 h-8 rounded bg-white/[0.04]" />
+const SkeletonRows = () => (
+  <div className="space-y-4" aria-hidden>
+    {Array.from({ length: 5 }).map((_, i) => (
+      <div key={i} className="flex animate-pulse items-center gap-3">
+        <div className="h-5 w-5 rounded bg-white/[0.04]" />
         <div className="h-14 w-10 rounded-lg bg-white/[0.04]" />
         <div className="flex-1 space-y-2">
-          <div className="h-3 w-3/4 rounded bg-white/[0.04]" />
-          <div className="h-2.5 w-1/2 rounded bg-white/[0.04]" />
+          <div className="h-3.5 w-3/4 rounded bg-white/[0.05]" />
+          <div className="h-3 w-1/3 rounded bg-white/[0.04]" />
         </div>
       </div>
     ))}
@@ -124,215 +128,140 @@ const Skeleton = () => (
 );
 
 export const HomeSidebar = () => {
-  const [topMovies, setTopMovies] = useState<RankedItem[]>([]);
-  const [trendingShows, setTrendingShows] = useState<RankedItem[]>([]);
-  const [topRatedShows, setTopRatedShows] = useState<RankedItem[]>([]);
-  const [hiddenGems, setHiddenGems] = useState<RankedItem[]>([]);
-  const [timelessVault, setTimelessVault] = useState<RankedItem[]>([]);
-  const [lateNight, setLateNight] = useState<RankedItem[]>([]);
-  const [binge, setBinge] = useState<RankedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState(TABS[0].id);
+  const [data, setData] = useState<Record<string, RankedItem[]>>({});
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const [attempt, setAttempt] = useState(0);
 
+  const active = TABS.find((t) => t.id === activeId) ?? TABS[0];
+
+  // Each chart loads only when opened, and a failed one can't blank the others.
+  // (Before: seven requests on mount inside one Promise.all, so one failure emptied everything.)
   useEffect(() => {
-    let live = true;
-    const toItem = (m: any, type: 'movie' | 'tv'): RankedItem => ({
-      id: m.id,
-      title: m.title || m.name || m.original_title || m.original_name,
-      poster_path: m.poster_path,
-      year: (m.release_date || m.first_air_date)?.slice(0, 4),
-      rating: m.vote_average,
-      type,
-    });
+    if (data[active.id]) return;
+    let cancelled = false;
+    active
+      .load()
+      .then((res) => {
+        if (cancelled) return;
+        setData((prev) => ({ ...prev, [active.id]: (res.results || []).slice(0, 5).map((x) => toItem(x, active.type)) }));
+      })
+      .catch((err) => {
+        console.error(`Sidebar chart "${active.id}" failed:`, err);
+        if (!cancelled) setFailed((prev) => ({ ...prev, [active.id]: true }));
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active.id, attempt]);
 
-    Promise.all([
-      tmdb.getTrending('movie', 'week'),
-      tmdb.getTrending('tv', 'week'),
-      tmdb.getTopRated('tv'),
-      tmdb.discover('movie', 'vote_average.gte=8.0&vote_count.gte=300&vote_count.lte=4000&sort_by=vote_average.desc'),
-      tmdb.discover('movie', 'primary_release_date.lte=2002-01-01&vote_average.gte=8.2&vote_count.gte=1000&sort_by=vote_average.desc'),
-      tmdb.discover('movie', 'with_genres=27|53&sort_by=popularity.desc'),
-      tmdb.discover('tv', 'vote_average.gte=8.2&vote_count.gte=500&sort_by=popularity.desc'),
-    ]).then(([m, tv, topTv, gems, vault, thrills, bingeRes]) => {
-      if (!live) return;
-      setTopMovies((m.results || []).slice(0, 5).map((x: any) => toItem(x, 'movie')));
-      setTrendingShows((tv.results || []).slice(0, 5).map((x: any) => toItem(x, 'tv')));
-      setTopRatedShows((topTv.results || []).slice(0, 5).map((x: any) => toItem(x, 'tv')));
-      setHiddenGems((gems.results || []).slice(0, 5).map((x: any) => toItem(x, 'movie')));
-      setTimelessVault((vault.results || []).slice(0, 5).map((x: any) => toItem(x, 'movie')));
-      setLateNight((thrills.results || []).slice(0, 5).map((x: any) => toItem(x, 'movie')));
-      setBinge((bingeRes.results || []).slice(0, 5).map((x: any) => toItem(x, 'tv')));
-      setLoading(false);
-    }).catch(() => { if (live) setLoading(false); });
+  const items = data[active.id];
+  const hasFailed = !items && failed[active.id];
 
-    return () => { live = false; };
-  }, []);
+  const retry = () => {
+    setFailed((prev) => ({ ...prev, [active.id]: false }));
+    setAttempt((a) => a + 1);
+  };
 
   return (
-    <aside className="space-y-4" aria-label="Sidebar — Charts & Community">
+    <aside className="space-y-10" aria-label="Charts and community">
+      {/* ── Charts ── */}
+      <section>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-xl font-bold tracking-tight text-white">Charts</h2>
+          <Link
+            to={active.link}
+            className="inline-flex items-center gap-1 text-sm text-white/50 transition-colors hover:text-[#f5c542]"
+          >
+            See all <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
 
-      <SideCard icon={Film} label="Top Movies" link="/movies">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{topMovies.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Tv} label="Trending Shows" link="/tv">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{trendingShows.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Trophy} label="Top Rated TV" link="/tv">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{topRatedShows.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Sparkles} label="Hidden Gems" link="/explore">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{hiddenGems.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Crown} label="Timeless Vault" link="/explore">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{timelessVault.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Moon} label="Late-Night Thrills" link="/explore">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{lateNight.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      <SideCard icon={Clapperboard} label="Binge Champions" link="/tv">
-        {loading ? <Skeleton /> : <ol className="space-y-0.5">{binge.map((it, i) => <RankRow key={it.id} item={it} rank={i + 1} />)}</ol>}
-      </SideCard>
-
-      {/* ── Community Buzz ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#c9a24b]/20 bg-gradient-to-br from-[#1c0f18] to-[#0a0608] p-5">
-        <div className="pointer-events-none absolute -top-6 -right-6 w-28 h-28 bg-[#f5c542]/10 rounded-full blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.025] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:14px_14px]" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/25 flex items-center justify-center text-[#f5c542]">
-                <Flame className="w-3 h-3" />
-              </div>
-              <span className="font-display text-sm font-black text-white">Community Buzz</span>
-            </div>
-            <Link to="/community" className="text-[10px] font-mono font-bold text-[#c9a24b]/60 hover:text-[#f5c542] transition-colors">
-              Join →
-            </Link>
-          </div>
-
-          <p className="text-[11px] font-mono text-white/35 mb-3">What cinephiles are talking about</p>
-
-          <div className="space-y-2 mb-4">
-            {[
-              { tag: '#AbsoluteCinema', count: '240+' },
-              { tag: '#MustWatch2025', count: '180+' },
-              { tag: '#HiddenGems', count: '140+' },
-              { tag: '#WeekendWatch', count: '320+' },
-            ].map((topic) => (
-              <Link
-                key={topic.tag}
-                to="/community?feed=global"
-                className="flex items-center justify-between rounded-xl border border-[#c9a24b]/10 bg-white/[0.02] px-3 py-2 hover:border-[#c9a24b]/35 hover:bg-[#c9a24b]/8 transition-all group"
+        <div
+          role="tablist"
+          aria-label="Chart"
+          className="mt-4 flex gap-5 overflow-x-auto border-b border-white/[0.08] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {TABS.map((t) => {
+            const isActive = t.id === activeId;
+            return (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveId(t.id)}
+                className={`-mb-px shrink-0 border-b-2 pb-2.5 text-sm font-medium transition-colors ${isActive ? 'border-[#f5c542] text-white' : 'border-transparent text-white/45 hover:text-white/80'
+                  }`}
               >
-                <span className="text-xs font-semibold text-white/75 group-hover:text-white transition-colors">{topic.tag}</span>
-                <span className="text-[10px] font-mono text-[#c9a24b]/60">{topic.count} takes</span>
-              </Link>
-            ))}
-          </div>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
+        <div className="mt-4 min-h-[22rem]" role="tabpanel">
+          {items ? (
+            items.length > 0 ? (
+              <ol>
+                {items.map((it, i) => (
+                  <RankRow key={it.id} item={it} rank={i + 1} />
+                ))}
+              </ol>
+            ) : (
+              <p className="py-10 text-center text-sm text-white/45">Nothing on this chart right now.</p>
+            )
+          ) : hasFailed ? (
+            <div className="py-10 text-center">
+              <p className="text-sm text-white/55">Couldn’t load this chart.</p>
+              <button type="button" onClick={retry} className="mt-2 text-sm font-medium text-[#f5c542] hover:text-white">
+                Try again
+              </button>
+            </div>
+          ) : (
+            <SkeletonRows />
+          )}
+        </div>
+      </section>
+
+      {/* ── Community: one calm panel, no invented numbers ── */}
+      <section className="rounded-2xl bg-white/[0.04] p-5 ring-1 ring-white/[0.06]">
+        <h2 className="font-display text-lg font-bold text-white">Join the conversation</h2>
+        <p className="mt-1 text-sm text-white/50">See what cinephiles are saying, and add your own take.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Link
             to="/community/discussions"
-            className="flex w-full items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] text-xs font-black hover:brightness-110 transition-all shadow-lg shadow-[#c9a24b]/20 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-full bg-[#f5c542] px-4 py-2 text-sm font-bold text-[#1c120c] transition-colors hover:bg-white"
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            Start a Discussion
+            <MessageSquare className="h-4 w-4" />
+            Start a discussion
+          </Link>
+          <Link to="/community" className="text-sm text-white/55 transition-colors hover:text-[#f5c542]">
+            Browse community
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* ── Directors Vault Showcase ── */}
-      <div className="rounded-2xl border border-[#c9a24b]/20 bg-gradient-to-br from-[#180d14] to-[#0a0608] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/25 flex items-center justify-center text-[#f5c542]">
-              <Clapperboard className="w-3 h-3" />
-            </div>
-            <span className="font-display text-sm font-black text-white">Directors Vault</span>
-          </div>
-          <Link to="/directors" className="text-[10px] font-mono font-bold text-[#c9a24b]/80 hover:text-[#f5c542] transition-colors">
-            All 45+ →
+      {/* ── Genres ── */}
+      <section>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-xl font-bold tracking-tight text-white">Browse by genre</h2>
+          <Link to="/explore" className="inline-flex items-center gap-1 text-sm text-white/50 transition-colors hover:text-[#f5c542]">
+            All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-
-        <p className="text-[11px] font-mono text-white/40 mb-3">Masterminds behind cinema's greatest stories</p>
-
-        <div className="space-y-1.5 mb-3">
-          {[
-            { id: 525, name: 'Christopher Nolan', era: '1998–Present', films: 19, img: '/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg' },
-            { id: 137427, name: 'Denis Villeneuve', era: '1998–Present', films: 24, img: '/xzQYqb4nR8xT7Zdw5itbEL9K3fd.jpg' },
-            { id: 138, name: 'Quentin Tarantino', era: '1992–Present', films: 15, img: '/1gjcpAa99FAOWGnrUvHEXXsRs7o.jpg' },
-            { id: 1032, name: 'Martin Scorsese', era: '1967–Present', films: 58, img: '/g3DjfKsgZQWZiw30I20hZVk1oMX.jpg' },
-          ].map((d) => (
-            <Link
-              key={d.id}
-              to={`/director/${d.id}`}
-              className="flex items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.02] p-2 hover:border-[#c9a24b]/35 hover:bg-[#c9a24b]/10 transition-all group"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <img
-                  src={`https://image.tmdb.org/t/p/w92${d.img}`}
-                  alt={d.name}
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                  className="w-8 h-8 rounded-full object-cover border border-white/[0.1] grayscale group-hover:grayscale-0 transition-all"
-                />
-                <div className="min-w-0">
-                  <span className="text-xs font-semibold text-white/85 group-hover:text-[#f5c542] truncate block transition-colors">
-                    {d.name}
-                  </span>
-                  <span className="text-[10px] font-mono text-[#c9a24b]/70 block truncate">
-                    {d.era}
-                  </span>
-                </div>
-              </div>
-              <span className="text-[10px] font-mono text-white/30 shrink-0">
-                {d.films} films
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <Link
-          to="/directors"
-          className="flex w-full items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[0.04] hover:bg-[#c9a24b]/15 border border-[#c9a24b]/20 hover:border-[#f5c542]/50 text-[#f5c542] text-xs font-mono transition-all"
-        >
-          <span>Explore All 45+ Directors</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
-      {/* ── Explore Genres ── */}
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50">
-              <Compass className="w-3 h-3" />
-            </div>
-            <span className="font-display text-sm font-black text-white">Explore Genres</span>
-          </div>
-          <Link to="/explore" className="text-[10px] font-mono font-bold text-white/35 hover:text-white/70 transition-colors">All →</Link>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="mt-4 flex flex-wrap gap-2">
           {GENRES.map((g) => (
             <Link
               key={g.id}
               to={`/explore?genres=${g.id}`}
-              className="rounded-full border border-[#c9a24b]/15 bg-[#c9a24b]/5 px-3 py-1.5 text-[11px] font-mono text-white/55 hover:border-[#c9a24b]/50 hover:bg-[#c9a24b]/12 hover:text-[#f5c542] transition-all"
+              className="rounded-full bg-white/[0.05] px-3.5 py-1.5 text-sm text-white/65 transition-colors hover:bg-white/[0.1] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
             >
               {g.name}
             </Link>
           ))}
         </div>
-      </div>
+      </section>
     </aside>
   );
 };

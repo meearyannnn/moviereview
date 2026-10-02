@@ -1,6 +1,5 @@
-// src/components/directors/DirectorStats.tsx — Cinema Statistics Strip
+// src/components/directors/DirectorStats.tsx — Cinema Statistics Strip (simplified)
 import React from 'react';
-import { Film, Star, Trophy, Sparkles } from 'lucide-react';
 import { type DirectorProfile } from '@/hooks/useDirector';
 
 interface DirectorStatsProps {
@@ -8,67 +7,40 @@ interface DirectorStatsProps {
 }
 
 export const DirectorStats: React.FC<DirectorStatsProps> = ({ stats }) => {
-  const cards = [
+  const best = stats.highestRatedFilm;
+
+  const items = [
+    { label: 'Films directed', value: `${stats.totalFilms}` },
     {
-      label: 'Feature Films',
-      value: `${stats.totalFilms}`,
-      sub: 'Directed catalog',
-      icon: Film,
+      label: 'Average rating',
+      value: stats.avgRating > 0 ? `${stats.avgRating}` : '—',
+      gold: stats.avgRating > 0,
     },
     {
-      label: 'Average TMDB Rating',
-      value: stats.avgRating > 0 ? `★ ${stats.avgRating}` : 'N/A',
-      sub: 'Across all verified titles',
-      icon: Star,
-      highlight: true,
+      label: best ? `Best rated · ★ ${best.vote_average.toFixed(1)}` : 'Best rated',
+      value: best ? best.title : '—',
     },
-    {
-      label: 'Highest Rated Work',
-      value: stats.highestRatedFilm ? stats.highestRatedFilm.title : 'N/A',
-      sub: stats.highestRatedFilm
-        ? `★ ${stats.highestRatedFilm.vote_average.toFixed(1)} rating`
-        : 'Cinema landmark',
-      icon: Trophy,
-    },
-    {
-      label: 'Signature Genre',
-      value: stats.topGenre || 'Cinema',
-      sub: 'Most explored style',
-      icon: Sparkles,
-    },
+    { label: 'Signature genre', value: stats.topGenre || '—' },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      {cards.map((card, i) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={i}
-            className={`rounded-2xl p-4 sm:p-5 border transition-all duration-300 ${
-              card.highlight
-                ? 'bg-gradient-to-br from-[#c9a24b]/15 via-[#140a0d] to-[#140a0d] border-[#c9a24b]/40 shadow-[0_4px_20px_rgba(201,162,75,0.15)]'
-                : 'bg-[#140a0d]/80 border-white/[0.08] hover:border-[#c9a24b]/30'
-            }`}
+    <dl className="grid grid-cols-2 lg:grid-cols-4 rounded-2xl border border-white/[0.08] bg-[#140a0d]/80 overflow-hidden">
+      {items.map((item, i) => (
+        <div
+          key={item.label}
+          className={`min-w-0 p-5 sm:p-6 border-white/[0.08] ${i % 2 === 1 ? 'border-l' : ''
+            } ${i >= 2 ? 'border-t lg:border-t-0' : ''} ${i > 0 ? 'lg:border-l' : ''}`}
+        >
+          <dt className="text-xs sm:text-sm text-white/45 truncate">{item.label}</dt>
+          <dd
+            className={`mt-1.5 font-display font-extrabold tracking-tight text-2xl sm:text-3xl truncate ${item.gold ? 'text-[#f5c542]' : 'text-white'
+              }`}
+            title={item.value}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-mono tracking-wider uppercase text-white/50">
-                {card.label}
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#f5c542]">
-                <Icon className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            <p className="font-display font-extrabold text-xl sm:text-2xl text-white truncate">
-              {card.value}
-            </p>
-            <p className="text-[11px] font-mono text-[#c9a24b]/80 mt-1 truncate">
-              {card.sub}
-            </p>
-          </div>
-        );
-      })}
-    </div>
+            {item.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 };

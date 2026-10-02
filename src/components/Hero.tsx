@@ -1,346 +1,181 @@
-import { useEffect, useState, useRef, useCallback, type TouchEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Play, Info, Star, Plus, Check, X, PenLine } from 'lucide-react';
-import { tmdb, type Movie } from '@/services/tmdb';
-import { TitleLogo } from './TitleLogo';
-import { useWatchlist } from '@/hooks/useWatchlist';
-import { soundEffects } from '@/lib/soundEffects';
+// src/pages/Home.tsx
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
-interface VideoTrailer {
-  id: string;
+import { MovieRow } from '@/components/MovieRow';
+import { Navbar } from '@/components/Navbar';
+import { TraktAnticipatedShelf } from '@/components/TraktAnticipatedShelf';
+import { HomeCuratedShelves } from '@/components/HomeCuratedShelves';
+import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
+import { HomeNewLaunchesSection } from '@/components/HomeNewLaunchesSection';
+import { HomeFranchiseSection } from '@/components/HomeFranchiseSection';
+import { HomeSidebar } from '@/components/HomeSidebar';
+import { tmdb, type Movie } from '@/services/tmdb';
+import { useWatchlist } from '@/hooks/useWatchlist';
+import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy } from 'lucide-react';
+
+type MediaType = 'movie' | 'tv';
+
+interface Section {
   key: string;
-  name: string;
-  type: string;
-  site: string;
+  chip?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  title: string;
+  accent: string;
+  subtitle: string;
+  fetch: () => Promise<any>;
+  type?: MediaType;
+  viewAllLink?: string;
 }
 
-const SLIDE_MS = 7000;
+const getAiringToday = async () => {
+  const data = await tmdb.getTrending('tv', 'day');
+  return { results: data.results?.filter((s: Movie) => s.first_air_date).slice(0, 15) || [] };
+};
 
-// Thin line that fills over one slide's duration (sits on the active poster)
-const AutoFill = () => {
-  const [full, setFull] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFull(true)));
-    return () => cancelAnimationFrame(id);
-  }, []);
-  return (
-    <div
-      className="h-full bg-[#f5c542] shadow-[0_0_8px_#f5c542]"
-      style={{ width: full ? '100%' : '0%', transition: full ? `width ${SLIDE_MS}ms linear` : 'none' }}
+const TOP: Section[] = [
+  { key: 'latest', icon: Film, title: 'Latest', accent: 'Releases', subtitle: 'Trending in theaters this week', fetch: () => tmdb.getTrending('movie', 'week'), viewAllLink: '/movies' },
+  { key: 'trending', icon: Flame, title: 'Trending', accent: 'Now', subtitle: 'What everyone is watching', fetch: () => tmdb.getPopular('movie'), viewAllLink: '/movies' },
+];
+
+const MAIN: Section[] = [
+  { key: 'top-rated', chip: 'Top rated', icon: Award, title: 'Top Rated', accent: 'Masterpieces', subtitle: 'Critically acclaimed', fetch: () => tmdb.getTopRated('movie'), viewAllLink: '/movies' },
+  { key: 'action', chip: 'Action', icon: Zap, title: 'Action', accent: 'Blockbusters', subtitle: 'Big, loud and fast', fetch: () => tmdb.getByGenre(28, 'movie'), viewAllLink: '/movies' },
+  { key: 'scifi', chip: 'Sci-Fi', icon: Sparkles, title: 'Sci-Fi &', accent: 'Fantasy', subtitle: 'Worlds beyond ours', fetch: () => tmdb.getByGenre(878, 'movie'), viewAllLink: '/movies' },
+  { key: 'drama', chip: 'Drama', icon: Heart, title: 'Gripping', accent: 'Drama', subtitle: 'Stories that stay with you', fetch: () => tmdb.getByGenre(18, 'movie'), viewAllLink: '/movies' },
+  { key: 'tv-popular', chip: 'Popular TV', icon: Tv, title: 'Popular', accent: 'TV Series', subtitle: 'Worth binging', fetch: () => tmdb.getPopular('tv'), type: 'tv', viewAllLink: '/tv' },
+  { key: 'tv-airing', chip: 'Airing today', icon: Radio, title: 'Airing', accent: 'Today', subtitle: 'New episodes live', fetch: getAiringToday, type: 'tv', viewAllLink: '/schedule' },
+  { key: 'tv-top', chip: 'Top TV', icon: Trophy, title: 'Top Rated', accent: 'TV Shows', subtitle: 'The best of television', fetch: () => tmdb.getTopRated('tv'), type: 'tv', viewAllLink: '/tv' },
+];
+
+// A div, not a section: MovieRow already renders its own <section>
+const Row = ({ s }: { s: Section }) => (
+  <div id={s.key} className="scroll-mt-20">
+    <MovieRow
+      icon={s.icon}
+      title={s.title}
+      accent={s.accent}
+      subtitle={s.subtitle}
+      fetchData={s.fetch}
+      type={s.type}
+      viewAllLink={s.viewAllLink}
     />
-  );
-};
+  </div>
+);
 
-export const Hero = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [trailerKey, setTrailerKey] = useState<string | null>(null);
-  const [loadingTrailer, setLoadingTrailer] = useState(false);
+const JUMP_CHIPS = [
+  { key: 'new-launches', label: 'New releases' },
+  { key: 'directors-spotlight', label: 'Directors' },
+  { key: 'franchises', label: 'Franchises' },
+  ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, label: s.chip! })),
+];
 
-  const navigate = useNavigate();
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await tmdb.getTrending('movie', 'week');
-        if (!cancelled) setMovies(data.results?.slice(0, 5) || []);
-      } catch (e) {
-        console.error('Failed to load hero movies:', e);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const goToSlide = useCallback((index: number) => {
-    if (index === currentIndex) return;
-    soundEffects.playSwoosh();
-    setIsAutoPlay(false);
-    setCurrentIndex(index);
-  }, [currentIndex]);
-
-  const step = useCallback((dir: 1 | -1) => {
-    if (movies.length === 0) return;
-    soundEffects.playSwoosh();
-    setCurrentIndex((i) => (i + dir + movies.length) % movies.length);
-  }, [movies.length]);
-
-  // Autoplay: one timer per slide so it stays in sync with the progress line
-  useEffect(() => {
-    if (!isAutoPlay || movies.length === 0) return;
-    const t = setTimeout(() => step(1), SLIDE_MS);
-    return () => clearTimeout(t);
-  }, [isAutoPlay, currentIndex, movies.length, step]);
-
-  // Touch swipe
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const onTouchStart = (e: TouchEvent) => {
-    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+const JumpBar = () => {
+  const jump = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return; // let the browser handle the hash if the target isn't there
+    e.preventDefault();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-  const onTouchEnd = (e: TouchEvent) => {
-    const s = touchStart.current;
-    touchStart.current = null;
-    if (!s) return;
-    const dx = s.x - e.changedTouches[0].clientX;
-    const dy = s.y - e.changedTouches[0].clientY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45) {
-      setIsAutoPlay(false);
-      step(dx > 0 ? 1 : -1);
-    }
-  };
-
-  // Trailer
-  const closeTrailer = useCallback(() => setTrailerKey(null), []);
-
-  useEffect(() => {
-    if (!trailerKey) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeTrailer();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [trailerKey, closeTrailer]);
-
-  const handleWatchTrailer = async (movieId: number) => {
-    soundEffects.playHoverTick();
-    setLoadingTrailer(true);
-    try {
-      const data = await tmdb.getVideos(movieId, 'movie');
-      const trailer = data.results?.find(
-        (v: VideoTrailer) => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube'
-      );
-      if (trailer) {
-        setIsAutoPlay(false);
-        setTrailerKey(trailer.key);
-        soundEffects.playChime();
-      } else {
-        navigate(`/movie/${movieId}`);
-      }
-    } catch {
-      navigate(`/movie/${movieId}`);
-    } finally {
-      setLoadingTrailer(false);
-    }
-  };
-
-  if (movies.length === 0) {
-    return (
-      <div className="flex h-[70vh] w-full items-center justify-center bg-[#060810]">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
-      </div>
-    );
-  }
-
-  const featured = movies[currentIndex];
-  const year = featured.release_date ? new Date(featured.release_date).getFullYear() : null;
-  const rating = featured.vote_average ? featured.vote_average.toFixed(1) : null;
-  const inWatchlist = isInWatchlist(featured.id);
-
-  const roundBtn =
-    'flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-white backdrop-blur-md transition-colors hover:bg-white/[0.16] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70';
 
   return (
-    <>
-      <section
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        aria-roledescription="carousel"
-        className="relative flex h-[78vh] max-h-[820px] min-h-[600px] w-full select-none flex-col justify-end overflow-hidden bg-[#0a0608]"
-      >
-        {/* Backdrops: stacked, crossfaded */}
-        <div className="absolute inset-0">
-          {movies.map((m, i) => (
-            <img
-              key={m.id}
-              src={tmdb.getImageUrl(m.backdrop_path, 'w1280')}
-              alt=""
-              decoding="async"
-              aria-hidden={i !== currentIndex}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = '/placeholder.svg';
-              }}
-              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 motion-reduce:transition-none ${
-                i === currentIndex ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ))}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/40 to-transparent" />
-          <div className="absolute inset-y-0 left-0 w-full max-w-2xl bg-gradient-to-r from-[#0a0608]/80 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0a0608]/70 to-transparent" />
-        </div>
-
-        {/* Ambient Top Studio Hallmark */}
-        <div className="pointer-events-none absolute top-16 sm:top-20 right-4 sm:right-8 lg:right-12 z-10 hidden sm:flex flex-col items-end opacity-30">
-          <img
-            src="/assets/branding/movieguy-hero-tight.png"
-            alt="MovieGuy"
-            className="h-5 sm:h-6 lg:h-7 w-auto object-contain filter drop-shadow-[0_0_16px_rgba(245,197,66,0.4)]"
-          />
-          <span className="font-mono text-[8px] tracking-[0.3em] uppercase text-[#c9a24b] mt-1 mr-0.5">
-            PREMIERE STAGE
-          </span>
-        </div>
-
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-8 sm:px-6 md:pb-12 lg:flex-row lg:items-end lg:justify-between lg:px-8">
-          {/* Featured film */}
-          <div key={featured.id} className="max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-700">
-            {/* MovieGuy Box Office Premiere Badge */}
-            <div className="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-black/65 border border-[#c9a24b]/30 backdrop-blur-md mb-3 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
-              <img
-                src="/assets/branding/movieguy-logo-tight.png"
-                alt="MovieGuy"
-                className="h-3.5 w-auto object-contain animate-pulse"
-              />
-              <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-[#f5c542] uppercase">
-                MOVIEGUY MARQUEE
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] shadow-[0_0_8px_rgba(245,197,66,0.9)]" />
-              <span className="font-mono text-[10px] text-white/50">PREMIERE #{currentIndex + 1}</span>
-            </div>
-
-            <p className="mb-4 flex items-center gap-3 text-sm text-white/70">
-              <span className="font-mono font-bold text-[#c9a24b]">#{currentIndex + 1} THIS WEEK</span>
-              {rating && (
-                <span className="flex items-center gap-1 font-mono font-bold text-[#f5c542]">
-                  <Star className="h-3.5 w-3.5 fill-[#f5c542] text-[#f5c542]" />
-                  {rating}
-                </span>
-              )}
-              {year && <span className="font-mono text-white/50">{year}</span>}
-            </p>
-
-            <TitleLogo id={featured.id} type="movie" title={featured.title} size="hero" />
-
-            <p className="mb-6 mt-4 line-clamp-3 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
-              {featured.overview}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  navigate(`/movie/${featured.id}#reviews`);
-                }}
-                className="flex h-11 items-center gap-2 rounded-full bg-[#f5c542] hover:bg-[#e6b738] px-6 text-sm font-extrabold text-[#1c120c] transition-all shadow-lg shadow-[#f5c542]/25 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a24b]"
-              >
-                <PenLine className="h-4 w-4" />
-                Rate &amp; Review
-              </button>
-
-              <button
-                onClick={() => handleWatchTrailer(featured.id)}
-                disabled={loadingTrailer}
-                className="flex h-11 items-center gap-2 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/80 px-5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-[#c9a24b]/15 hover:border-[#c9a24b]/60 disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
-              >
-                <Play className="h-4 w-4 fill-[#f5c542] text-[#f5c542]" />
-                {loadingTrailer ? 'Loading' : 'Trailer'}
-              </button>
-
-              <button
-                onClick={() => {
-                  soundEffects.playChime();
-                  toggleWatchlist({
-                    id: featured.id,
-                    title: featured.title,
-                    poster_path: featured.poster_path,
-                    backdrop_path: featured.backdrop_path,
-                    vote_average: featured.vote_average,
-                    release_date: featured.release_date,
-                    media_type: 'movie',
-                  });
-                }}
-                className={`${roundBtn} ${inWatchlist ? '!border-[#c9a24b] !bg-[#c9a24b]/25 text-[#f5c542] shadow-[0_0_12px_rgba(201,162,75,0.4)]' : 'border-[#c9a24b]/30 bg-[#140c10]/80'}`}
-                aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-                aria-pressed={inWatchlist}
-              >
-                {inWatchlist ? <Check className="h-4 w-4 text-[#f5c542]" /> : <Plus className="h-4 w-4 text-[#c9a24b]" />}
-              </button>
-
-              <button
-                onClick={() => {
-                  soundEffects.playHoverTick();
-                  navigate(`/movie/${featured.id}`);
-                }}
-                className={`${roundBtn} border-[#c9a24b]/30 bg-[#140c10]/80 hover:bg-[#c9a24b]/15`}
-                aria-label="View details"
-              >
-                <Info className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Poster picker: the five films, tap one to feature it */}
-          <ol className="flex gap-2.5 sm:gap-3" aria-label="Pick a film">
-            {movies.map((m, i) => {
-              const active = i === currentIndex;
-              return (
-                <li key={m.id} className="w-[4.25rem] sm:w-20 lg:w-24">
-                  <button
-                    onClick={() => goToSlide(i)}
-                    aria-label={`Show ${m.title}`}
-                    aria-current={active}
-                    className={`relative block aspect-[2/3] w-full overflow-hidden rounded-lg bg-neutral-900 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 ${active
-                        ? 'ring-2 ring-[#c9a24b] shadow-[0_0_15px_rgba(201,162,75,0.5)]'
-                        : 'opacity-55 hover:opacity-90'
-                      }`}
-                  >
-                    {m.poster_path && (
-                      <img
-                        src={tmdb.getImageUrl(m.poster_path, 'w342')}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                    {active && isAutoPlay && (
-                      <span className="absolute inset-x-0 bottom-0 block h-[3px] bg-black/50">
-                        <AutoFill key={currentIndex} />
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      {/* Trailer modal */}
-      {trailerKey && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Trailer"
-          onClick={closeTrailer}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+    <nav
+      aria-label="Jump to section"
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {JUMP_CHIPS.map((c) => (
+        <a
+          key={c.key}
+          href={`#${c.key}`}
+          onClick={(e) => jump(e, c.key)}
+          className="shrink-0 rounded-full bg-white/[0.05] px-4 py-2 text-sm text-white/60 transition-colors hover:bg-white/[0.09] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
-          >
-            <button
-              onClick={closeTrailer}
-              className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition-colors hover:bg-black/90"
-              aria-label="Close trailer"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <iframe
-              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
-              title="Movie trailer"
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
-    </>
+          {c.label}
+        </a>
+      ))}
+    </nav>
   );
 };
+
+const Home = () => {
+  const { watchlist } = useWatchlist();
+  const last = watchlist?.[0];
+  const lastType: MediaType = (last?.media_type as MediaType) || 'movie';
+
+  const fetchRecommended = useMemo(
+    () => (last?.id ? () => tmdb.getRecommendations(last.id, lastType) : null),
+    [last?.id, lastType]
+  );
+
+  return (
+    // overflow-x-clip, not -hidden: "hidden" turns this div into a scroll container
+    // and silently breaks the sticky sidebar below
+    <div className="relative min-h-screen overflow-x-clip bg-transparent text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
+      <Navbar />
+
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* One spacing rhythm for the whole page. Sections must not add their own vertical margins. */}
+        <div className="space-y-14 pb-28 pt-24 sm:pt-28 md:pb-16">
+          <JumpBar />
+
+          {fetchRecommended && last?.title && (
+            <MovieRow icon={Sparkles} title="Because you saved" accent={last.title} fetchData={fetchRecommended} />
+          )}
+
+          <HomeNewLaunchesSection />
+          <HomeDirectorsSpotlight />
+          <HomeFranchiseSection />
+
+          {/*
+            Shelves and sidebar share one grid. The sidebar spans every shelf row and is sticky,
+            so it can never be taller than the column beside it. (Before, it sat next to just two
+            rows, and its extra height became a big blank gap under them.)
+            Mobile order: first shelves, sidebar, then the rest.
+          */}
+          <div className="grid gap-x-10 gap-y-14 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <div className="min-w-0 space-y-14 lg:col-start-1">
+              <HomeCuratedShelves />
+              {TOP.map((s) => (
+                <Row key={s.key} s={s} />
+              ))}
+            </div>
+
+            <div
+              className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <HomeSidebar />
+            </div>
+
+            <div className="min-w-0 lg:col-start-1">
+              <TraktAnticipatedShelf />
+            </div>
+
+            <div className="min-w-0 space-y-14 lg:col-start-1">
+              {MAIN.map((s) => (
+                <Row key={s.key} s={s} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-t border-white/[0.06] pb-28 md:pb-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]">
+              <img
+                src="/assets/branding/movieguy-hero-tight.png"
+                alt="MovieGuy"
+                className="h-[18px] w-auto object-contain opacity-80 transition-opacity hover:opacity-100 sm:h-[20px]"
+              />
+            </Link>
+            <span className="text-xs text-white/30">Honest reviews for cinema &amp; television</span>
+          </div>
+          <span className="text-xs text-white/25">© {new Date().getFullYear()} MovieGuy</span>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Home;

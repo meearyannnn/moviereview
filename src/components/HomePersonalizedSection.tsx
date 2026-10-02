@@ -184,19 +184,19 @@ export const HomePersonalizedSection = () => {
     <section
       id="for-you"
       aria-label="Inspired by your collection"
-      className="scroll-mt-20 rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#180e15]/70 via-[#10080e]/80 to-[#0a0508]/90 p-5 sm:p-7 backdrop-blur-xl shadow-2xl"
+      className="scroll-mt-20 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#180e15]/70 via-[#10080e]/80 to-[#0a0508]/90 p-3.5 sm:p-5 backdrop-blur-xl shadow-xl"
     >
       {/* ── Section Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-white/[0.06]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-white/[0.06]">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-2 font-display text-lg sm:text-2xl font-bold tracking-tight text-white">
-            <BookmarkCheck className="h-5 w-5 shrink-0 text-[#f5c542]" />
+          <h2 className="flex items-center gap-2 font-display text-base sm:text-lg font-bold tracking-tight text-white">
+            <BookmarkCheck className="h-4 w-4 shrink-0 text-[#f5c542]" />
             <span>Inspired by your collection</span>
             {activeCollection?.title && (
               <span className="truncate text-[#f5c542]">{activeCollection.title}</span>
             )}
           </h2>
-          <p className="mt-1 text-xs sm:text-sm text-white/50 truncate">
+          <p className="mt-0.5 text-xs text-white/50 truncate">
             {activeCollection?.description ||
               `Personalized cinema recommendations matching the mood of "${activeCollection?.title || 'your list'}"`}
           </p>
@@ -210,32 +210,32 @@ export const HomePersonalizedSection = () => {
               onClick={() => setViewMode('grid')}
               aria-label="Grid View"
               title="Grid View"
-              className={`flex h-7 w-7 items-center justify-center rounded-md text-xs transition-colors ${
+              className={`flex h-6 w-6 items-center justify-center rounded text-xs transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-[#f5c542] text-[#140c10] shadow-sm font-semibold'
                   : 'text-white/50 hover:text-white'
               }`}
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
+              <LayoutGrid className="h-3 w-3" />
             </button>
             <button
               type="button"
               onClick={() => setViewMode('carousel')}
               aria-label="Row Carousel View"
               title="Row Carousel View"
-              className={`flex h-7 w-7 items-center justify-center rounded-md text-xs transition-colors ${
+              className={`flex h-6 w-6 items-center justify-center rounded text-xs transition-colors ${
                 viewMode === 'carousel'
                   ? 'bg-[#f5c542] text-[#140c10] shadow-sm font-semibold'
                   : 'text-white/50 hover:text-white'
               }`}
             >
-              <Rows3 className="h-3.5 w-3.5" />
+              <Rows3 className="h-3 w-3" />
             </button>
           </div>
 
           <Link
             to="/library?tab=collections"
-            className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-[#f5c542]/40 hover:text-[#f5c542]"
+            className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-white/70 transition-colors hover:border-[#f5c542]/40 hover:text-[#f5c542]"
           >
             Manage <ArrowRight className="h-3 w-3" />
           </Link>
@@ -244,8 +244,8 @@ export const HomePersonalizedSection = () => {
 
       {/* ── Collection Filter Pills (User-friendly switching) ── */}
       {validCollections.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto py-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <span className="shrink-0 text-[11px] font-mono uppercase tracking-wider text-white/40 mr-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-white/40 mr-1">
             Collections:
           </span>
           {validCollections.map((col) => {
@@ -259,16 +259,16 @@ export const HomePersonalizedSection = () => {
                   setActiveCollectionId(col.id);
                   setDisplayLimit(12);
                 }}
-                className={`group shrink-0 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                className={`group shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#f5c542] text-[#140c10] shadow-[0_0_16px_rgba(245,197,66,0.35)] scale-[1.02]'
+                    ? 'bg-[#f5c542] text-[#140c10] shadow-[0_0_12px_rgba(245,197,66,0.3)] scale-[1.02]'
                     : 'bg-white/[0.05] text-white/60 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]'
                 }`}
               >
                 <span>{col.title}</span>
                 {count > 0 && (
                   <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono transition-colors ${
+                    className={`rounded-full px-1.5 py-0.2 text-[9px] font-mono transition-colors ${
                       isActive ? 'bg-[#140c10]/20 text-[#140c10]' : 'bg-white/10 text-white/50 group-hover:text-white'
                     }`}
                   >
@@ -283,10 +283,10 @@ export const HomePersonalizedSection = () => {
 
       {/* ── Grid Form Display ── */}
       {viewMode === 'grid' ? (
-        <div className="pt-2 space-y-5">
-          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="pt-2 space-y-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
             {loadingRecs
-              ? Array.from({ length: 12 }).map((_, i) => (
+              ? Array.from({ length: 14 }).map((_, i) => (
                   <div key={i} className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
                 ))
               : recommendations.slice(0, displayLimit).map((movie) => (
@@ -295,12 +295,12 @@ export const HomePersonalizedSection = () => {
           </div>
 
           {/* Show More / Show Less Button */}
-          {!loadingRecs && recommendations.length > 12 && (
+          {!loadingRecs && recommendations.length > 14 && (
             <div className="flex justify-center pt-2">
               <button
                 type="button"
-                onClick={() => setDisplayLimit((prev) => (prev >= recommendations.length ? 12 : prev + 6))}
-                className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-5 py-2 text-xs font-semibold text-white/70 transition-colors hover:border-[#f5c542]/50 hover:bg-white/[0.08] hover:text-[#f5c542]"
+                onClick={() => setDisplayLimit((prev) => (prev >= recommendations.length ? 14 : prev + 7))}
+                className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-white/70 transition-colors hover:border-[#f5c542]/50 hover:bg-white/[0.08] hover:text-[#f5c542]"
               >
                 {displayLimit >= recommendations.length ? 'Show Less' : `Show More (${recommendations.length - displayLimit} more)`}
               </button>
@@ -309,43 +309,43 @@ export const HomePersonalizedSection = () => {
         </div>
       ) : (
         /* ── Carousel Row Track ── */
-        <div className="relative pt-2">
+        <div className="relative pt-1.5">
           {/* Scroll arrow buttons for carousel */}
-          <div className="absolute -top-10 right-0 hidden sm:flex items-center gap-1.5">
+          <div className="absolute -top-9 right-0 hidden sm:flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => scrollToDirection('left')}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3 w-3" />
             </button>
             <button
               type="button"
               onClick={() => scrollToDirection('right')}
               disabled={!canScrollRight}
               aria-label="Scroll right"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3 w-3" />
             </button>
           </div>
 
           <div
             ref={carouselRef}
             {...carouselHandlers}
-            className={`scrollbar-hide flex touch-pan-x select-none gap-3.5 overflow-x-auto overscroll-x-contain pb-2 pt-1 sm:gap-4 ${
+            className={`scrollbar-hide flex touch-pan-x select-none gap-3 overflow-x-auto overscroll-x-contain pb-2 pt-1 sm:gap-3.5 ${
               isDragging ? 'cursor-grabbing' : 'cursor-grab'
             }`}
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {loadingRecs
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[140px] sm:w-[165px] md:w-[185px] shrink-0 aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0 aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
                 ))
               : recommendations.map((movie) => (
-                  <div key={movie.id} className="w-[140px] sm:w-[165px] md:w-[185px] shrink-0">
+                  <div key={movie.id} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0">
                     <MovieCard movie={movie} />
                   </div>
                 ))}

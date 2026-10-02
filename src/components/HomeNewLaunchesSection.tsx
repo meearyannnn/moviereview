@@ -216,18 +216,18 @@ export const HomeNewLaunchesSection = () => {
   return (
     <section className="scroll-mt-20" id="new-launches">
       {/* ── Header ── */}
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
+          <h2 className="font-display font-bold text-lg sm:text-xl text-white tracking-tight">
             Premieres &amp; launches
           </h2>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-0.5 text-xs text-white/50">
             Released in the last 2 weeks or arriving in the next 2 months.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-full bg-white/[0.05] p-1">
+          <div className="flex rounded-full bg-white/[0.05] p-0.5">
             {([
               { id: 'shelf', Icon: Rows3, label: 'Shelf view' },
               { id: 'grid', Icon: LayoutGrid, label: 'Grid view' },
@@ -240,10 +240,10 @@ export const HomeNewLaunchesSection = () => {
                 }}
                 aria-label={label}
                 aria-pressed={viewMode === id}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${viewMode === id ? 'bg-white text-black' : 'text-white/50 hover:text-white'
+                className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${viewMode === id ? 'bg-white text-black' : 'text-white/50 hover:text-white'
                   }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-3.5 w-3.5" />
               </button>
             ))}
           </div>
@@ -256,9 +256,9 @@ export const HomeNewLaunchesSection = () => {
                   onClick={() => handleScroll(dir)}
                   disabled={dir === 'left' ? !canScrollLeft : !canScrollRight}
                   aria-label={dir === 'left' ? 'Previous launches' : 'Next launches'}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
                 >
-                  {dir === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {dir === 'left' ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                 </button>
               ))}
             </div>
@@ -294,35 +294,35 @@ export const HomeNewLaunchesSection = () => {
       </nav>
 
       {/* ── Content ── */}
-      <div className="mt-6">
+      <div className="mt-4">
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
-            {Array.from({ length: 10 }).map((_, i) => (
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 sm:gap-3.5">
+            {Array.from({ length: 14 }).map((_, i) => (
               <div key={i}>
                 <div className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
-                <div className="mt-3 h-4 w-3/4 animate-pulse rounded bg-white/[0.05]" />
-                <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-white/[0.04]" />
+                <div className="mt-2 h-3.5 w-3/4 animate-pulse rounded bg-white/[0.05]" />
+                <div className="mt-1 h-3 w-1/2 animate-pulse rounded bg-white/[0.04]" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="font-semibold text-white/80">Nothing here yet</p>
-            <p className="mt-1 text-sm text-white/40">Try another tab to see more premieres.</p>
+          <div className="py-16 text-center">
+            <p className="font-semibold text-white/80 text-sm">Nothing here yet</p>
+            <p className="mt-1 text-xs text-white/40">Try another tab to see more premieres.</p>
           </div>
         ) : viewMode === 'shelf' ? (
           <div
             ref={scrollRef}
-            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {filtered.map((item) => (
-              <div key={`${item.mediaType}-${item.id}`} className="w-[160px] shrink-0 snap-start sm:w-[200px] md:w-[220px]">
+              <div key={`${item.mediaType}-${item.id}`} className="w-[115px] shrink-0 snap-start sm:w-[130px] md:w-[145px] lg:w-[155px]">
                 {renderCard(item)}
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 sm:gap-3.5">
             {filtered.map(renderCard)}
           </div>
         )}
@@ -531,31 +531,31 @@ const LaunchCard = ({ item, isSaved, onOpen, onPlay, onToggleSave }: LaunchCardP
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
 
           {/* The one badge: what kind of drop this is */}
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-md">
+          <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold text-white/90 backdrop-blur-md">
             <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
             {cfg.label}
           </span>
 
           {/* Release timing */}
           <span
-            className={`absolute bottom-2 left-2 text-xs font-semibold ${upcoming ? 'text-[#f5c542]' : 'text-white/90'}`}
+            className={`absolute bottom-1.5 left-1.5 text-[10px] font-semibold ${upcoming ? 'text-[#f5c542]' : 'text-white/90'}`}
           >
             {item.releaseTimingLabel || item.releaseDate}
           </span>
 
           {item.rating !== undefined && item.rating > 0 && (
-            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-xs font-semibold text-white/90">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-white/90">
+              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
               {item.rating}
             </span>
           )}
         </div>
 
-        <div className="mt-3 px-0.5">
-          <h3 className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#f5c542] sm:text-base" title={item.title}>
+        <div className="mt-2 px-0.5">
+          <h3 className="truncate text-xs font-semibold text-white transition-colors group-hover:text-[#f5c542] sm:text-[13px] leading-tight" title={item.title}>
             {item.title}
           </h3>
-          <p className="mt-0.5 truncate text-xs text-white/45">
+          <p className="mt-0.5 truncate text-[11px] text-white/45">
             {item.genres && item.genres.length > 0
               ? item.genres.slice(0, 2).join(', ')
               : item.mediaType === 'tv'
@@ -566,23 +566,23 @@ const LaunchCard = ({ item, isSaved, onOpen, onPlay, onToggleSave }: LaunchCardP
       </button>
 
       {/* Hover actions (always visible on touch via focus-within / group-focus) */}
-      <div className="absolute right-2 top-2 flex flex-col gap-1.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+      <div className="absolute right-1.5 top-1.5 flex flex-col gap-1 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
         <button
           onClick={(e) => onToggleSave(e, item)}
           aria-label={isSaved ? 'Remove from watchlist' : 'Add to watchlist'}
           aria-pressed={isSaved}
-          className={`flex h-8 w-8 items-center justify-center rounded-full bg-black/65 backdrop-blur-md transition-colors hover:bg-white hover:text-black ${isSaved ? 'text-[#f5c542]' : 'text-white'
+          className={`flex h-7 w-7 items-center justify-center rounded-full bg-black/65 backdrop-blur-md transition-colors hover:bg-white hover:text-black ${isSaved ? 'text-[#f5c542]' : 'text-white'
             }`}
         >
-          {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+          {isSaved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
         </button>
         {item.trailerKey && (
           <button
             onClick={(e) => onPlay(e, item.trailerKey!)}
             aria-label={`Play ${videoName(item)}`}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5c542] text-[#1c120c] transition-colors hover:bg-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f5c542] text-[#1c120c] transition-colors hover:bg-white"
           >
-            <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+            <Play className="ml-0.5 h-3 w-3 fill-current" />
           </button>
         )}
       </div>

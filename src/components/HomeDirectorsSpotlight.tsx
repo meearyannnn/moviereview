@@ -109,14 +109,14 @@ export const HomeDirectorsSpotlight: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* ── Clean Section Header ── */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 px-0.5">
         {/* Title & Tagline */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center flex-shrink-0 shadow-sm">
-            <Clapperboard className="w-4 h-4" />
+          <div className="w-7 h-7 rounded-lg bg-[#c9a24b]/15 border border-[#c9a24b]/30 text-[#f5c542] flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Clapperboard className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
-            <h2 className="font-display text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
+            <h2 className="font-display text-lg sm:text-xl font-bold tracking-tight text-white flex items-baseline gap-2">
               <span>Directors</span>
               <span className="text-[#f5c542]">Vault</span>
             </h2>
@@ -141,7 +141,7 @@ export const HomeDirectorsSpotlight: React.FC = () => {
         ref={pillsContainerRef}
         role="tablist"
         aria-label="Choose Director"
-        className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 sm:mx-0 px-4 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+        className="flex items-center gap-1.5 overflow-x-auto pb-2 -mx-4 sm:mx-0 px-4 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
       >
         {directors.map((director, index) => {
           const isSelected = index === currentIndex;
@@ -156,9 +156,9 @@ export const HomeDirectorsSpotlight: React.FC = () => {
               aria-selected={isSelected}
               type="button"
               onClick={() => selectDirector(index)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-mono transition-all duration-300 flex items-center gap-2 border select-none ${
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-mono transition-all duration-300 flex items-center gap-1.5 border select-none ${
                 isSelected
-                  ? 'bg-[#f5c542] text-[#1c120c] font-black border-[#f5c542] shadow-[0_0_18px_rgba(245,197,66,0.4)] scale-[1.02]'
+                  ? 'bg-[#f5c542] text-[#1c120c] font-black border-[#f5c542] shadow-[0_0_14px_rgba(245,197,66,0.35)] scale-[1.02]'
                   : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:border-[#c9a24b]/40 hover:bg-white/[0.06]'
               }`}
             >
@@ -166,14 +166,14 @@ export const HomeDirectorsSpotlight: React.FC = () => {
                 <img
                   src={`https://image.tmdb.org/t/p/w92${director.profilePath}`}
                   alt=""
-                  className={`w-4 h-4 rounded-full object-cover transition-all ${
+                  className={`w-3.5 h-3.5 rounded-full object-cover transition-all ${
                     isSelected ? 'ring-1 ring-black/50 grayscale-0' : 'grayscale opacity-75'
                   }`}
                   loading="lazy"
                 />
               ) : (
                 <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
+                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] ${
                     isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-white/50'
                   }`}
                 >
@@ -182,7 +182,7 @@ export const HomeDirectorsSpotlight: React.FC = () => {
               )}
               <span>{director.name}</span>
               <span
-                className={`text-[10px] font-mono ${
+                className={`text-[9px] font-mono ${
                   isSelected ? 'text-[#1c120c]/70' : 'text-white/30'
                 }`}
               >
@@ -194,7 +194,7 @@ export const HomeDirectorsSpotlight: React.FC = () => {
       </div>
 
       {/* ── Showcase Card: Dynamic Cinema Display with Smooth Transitions ── */}
-      <div className="relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#140b10]/80 via-[#10080d]/90 to-[#0a0608] p-4 sm:p-6 backdrop-blur-md mt-2 overflow-hidden shadow-2xl transition-all">
+      <div className="relative rounded-xl border border-white/[0.08] bg-gradient-to-b from-[#140b10]/80 via-[#10080d]/90 to-[#0a0608] p-3.5 sm:p-4 backdrop-blur-md mt-2 overflow-hidden shadow-2xl transition-all">
         {/* Subtle Ambient Radial Gold Glow behind the active director */}
         <div className="pointer-events-none absolute -top-24 left-1/4 w-96 h-96 bg-[radial-gradient(ellipse_at_center,_rgba(245,197,66,0.08)_0%,_transparent_70%)] blur-2xl" />
 
@@ -227,21 +227,21 @@ export const HomeDirectorsSpotlight: React.FC = () => {
         </div>
 
         {/* ── Quick Discovery Strip: Direct Jump to Other Curated Masters ── */}
-        <div className="pt-5 mt-4 border-t border-white/[0.06]">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-[#f5c542]" />
+        <div className="pt-3 mt-3 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-white/40 flex items-center gap-1.5">
+              <Sparkles className="w-2.5 h-2.5 text-[#f5c542]" />
               <span>Explore More Masters in Vault</span>
             </span>
             <Link
               to="/directors"
-              className="text-[11px] font-mono text-[#c9a24b]/80 hover:text-[#f5c542] transition-colors"
+              className="text-[10px] font-mono text-[#c9a24b]/80 hover:text-[#f5c542] transition-colors"
             >
               Search All 45+ Filmmakers →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {directors.slice(0, 8).map((m, idx) => {
               const isCurrent = m.id === currentDirector.id;
               return (
@@ -249,9 +249,9 @@ export const HomeDirectorsSpotlight: React.FC = () => {
                   key={m.id}
                   type="button"
                   onClick={() => selectDirector(idx)}
-                  className={`group flex items-center gap-3 p-2 rounded-xl border text-left transition-all ${
+                  className={`group flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all ${
                     isCurrent
-                      ? 'border-[#f5c542] bg-[#c9a24b]/10 shadow-[0_0_15px_rgba(245,197,66,0.15)]'
+                      ? 'border-[#f5c542] bg-[#c9a24b]/10 shadow-[0_0_10px_rgba(245,197,66,0.15)]'
                       : 'border-white/[0.06] bg-white/[0.02] hover:border-[#c9a24b]/40 hover:bg-[#c9a24b]/5'
                   }`}
                 >
@@ -260,7 +260,7 @@ export const HomeDirectorsSpotlight: React.FC = () => {
                       src={`https://image.tmdb.org/t/p/w185${m.profilePath}`}
                       alt={m.name}
                       loading="lazy"
-                      className={`w-9 h-11 rounded-lg object-cover border transition-all ${
+                      className={`w-7 h-9 rounded object-cover border transition-all ${
                         isCurrent
                           ? 'border-[#f5c542] grayscale-0'
                           : 'border-white/[0.08] grayscale group-hover:grayscale-0'

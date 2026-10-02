@@ -124,8 +124,8 @@ export const MovieCard = memo(
           aria-label={saved ? 'Remove from Watch Later' : 'Save to Watch Later'}
           aria-pressed={saved}
           className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition focus-visible:opacity-100 ${saved
-              ? 'bg-[#f5c542] text-[#1c120c]'
-              : 'bg-black/65 text-white opacity-0 hover:bg-white hover:text-black group-hover:opacity-100 [@media(hover:none)]:opacity-100'
+            ? 'bg-[#f5c542] text-[#1c120c]'
+            : 'bg-black/65 text-white opacity-0 hover:bg-white hover:text-black group-hover:opacity-100 [@media(hover:none)]:opacity-100'
             }`}
         >
           <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />

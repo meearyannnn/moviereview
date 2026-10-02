@@ -103,12 +103,12 @@ export const HomeFranchiseSection = () => {
       style={{ '--accent': franchise.accentColor } as CSSProperties}
     >
       {/* ── Header ── */}
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
+          <h2 className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
             Franchises &amp; sagas
           </h2>
-          <p className="mt-1 text-sm text-white/50">{franchise.tagline}</p>
+          <p className="mt-0.5 text-xs text-white/50">{franchise.tagline}</p>
         </div>
 
         <div className="hidden gap-1.5 sm:flex">
@@ -118,9 +118,9 @@ export const HomeFranchiseSection = () => {
               onClick={() => scrollShelf(dir)}
               disabled={dir === 'left' ? !canScrollLeft : !canScrollRight}
               aria-label={dir === 'left' ? 'Previous films' : 'Next films'}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
             >
-              {dir === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {dir === 'left' ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
           ))}
         </div>
@@ -129,7 +129,7 @@ export const HomeFranchiseSection = () => {
       {/* ── Franchise tabs: the underline takes the franchise's own colour ── */}
       <nav
         aria-label="Choose a franchise"
-        className="mt-6 flex gap-6 overflow-x-auto border-b border-white/[0.08] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mt-4 flex gap-5 overflow-x-auto border-b border-white/[0.08] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {FRANCHISES_CONFIG.map((f) => {
           const active = f.id === selectedId;
@@ -141,7 +141,7 @@ export const HomeFranchiseSection = () => {
                 setSelectedId(f.id);
               }}
               aria-current={active}
-              className={`-mb-px shrink-0 border-b-2 pb-3 text-sm font-medium transition-colors ${active ? 'text-white' : 'border-transparent text-white/45 hover:text-white/80'
+              className={`-mb-px shrink-0 border-b-2 pb-2 text-xs font-medium transition-colors ${active ? 'text-white' : 'border-transparent text-white/45 hover:text-white/80'
                 }`}
               style={active ? { borderColor: f.accentColor } : undefined}
             >
@@ -152,29 +152,29 @@ export const HomeFranchiseSection = () => {
       </nav>
 
       {/* ── Shelf ── */}
-      <div className="mt-6">
+      <div className="mt-4">
         {loading ? (
-          <div className="flex gap-4 overflow-hidden sm:gap-5">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="w-[155px] shrink-0 sm:w-[190px] md:w-[205px]">
+          <div className="flex gap-3 overflow-hidden sm:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="w-[115px] shrink-0 sm:w-[130px] md:w-[145px] lg:w-[155px]">
                 <div className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.04]" />
-                <div className="mt-3 h-4 w-3/4 animate-pulse rounded bg-white/[0.05]" />
-                <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-white/[0.04]" />
+                <div className="mt-2 h-3.5 w-3/4 animate-pulse rounded bg-white/[0.05]" />
+                <div className="mt-1.5 h-3 w-1/3 animate-pulse rounded bg-white/[0.04]" />
               </div>
             ))}
           </div>
         ) : movies.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="font-semibold text-white/80">No films found for {franchise.shortName}</p>
-            <p className="mt-1 text-sm text-white/40">Pick another franchise above.</p>
+          <div className="py-16 text-center">
+            <p className="font-semibold text-white/80 text-sm">No films found for {franchise.shortName}</p>
+            <p className="mt-1 text-xs text-white/40">Pick another franchise above.</p>
           </div>
         ) : (
           <div
             ref={shelfRef}
-            className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {movies.map((movie) => (
-              <div key={movie.id} className="group relative w-[155px] shrink-0 snap-start sm:w-[190px] md:w-[205px]">
+              <div key={movie.id} className="group relative w-[115px] shrink-0 snap-start sm:w-[130px] md:w-[145px] lg:w-[155px]">
                 {/* The card is one real button; the play control sits beside it, not inside it */}
                 <button
                   onClick={() => openMovie(movie.id)}
@@ -194,20 +194,20 @@ export const HomeFranchiseSection = () => {
                     />
                   </div>
 
-                  <div className="mt-3 px-0.5">
+                  <div className="mt-2 px-0.5">
                     <h3
-                      className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[var(--accent)] sm:text-base"
+                      className="truncate text-xs font-semibold text-white transition-colors group-hover:text-[var(--accent)] sm:text-[13px] leading-tight"
                       title={movie.title}
                     >
                       {movie.title}
                     </h3>
-                    <p className="mt-0.5 flex items-center gap-2 text-xs text-white/45">
+                    <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/45">
                       <span className={movie.isUpcoming ? 'font-semibold text-[var(--accent)]' : undefined}>
                         {movie.isUpcoming ? `Coming ${movie.releaseYear ?? 'soon'}` : movie.releaseYear ?? 'TBA'}
                       </span>
                       {movie.vote_average !== undefined && movie.vote_average > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        <span className="inline-flex items-center gap-0.5">
+                          <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
                           {movie.vote_average}
                         </span>
                       )}
@@ -219,12 +219,12 @@ export const HomeFranchiseSection = () => {
                   onClick={() => playTrailer(movie.id)}
                   disabled={trailerLoadingId === movie.id}
                   aria-label={`Play trailer for ${movie.title}`}
-                  className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white opacity-0 backdrop-blur-md transition hover:bg-white hover:text-black focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                  className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-white opacity-0 backdrop-blur-md transition hover:bg-white hover:text-black focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                 >
                   {trailerLoadingId === movie.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Play className="ml-0.5 h-4 w-4 fill-current" />
+                    <Play className="ml-0.5 h-3 w-3 fill-current" />
                   )}
                 </button>
               </div>

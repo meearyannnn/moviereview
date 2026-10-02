@@ -57,7 +57,7 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
             </div>
           )}
           <div>
-            <h2 className="font-display font-bold text-xl tracking-tight text-white">{title}</h2>
+            <h2 className="font-display font-bold text-base sm:text-lg tracking-tight text-white">{title}</h2>
             {subtitle && <p className="text-[11px] font-mono text-white/30 mt-0.5">{subtitle}</p>}
           </div>
         </div>
@@ -70,11 +70,11 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
           )}
           <button onClick={() => scrollToDirection('left')} disabled={!canScrollLeft} aria-label="Scroll left"
             className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/40 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all">
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <button onClick={() => scrollToDirection('right')} disabled={!canScrollRight} aria-label="Scroll right"
             className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/40 hover:text-white flex items-center justify-center disabled:opacity-20 disabled:pointer-events-none transition-all">
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -82,9 +82,9 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
       {/* Track */}
       {loading ? (
         <div className="flex gap-3 sm:gap-4 overflow-hidden py-1">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex-none w-[140px] sm:w-[165px] flex flex-col gap-2">
-              <div className="aspect-[2/3] rounded-2xl bg-white/[0.04] animate-pulse border border-white/[0.05]" style={{ animationDelay: `${i * 60}ms` }} />
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="flex-none w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] flex flex-col gap-2">
+              <div className="aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse border border-white/[0.05]" style={{ animationDelay: `${i * 60}ms` }} />
               <div className="h-3 w-3/4 bg-white/[0.04] rounded animate-pulse" />
             </div>
           ))}
@@ -99,7 +99,7 @@ export const CuratedShelfRow: React.FC<CuratedShelfRowProps> = ({
           {items.map((item) => (
             <div
               key={`${item.media_type}-${item.id}`}
-              className={`flex-none w-[140px] sm:w-[165px] md:w-[180px] ${isDragging ? 'pointer-events-none' : ''}`}
+              className={`flex-none w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] ${isDragging ? 'pointer-events-none' : ''}`}
             >
               <MovieCard movie={toMovie(item) as any} type={item.media_type as 'movie' | 'tv'} />
             </div>

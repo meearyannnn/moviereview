@@ -106,11 +106,11 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
 
       {/* Horizontal Carousel Track - edge-to-edge touch swipe on phone */}
       {loading ? (
-        <div className="flex gap-3 sm:gap-4 overflow-hidden py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="flex gap-2.5 sm:gap-3 overflow-hidden py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="w-[136px] sm:w-44 md:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#140a0d] border border-[#c9a24b]/15 animate-pulse"
+              className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0 aspect-[2/3] rounded-xl bg-[#140a0d] border border-[#c9a24b]/15 animate-pulse"
             />
           ))}
         </div>
@@ -118,13 +118,13 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
         <div
           ref={containerRef}
           {...handlers}
-          className="flex gap-3 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-2 -mx-4 px-4 sm:mx-0 sm:px-0.5 cursor-grab active:cursor-grabbing select-none touch-pan-x"
+          className="flex gap-2.5 sm:gap-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1.5 -mx-4 px-4 sm:mx-0 sm:px-0.5 cursor-grab active:cursor-grabbing select-none touch-pan-x"
         >
           {items.map((item, index) =>
             renderItem ? (
               renderItem(item, index)
             ) : (
-              <div key={`${item.media_type || 'm'}_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
+              <div key={`${item.media_type || 'm'}_${item.id}_${index}`} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0">
                 <MovieCard movie={item} type={typeOverride} />
               </div>
             )
@@ -288,10 +288,10 @@ export const ExploreSmartShelves: React.FC = () => {
             key={`top10_${item.media_type || 'm'}_${item.id}`}
             className="flex-none flex items-end relative group"
           >
-            {/* Massive Cinema Gold / Yellow Stroked Rank Number */}
+            {/* Cinema Gold / Yellow Stroked Rank Number */}
             <span
               aria-hidden="true"
-              className="select-none font-display font-black text-6xl sm:text-8xl leading-none text-transparent -mr-5 sm:-mr-8 z-10 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] translate-y-2 sm:translate-y-3 pointer-events-none transition-transform duration-300 group-hover:scale-105"
+              className="select-none font-display font-black text-5xl sm:text-6xl leading-none text-transparent -mr-4 sm:-mr-6 z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)] translate-y-2 pointer-events-none transition-transform duration-300 group-hover:scale-105"
               style={{
                 WebkitTextStroke: '2px #f5c542',
                 color: '#0a0608',
@@ -299,7 +299,7 @@ export const ExploreSmartShelves: React.FC = () => {
             >
               {index + 1}
             </span>
-            <div className="w-[136px] sm:w-44 md:w-48 shrink-0">
+            <div className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0">
               <MovieCard movie={item} />
             </div>
           </div>
@@ -399,11 +399,11 @@ export const ExploreSmartShelves: React.FC = () => {
 
         {/* Streaming Shelf Carousel */}
         {loadingStreaming ? (
-          <div className="flex gap-3 sm:gap-4 overflow-hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="flex gap-2.5 sm:gap-3 overflow-hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="w-[136px] sm:w-44 md:w-48 shrink-0 aspect-[2/3] rounded-2xl bg-[#0c0609] border border-[#c9a24b]/15 animate-pulse"
+                className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0 aspect-[2/3] rounded-xl bg-[#0c0609] border border-[#c9a24b]/15 animate-pulse"
               />
             ))}
           </div>
@@ -411,10 +411,10 @@ export const ExploreSmartShelves: React.FC = () => {
           <div
             ref={streamingScrollRef}
             {...streamingHandlers}
-            className="flex gap-3 sm:gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0 cursor-grab active:cursor-grabbing select-none touch-pan-x"
+            className="flex gap-2.5 sm:gap-3.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 -mx-2 px-2 sm:mx-0 sm:px-0 cursor-grab active:cursor-grabbing select-none touch-pan-x"
           >
             {streamingItems.map((item, index) => (
-              <div key={`streaming_${item.id}_${index}`} className="w-[136px] sm:w-44 md:w-48 shrink-0">
+              <div key={`streaming_${item.id}_${index}`} className="w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] shrink-0">
                 <MovieCard movie={item} />
               </div>
             ))}

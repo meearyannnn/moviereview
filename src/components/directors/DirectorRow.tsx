@@ -92,12 +92,12 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({
     .join(' · ');
 
   return (
-    <article className="py-8 sm:py-10 border-b border-white/[0.07] last:border-b-0">
+    <article className="py-2 sm:py-3 border-b border-white/[0.07] last:border-b-0">
       {/* Header: round portrait + one-line name */}
       <Link
         to={`/director/${id}`}
         aria-label={`View ${name}'s filmography`}
-        className="group flex items-center gap-5 sm:gap-6 mb-6 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+        className="group flex items-center gap-3.5 sm:gap-4 mb-4 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
       >
         <img
           src={photoUrl}
@@ -107,22 +107,22 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({
           onError={(e) => {
             e.currentTarget.src = FALLBACK_PORTRAIT;
           }}
-          className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full object-cover grayscale ring-1 ring-[#c9a24b]/30 transition duration-500 group-hover:grayscale-0 group-hover:ring-[#f5c542] group-hover:shadow-[0_0_30px_rgba(245,197,66,0.3)]"
+          className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-full object-cover grayscale ring-1 ring-[#c9a24b]/30 transition duration-500 group-hover:grayscale-0 group-hover:ring-[#f5c542] group-hover:shadow-[0_0_20px_rgba(245,197,66,0.3)]"
         />
 
         <div className="min-w-0 flex-1">
-          <h2 className="font-display font-extrabold tracking-tight text-3xl sm:text-5xl text-white leading-none truncate transition-colors group-hover:text-[#f5c542]">
+          <h2 className="font-display font-bold tracking-tight text-lg sm:text-2xl text-white leading-tight truncate transition-colors group-hover:text-[#f5c542]">
             {name}
           </h2>
-          {meta && <p className="mt-2 text-sm text-white/50">{meta}</p>}
+          {meta && <p className="mt-0.5 text-xs text-white/50">{meta}</p>}
         </div>
 
-        <ChevronRight className="hidden sm:block w-6 h-6 text-white/30 transition group-hover:text-[#f5c542] group-hover:translate-x-1" />
+        <ChevronRight className="hidden sm:block w-4 h-4 text-white/30 transition group-hover:text-[#f5c542] group-hover:translate-x-0.5" />
       </Link>
 
       {/* Posters */}
       {topFive.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
           {topFive.map((movie, i) => {
             const poster = movie.poster_path
               ? tmdb.getImageUrl(movie.poster_path, 'w500')
@@ -135,10 +135,10 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({
                 key={movie.id}
                 to={`/movie/${movie.id}`}
                 title={year ? `${movie.title} (${year})` : movie.title}
-                className={`group/poster block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] ${i >= 4 ? 'hidden md:block' : i >= 2 ? 'hidden sm:block' : ''
+                className={`group/poster block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] ${i >= 5 ? 'hidden md:block' : i >= 3 ? 'hidden sm:block' : ''
                   }`}
               >
-                <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#140a0d] ring-1 ring-white/10 transition duration-300 group-hover/poster:ring-[#f5c542] group-hover/poster:-translate-y-1 group-hover/poster:shadow-[0_12px_30px_rgba(245,197,66,0.25)]">
+                <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#140a0d] ring-1 ring-white/10 transition duration-300 group-hover/poster:ring-[#f5c542] group-hover/poster:-translate-y-0.5 group-hover/poster:shadow-[0_8px_20px_rgba(245,197,66,0.2)]">
                   <img
                     src={poster}
                     alt={movie.title}
@@ -146,19 +146,21 @@ export const DirectorRow: React.FC<DirectorRowProps> = ({
                     onError={(e) => {
                       e.currentTarget.src = FALLBACK_POSTER;
                     }}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover/poster:scale-105"
                   />
                   {rating && (
-                    <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur-sm text-[#f5c542] text-[11px] font-semibold">
-                      <Star className="w-3 h-3 fill-current stroke-none" />
+                    <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-sm text-[#f5c542] text-[10px] font-semibold">
+                      <Star className="w-2.5 h-2.5 fill-current stroke-none" />
                       {rating}
                     </span>
                   )}
                 </div>
-                <h3 className="mt-2 text-sm font-semibold text-white/90 truncate group-hover/poster:text-[#f5c542] transition-colors">
-                  {movie.title}
-                </h3>
-                {year && <p className="text-xs text-white/40">{year}</p>}
+                <div className="mt-1.5 px-0.5">
+                  <h3 className="text-xs sm:text-[13px] font-semibold text-white/90 truncate group-hover/poster:text-[#f5c542] transition-colors leading-tight">
+                    {movie.title}
+                  </h3>
+                  {year && <p className="text-[10px] text-white/40 mt-0.5">{year}</p>}
+                </div>
               </Link>
             );
           })}

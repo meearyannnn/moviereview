@@ -18,7 +18,7 @@ interface MovieRowProps {
 }
 
 // One width scale, shared by real cards and skeletons so nothing jumps when data arrives
-const CARD_WIDTH = 'w-[140px] sm:w-[165px] md:w-[185px] lg:w-[205px]';
+const CARD_WIDTH = 'w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px]';
 
 export const MovieRow = ({
   title,
@@ -69,34 +69,34 @@ export const MovieRow = ({
 
   const hasHeader = Boolean(title?.trim());
   const seeAllClass =
-    'mr-1 inline-flex items-center gap-1 text-sm text-white/50 transition-colors hover:text-[#f5c542]';
+    'mr-1 inline-flex items-center gap-1 text-xs text-white/50 transition-colors hover:text-[#f5c542]';
 
   return (
     <section className="w-full min-w-0 max-w-full" aria-label={title || undefined} aria-busy={loading}>
       {hasHeader && (
-        <header className="mb-4 flex items-end justify-between gap-4">
+        <header className="mb-3 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight text-white">
-              {Icon && <Icon className="h-5 w-5 shrink-0 text-white/50" />}
+            <h2 className="flex items-center gap-2 font-display text-base sm:text-lg font-bold tracking-tight text-white">
+              {Icon && <Icon className="h-4 w-4 shrink-0 text-white/50" />}
               <span className="truncate">{title}</span>
               {accent && <span className="shrink-0 text-[#f5c542]">{accent}</span>}
             </h2>
-            {subtitle && <p className="mt-0.5 truncate text-sm text-white/45">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 truncate text-xs text-white/45">{subtitle}</p>}
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
             {/* One "See all" control, visible on mobile too (it used to be hidden below sm) */}
             {viewAllLink ? (
               <Link to={viewAllLink} className={seeAllClass}>
-                See all <ArrowRight className="h-3.5 w-3.5" />
+                See all <ArrowRight className="h-3 w-3" />
               </Link>
             ) : onViewMore ? (
               <button type="button" onClick={onViewMore} className={seeAllClass}>
-                See all <ArrowRight className="h-3.5 w-3.5" />
+                See all <ArrowRight className="h-3 w-3" />
               </button>
             ) : null}
 
-            <div className="hidden gap-1.5 sm:flex">
+            <div className="hidden gap-1 sm:flex">
               {(['left', 'right'] as const).map((dir) => (
                 <button
                   key={dir}
@@ -104,9 +104,9 @@ export const MovieRow = ({
                   onClick={() => scrollToDirection(dir)}
                   disabled={dir === 'left' ? !canScrollLeft : !canScrollRight}
                   aria-label={dir === 'left' ? 'Scroll left' : 'Scroll right'}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-white transition-colors hover:bg-white/10 disabled:pointer-events-none disabled:opacity-25"
                 >
-                  {dir === 'left' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {dir === 'left' ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                 </button>
               ))}
             </div>

@@ -80,14 +80,14 @@ const JumpBar = () => {
   return (
     <nav
       aria-label="Jump to section"
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {JUMP_CHIPS.map((c) => (
         <a
           key={c.key}
           href={`#${c.key}`}
           onClick={(e) => jump(e, c.key)}
-          className="shrink-0 rounded-full bg-white/[0.05] px-4 py-2 text-sm text-white/60 transition-colors hover:bg-white/[0.09] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+          className="shrink-0 rounded-full bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/60 transition-colors hover:bg-white/[0.09] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
         >
           {c.label}
         </a>
@@ -104,8 +104,8 @@ const Home = () => {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* One spacing rhythm for the whole page. Sections must not add their own vertical margins. */}
-        <div className="space-y-14 pb-28 pt-24 sm:pt-28 md:pb-16">
+        {/* Compact, clean spacing rhythm for the whole page. */}
+        <div className="space-y-9 sm:space-y-10 pb-24 pt-20 sm:pt-24 md:pb-16">
           <JumpBar />
 
           <HomeNewLaunchesSection />
@@ -116,12 +116,11 @@ const Home = () => {
 
           {/*
             Shelves and sidebar share one grid. The sidebar spans every shelf row and is sticky,
-            so it can never be taller than the column beside it. (Before, it sat next to just two
-            rows, and its extra height became a big blank gap under them.)
+            so it can never be taller than the column beside it.
             Mobile order: first shelves, sidebar, then the rest.
           */}
-          <div className="grid gap-x-10 gap-y-14 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
-            <div className="min-w-0 space-y-14 lg:col-start-1">
+          <div className="grid gap-x-8 gap-y-9 sm:gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className="min-w-0 space-y-9 sm:space-y-10 lg:col-start-1">
               <HomeCuratedShelves />
               {TOP.map((s) => (
                 <Row key={s.key} s={s} />
@@ -139,7 +138,7 @@ const Home = () => {
               <TraktAnticipatedShelf />
             </div>
 
-            <div className="min-w-0 space-y-14 lg:col-start-1">
+            <div className="min-w-0 space-y-9 sm:space-y-10 lg:col-start-1">
               {MAIN.map((s) => (
                 <Row key={s.key} s={s} />
               ))}

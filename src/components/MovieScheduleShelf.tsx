@@ -165,10 +165,10 @@ export const MovieScheduleShelf: React.FC = () => {
       >
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex-none w-36 sm:w-44 flex flex-col gap-2">
-              <div className="aspect-[2/3] rounded-2xl bg-white/[0.03] animate-pulse border border-white/[0.05]" />
+            <div key={i} className="flex-none w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] flex flex-col gap-1.5">
+              <div className="aspect-[2/3] rounded-xl bg-white/[0.03] animate-pulse border border-white/[0.05]" />
               <div className="h-3 w-3/4 rounded bg-white/[0.03] animate-pulse" />
-              <div className="h-2.5 w-1/2 rounded bg-white/[0.03] animate-pulse" />
+              <div className="h-2 w-1/2 rounded bg-white/[0.03] animate-pulse" />
             </div>
           ))
         ) : (
@@ -183,10 +183,10 @@ export const MovieScheduleShelf: React.FC = () => {
               <div
                 key={movie.id}
                 onClick={() => navigate(`/movie/${movie.id}`)}
-                className="flex-none w-36 sm:w-44 group cursor-pointer"
+                className="flex-none w-[115px] sm:w-[130px] md:w-[145px] lg:w-[155px] group cursor-pointer"
               >
                 {/* Poster container */}
-                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-[#c9a24b]/20 bg-[#140a0d] group-hover:border-[#f5c542]/60 group-hover:shadow-[0_8px_30px_rgba(245,197,66,0.25)] transition-all duration-300 transform group-hover:-translate-y-1">
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-[#c9a24b]/20 bg-[#140a0d] group-hover:border-[#f5c542]/60 group-hover:shadow-[0_4px_20px_rgba(245,197,66,0.2)] transition-all duration-300 transform group-hover:-translate-y-0.5">
                   {posterUrl ? (
                     <img
                       src={posterUrl}
@@ -201,7 +201,7 @@ export const MovieScheduleShelf: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
-                      <Film className="w-8 h-8 text-white/20" />
+                      <Film className="w-6 h-6 text-white/20" />
                     </div>
                   )}
 
@@ -209,27 +209,27 @@ export const MovieScheduleShelf: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
                   {/* Top Release Date Pill */}
-                  <div className="absolute top-2.5 left-2.5 z-10">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/75 border border-[#c9a24b]/30 text-white backdrop-blur-md shadow-md">
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-black/80 border border-[#c9a24b]/30 text-white backdrop-blur-md shadow-sm">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#f5c542] animate-pulse" />
                       {dateBadge}
                     </span>
                   </div>
 
                   {/* Bottom Release Tag */}
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10">
-                    <span className="block truncate text-[10px] font-bold text-[#f3e9d2] bg-black/70 border border-[#c9a24b]/30 backdrop-blur-md px-2 py-0.5 rounded-md text-center">
+                  <div className="absolute bottom-2 left-2 right-2 z-10">
+                    <span className="block truncate text-[9px] font-semibold text-[#f3e9d2] bg-black/75 border border-[#c9a24b]/30 backdrop-blur-md px-1.5 py-0.5 rounded text-center">
                       {movie.releaseTag || 'In Theatres'}
                     </span>
                   </div>
                 </div>
 
                 {/* Movie Title & Date */}
-                <div className="mt-2.5 px-0.5">
-                  <h3 className="font-display font-bold text-xs sm:text-sm text-white/90 group-hover:text-[#f5c542] transition-colors line-clamp-1">
+                <div className="mt-2 px-0.5">
+                  <h3 className="font-display font-semibold text-xs sm:text-[13px] leading-tight text-white/90 group-hover:text-[#f5c542] transition-colors line-clamp-1">
                     {movie.title}
                   </h3>
-                  <p className="text-[11px] text-[#c9a24b]/60 font-mono mt-0.5 line-clamp-1">
+                  <p className="text-[10px] text-[#c9a24b]/70 font-mono mt-0.5 line-clamp-1">
                     {fullDate}
                   </p>
                 </div>

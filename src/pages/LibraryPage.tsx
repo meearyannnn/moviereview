@@ -19,6 +19,8 @@ import {
   Check,
   ChevronRight,
   Sparkles,
+  Flame,
+  Hourglass,
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
@@ -388,36 +390,36 @@ export const LibraryPage: React.FC = () => {
                     type="button"
                     onClick={() => setLaterTag('asap')}
                     className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'asap'
-                        ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-sm shadow-rose-500/20'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
                       }`}
                   >
-                    <span>🚀</span>
-                    <span>ASAP</span>
+                    <Flame className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Zero Chill</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLaterTag('weekend')}
                     className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'weekend'
-                        ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
+                        ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542] shadow-sm shadow-[#f5c542]/20'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
                       }`}
                   >
-                    <span>🍿</span>
-                    <span>Weekend</span>
+                    <Sparkles className="w-3.5 h-3.5 text-[#f5c542]" />
+                    <span>Weekend Vibe</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setLaterTag('someday')}
                     className={`px-4 py-2 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 transition-all border ${laterTag === 'someday'
-                        ? 'bg-[#c9a24b]/20 border-[#f5c542] text-[#f5c542]'
+                        ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-sm shadow-sky-500/20'
                         : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white'
                       }`}
                   >
-                    <span>🐌</span>
-                    <span>Someday</span>
+                    <Hourglass className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Low-Key</span>
                   </button>
                 </div>
 
@@ -468,8 +470,25 @@ export const LibraryPage: React.FC = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
                             {/* Tag pill badge */}
-                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-black/75 border border-[#c9a24b]/40 text-[#f5c542] backdrop-blur-md">
-                              {item.tag === 'asap' ? '🚀 ASAP' : item.tag === 'weekend' ? '🍿 Weekend' : '🐌 Someday'}
+                            <span
+                              className={`absolute top-2 left-2 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wide backdrop-blur-md flex items-center gap-1 shadow-md ${
+                                item.tag === 'asap'
+                                  ? 'bg-black/80 border border-rose-500/40 text-rose-300'
+                                  : item.tag === 'weekend'
+                                  ? 'bg-black/80 border border-[#f5c542]/40 text-[#f5c542]'
+                                  : 'bg-black/80 border border-sky-500/40 text-sky-300'
+                              }`}
+                            >
+                              {item.tag === 'asap' && <Flame className="w-2.5 h-2.5 text-rose-400 shrink-0" />}
+                              {item.tag === 'weekend' && <Sparkles className="w-2.5 h-2.5 text-[#f5c542] shrink-0" />}
+                              {item.tag === 'someday' && <Hourglass className="w-2.5 h-2.5 text-sky-400 shrink-0" />}
+                              <span>
+                                {item.tag === 'asap'
+                                  ? 'Zero Chill'
+                                  : item.tag === 'weekend'
+                                  ? 'Weekend Vibe'
+                                  : 'Low-Key'}
+                              </span>
                             </span>
                           </Link>
 

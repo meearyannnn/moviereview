@@ -4,7 +4,7 @@
  */
 import { useEffect, useState, useRef, type ElementType, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock, Eye } from 'lucide-react';
+import { Bookmark, Check, Play, Share2, X, PenLine, Calendar, Star, Clock, Eye, Flame, Sparkles, Hourglass } from 'lucide-react';
 import { tmdb, type CastMember, type CrewMember } from '@/services/tmdb';
 import type { WatchLaterTag } from '@/services/userLibrary';
 
@@ -130,34 +130,38 @@ const secondaryBtn =
 const idleBtn = 'border-[#c9a24b]/30 bg-[#140c10]/90 text-white hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10';
 const savedBtn = 'border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c542]/30 shadow-md shadow-[#f5c542]/25';
 
-// ── Watch Later Popover Options ─────────────────────────────────────────
+// ── Watch Later Popover Options (Unique Gen-Z Tiers & Elegant Icons) ────────
 const WATCH_LATER_OPTIONS: Array<{
   tag: WatchLaterTag;
-  icon: string;
+  icon: typeof Flame;
   label: string;
   desc: string;
   textColor: string;
+  iconColor: string;
 }> = [
     {
       tag: 'asap',
-      icon: '🚀',
-      label: 'ASAP',
-      desc: 'Watch as soon as you can',
+      icon: Flame,
+      label: 'Zero Chill',
+      desc: 'Must watch immediately · peak urgency',
       textColor: 'text-rose-400',
+      iconColor: 'text-rose-400',
     },
     {
       tag: 'weekend',
-      icon: '🥤',
-      label: 'Weekend',
-      desc: 'Save for your next free weekend',
+      icon: Sparkles,
+      label: 'Weekend Vibe',
+      desc: 'Queued for your next off-duty sesh',
       textColor: 'text-[#f5c542]',
+      iconColor: 'text-[#f5c542]',
     },
     {
       tag: 'someday',
-      icon: '🐌',
-      label: 'Someday',
-      desc: 'No rush — get to it when you can',
+      icon: Hourglass,
+      label: 'Low-Key',
+      desc: 'Letting it simmer · zero pressure',
       textColor: 'text-sky-400',
+      iconColor: 'text-sky-400',
     },
   ];
 
@@ -303,13 +307,13 @@ export const ActionBar = ({
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm">{opt.icon}</span>
+                        <div className="flex items-center gap-2">
+                          <opt.icon className={`h-4 w-4 shrink-0 ${opt.iconColor}`} />
                           <span className={`text-sm font-display font-bold ${opt.textColor}`}>
                             {opt.label}
                           </span>
                         </div>
-                        <p className="text-xs font-mono text-white/60 mt-0.5 leading-snug">
+                        <p className="text-xs font-mono text-white/50 mt-1 leading-snug">
                           {opt.desc}
                         </p>
                       </div>

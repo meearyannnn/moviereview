@@ -8,6 +8,7 @@ import { HomeDirectorsSpotlight } from '@/components/HomeDirectorsSpotlight';
 import { HomeNewLaunchesSection } from '@/components/HomeNewLaunchesSection';
 import { HomeFranchiseSection } from '@/components/HomeFranchiseSection';
 import { HomePersonalizedSection } from '@/components/HomePersonalizedSection';
+import { DailyCinemaPollSection } from '@/components/home/DailyCinemaPollSection';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { tmdb, type Movie } from '@/services/tmdb';
 import { Film, Flame, Award, Zap, Sparkles, Heart, Tv, Radio, Trophy } from 'lucide-react';
@@ -66,6 +67,7 @@ const JUMP_CHIPS = [
   { key: 'directors-spotlight', label: 'Directors' },
   { key: 'franchises', label: 'Franchises' },
   { key: 'for-you', label: 'For You' },
+  { key: 'daily-poll', label: 'Daily Poll' },
   ...MAIN.filter((s) => s.chip).map((s) => ({ key: s.key, label: s.chip! })),
 ];
 
@@ -113,6 +115,7 @@ const Home = () => {
           <HomeFranchiseSection />
 
           <HomePersonalizedSection />
+          <DailyCinemaPollSection />
 
           {/*
             Shelves and sidebar share one grid. The sidebar spans every shelf row and is sticky,

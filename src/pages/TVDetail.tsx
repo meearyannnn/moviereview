@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Layers } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
@@ -10,7 +10,6 @@ import { RatingsDisplay } from '@/components/RatingsDisplay';
 import { ActorFilmographyModal } from '@/components/ActorFilmographyModal';
 import { TitleLogo } from '@/components/TitleLogo';
 import { useOmdb } from '@/services/omdb';
-import { useWatchlist } from '@/hooks/useWatchlist';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
 import type { WatchLaterTag } from '@/services/userLibrary';
 import { AddToCollectionModal } from '@/components/library/AddToCollectionModal';
@@ -49,6 +48,45 @@ interface TVShowDetail extends MovieDetail {
 
 const scrollToReviews = () =>
   document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' });
+
+/* Same glass system as Home / MovieDetail / Navbar. Move to a shared file when ready. */
+const GlassStyles = () => (
+  <style>{`
+    .page-root {
+      font-family: -apple-system, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.025) 100%);
+      backdrop-filter: blur(40px) saturate(170%);
+      -webkit-backdrop-filter: blur(40px) saturate(170%);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.03), 0 30px 60px -30px rgba(0,0,0,0.65);
+    }
+    .glass-thin {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 24px -8px rgba(0,0,0,0.5);
+    }
+    .page-root a:focus-visible, .page-root button:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.7);
+      outline-offset: 3px;
+    }
+    @keyframes drift-a { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(8vw,6vh,0) scale(1.15); } }
+    @keyframes drift-b { 0%,100% { transform: translate3d(0,0,0) scale(1.1); } 50% { transform: translate3d(-10vw,-4vh,0) scale(0.95); } }
+    .aurora { position: fixed; border-radius: 9999px; pointer-events: none; z-index: 0; will-change: transform; }
+    .aurora-a { top: 30%; left: 5%; width: 55vw; height: 45vw; background: radial-gradient(closest-side, rgba(96,130,255,0.16), transparent); filter: blur(70px); animation: drift-a 40s ease-in-out infinite; }
+    .aurora-b { bottom: -10%; right: -5%; width: 50vw; height: 50vw; background: radial-gradient(closest-side, rgba(190,120,255,0.12), transparent); filter: blur(80px); animation: drift-b 48s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .aurora { animation: none !important; } }
+  `}</style>
+);
+
+/* One glass shelf per content section (replaces the hairline dividers) */
+const Shelf: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <section className={`glass rounded-[2rem] p-5 sm:p-7 ${className}`}>{children}</section>
+);
 
 const TVDetailPage = () => {
   const { id } = useParams();
@@ -181,29 +219,34 @@ const TVDetailPage = () => {
 
   if (!show) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0608] p-4 text-center">
-        <h2 className="mb-2 text-2xl font-bold text-white font-display">Show not found</h2>
-        <p className="mb-6 text-sm text-white/50">It may have been removed, or the link is wrong.</p>
-        <button
-          onClick={() => navigate('/')}
-          className="flex h-11 items-center rounded-full bg-[#f5c542] px-6 text-sm font-black text-[#1c120c] transition-colors hover:bg-[#c9a24b] shadow-lg shadow-[#f5c542]/25"
-        >
-          Return home
-        </button>
+      <div className="page-root relative flex min-h-screen items-center justify-center bg-[#090c12] p-4 overflow-hidden">
+        <GlassStyles />
+        <div className="aurora aurora-a" />
+        <div className="glass relative z-10 max-w-sm rounded-[2rem] p-10 text-center">
+          <h2 className="text-2xl font-semibold tracking-[-0.022em] text-white">Show not found</h2>
+          <p className="mt-2 text-sm text-white/50">It may have been removed, or the link is wrong.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-6 h-11 rounded-full bg-white px-7 text-sm font-semibold text-black transition-transform hover:scale-105 active:scale-95"
+          >
+            Back to home
+          </button>
+        </div>
       </div>
     );
   }
 
   const inWatchLater = isInWatchLater(show.id, 'tv');
-  const currentWatchLaterItem = watchLater.find((l) => l.media_id === show.id && l.media_type === 'tv');
+  const currentWatchLaterItem = watchLater.find((l) => Number(l.media_id) === Number(show.id) && l.media_type === 'tv');
   const watchLaterTag = currentWatchLaterItem?.tag;
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : null;
   const rating = show.vote_average ? show.vote_average.toFixed(1) : null;
   const isReleased = show.first_air_date ? new Date(show.first_air_date) <= new Date() : true;
   const seasons = show.number_of_seasons;
   const episodes = show.number_of_episodes;
-  const hasGenres = show.genres?.length > 0;
+  const hasGenres = (show.genres?.length ?? 0) > 0;
   const displayTitle = show.name || show.title || '';
+  const hasSeasons = !!show.seasons && show.seasons.filter((s) => s.season_number > 0).length > 0;
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -261,13 +304,14 @@ const TVDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
-      <Navbar />
+    <div className="page-root relative min-h-screen overflow-x-hidden bg-[#090c12] text-white selection:bg-white selection:text-black">
+      <GlassStyles />
 
-      {/* ── Cinema Projector Lighting & Curtain Gradients ── */}
-      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_rgba(201,162,75,0.03)_40%,_transparent_75%)] z-0" />
-      <div className="pointer-events-none fixed inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-black/90 via-[#140a0d]/40 to-transparent z-0" />
-      <div className="pointer-events-none fixed inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-black/90 via-[#140a0d]/40 to-transparent z-0" />
+      {/* Slow ambient light for the glass to refract (replaces the edge vignettes) */}
+      <div className="aurora aurora-a" />
+      <div className="aurora aurora-b" />
+
+      <Navbar />
 
       <DetailLayout
         backdropSrc={tmdb.getImageUrl(show.backdrop_path, 'original')}
@@ -349,30 +393,38 @@ const TVDetailPage = () => {
           <UpcomingCard heading="Not aired yet" verb="Premieres" date={show.first_air_date} />
         )}
 
-        {/* ── Write Review & Community Reviews (Directly below TV Meter) ── */}
-        <div className="mb-12 border-t border-white/[0.06] pt-10">
-          <ReviewSection mediaId={show.id} mediaType="tv" title={displayTitle} />
-        </div>
+        {/* Content shelves: each section sits on its own glass panel */}
+        <div className="space-y-6 sm:space-y-8">
+          <Shelf>
+            <ReviewSection mediaId={show.id} mediaType="tv" title={displayTitle} />
+          </Shelf>
 
-        <CastRow cast={cast} onSelect={setSelectedActor} />
-        <CrewRow crew={crew} onSelect={setSelectedActor} />
+          {(cast.length > 0 || crew.length > 0) && (
+            <Shelf className="space-y-8">
+              <CastRow cast={cast} onSelect={setSelectedActor} />
+              <CrewRow crew={crew} onSelect={setSelectedActor} />
+            </Shelf>
+          )}
 
-        {show.seasons && show.seasons.filter((s) => s.season_number > 0).length > 0 && (
-          <SeasonRatings
-            showId={show.id}
-            showName={displayTitle}
-            imdbId={imdbId}
-            showOmdbData={omdbData}
-            seasons={show.seasons}
-          />
-        )}
+          {hasSeasons && (
+            <Shelf>
+              <SeasonRatings
+                showId={show.id}
+                showName={displayTitle}
+                imdbId={imdbId}
+                showOmdbData={omdbData}
+                seasons={show.seasons}
+              />
+            </Shelf>
+          )}
 
-        <div className="mt-8 border-t border-white/[0.06] pt-10">
-          <WatchProviders mediaId={show.id} mediaType="tv" />
-        </div>
+          <Shelf>
+            <WatchProviders mediaId={show.id} mediaType="tv" />
+          </Shelf>
 
-        <div className="mt-12 border-t border-white/[0.06] pt-10 pb-32 md:pb-16 safe-bottom-content">
-          <RecommendedShelf mediaId={show.id} mediaType="tv" currentTitle={show.name} />
+          <Shelf className="mb-32 md:mb-16 safe-bottom-content">
+            <RecommendedShelf mediaId={show.id} mediaType="tv" currentTitle={show.name} />
+          </Shelf>
         </div>
       </DetailLayout>
 
@@ -385,20 +437,18 @@ const TVDetailPage = () => {
 
       {showTrailer && trailer && <TrailerModal trailerKey={trailer.key} onClose={closeTrailer} />}
 
-      {show && (
-        <AddToCollectionModal
-          isOpen={showCollectionModal}
-          onClose={() => setShowCollectionModal(false)}
-          media={{
-            id: show.id,
-            title: show.name,
-            mediaType: 'tv',
-            posterPath: show.poster_path,
-            releaseYear: show.first_air_date ? show.first_air_date.slice(0, 4) : undefined,
-            voteAverage: show.vote_average,
-          }}
-        />
-      )}
+      <AddToCollectionModal
+        isOpen={showCollectionModal}
+        onClose={() => setShowCollectionModal(false)}
+        media={{
+          id: show.id,
+          title: show.name,
+          mediaType: 'tv',
+          posterPath: show.poster_path,
+          releaseYear: show.first_air_date ? show.first_air_date.slice(0, 4) : undefined,
+          voteAverage: show.vote_average,
+        }}
+      />
     </div>
   );
 };

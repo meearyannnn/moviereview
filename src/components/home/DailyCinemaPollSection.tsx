@@ -112,7 +112,8 @@ export const DailyCinemaPollSection: React.FC = () => {
         </div>
 
         {/* Segmented matchup switcher */}
-        <nav className="flex gap-1 rounded-full bg-white/[0.06] p-1 backdrop-blur" aria-label="Matchups">
+        {/* Segmented matchup switcher */}
+        <nav className="flex gap-1 rounded-full bg-white/[0.06] p-1 backdrop-blur-xl border border-white/10" aria-label="Matchups">
           {polls.map((p, i) => {
             const active = i === activeIndex;
             return (
@@ -121,7 +122,7 @@ export const DailyCinemaPollSection: React.FC = () => {
                 type="button"
                 onClick={() => setActiveIndex(i)}
                 aria-current={active}
-                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542] ${active ? 'bg-[#f5c542] text-black shadow-lg shadow-[#f5c542]/25' : 'text-white/60 hover:text-white'
+                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${active ? 'bg-white text-black shadow-lg shadow-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'
                   }`}
               >
                 {active ? p.category : i + 1}
@@ -168,8 +169,8 @@ export const DailyCinemaPollSection: React.FC = () => {
               onMouseLeave={() => setHoverId(null)}
               onFocus={() => setHoverId(option.id)}
               onBlur={() => setHoverId(null)}
-              className={`group relative aspect-[2/3] cursor-pointer overflow-hidden rounded-2xl bg-black outline-none ring-1 transition-all duration-500 focus-visible:ring-2 focus-visible:ring-[#f5c542] motion-reduce:transition-none ${isPick
-                  ? 'ring-2 ring-[#f5c542] shadow-2xl shadow-[#f5c542]/30'
+              className={`group relative aspect-[2/3] cursor-pointer overflow-hidden rounded-2xl bg-black outline-none ring-1 transition-all duration-500 focus-visible:ring-2 focus-visible:ring-white motion-reduce:transition-none ${isPick
+                  ? 'ring-2 ring-white shadow-2xl shadow-white/30'
                   : 'ring-white/10 hover:ring-white/30'
                 } ${hasVoted && !isPick && !isLeader ? 'opacity-70 hover:opacity-100' : ''} ${!hasVoted ? 'hover:-translate-y-1.5' : ''
                 }`}
@@ -187,14 +188,14 @@ export const DailyCinemaPollSection: React.FC = () => {
               />
 
               {/* Cursor-following spotlight */}
-              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(245,197,66,0.22),transparent_70%)]" />
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.2),transparent_70%)]" />
 
               {/* Result fill: rises from the bottom to the vote share */}
               {hasVoted && (
                 <div
                   className={`pointer-events-none absolute inset-x-0 bottom-0 transition-[height] duration-1000 ease-out motion-reduce:transition-none ${isPick
-                      ? 'bg-gradient-to-t from-[#f5c542]/70 to-[#f5c542]/20'
-                      : 'bg-gradient-to-t from-white/30 to-white/5'
+                      ? 'bg-gradient-to-t from-white/50 to-white/20'
+                      : 'bg-gradient-to-t from-white/25 to-white/5'
                     }`}
                   style={{ height: `${pct}%` }}
                 />
@@ -209,14 +210,14 @@ export const DailyCinemaPollSection: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
                 title={`View ${option.title}`}
                 aria-label={`View ${option.title} details`}
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white/80 opacity-0 backdrop-blur transition hover:bg-[#f5c542] hover:text-black focus-visible:opacity-100 group-hover:opacity-100"
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white/80 opacity-0 backdrop-blur transition hover:bg-white hover:text-black focus-visible:opacity-100 group-hover:opacity-100"
               >
                 <ExternalLink className="h-4 w-4" />
               </Link>
 
               {/* Your pick badge */}
               {isPick && (
-                <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#f5c542] text-black shadow-lg">
+                <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-black shadow-lg">
                   <Check className="h-4 w-4 stroke-[3]" />
                 </span>
               )}
@@ -225,7 +226,7 @@ export const DailyCinemaPollSection: React.FC = () => {
               <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
                 {hasVoted && (
                   <div className="mb-1 flex items-baseline gap-2">
-                    <span className={`font-display text-3xl font-black tabular-nums sm:text-4xl ${isPick ? 'text-[#f5c542]' : 'text-white'}`}>
+                    <span className="font-display text-3xl font-black tabular-nums sm:text-4xl text-white">
                       {pct}%
                     </span>
                     {isLeader && <span className="text-xs font-semibold text-white/80">leading</span>}

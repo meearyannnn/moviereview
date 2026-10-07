@@ -94,23 +94,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[420px] bg-[#140a0d]/95 backdrop-blur-2xl border border-[#c9a24b]/25 text-white shadow-2xl p-0 overflow-hidden rounded-2xl">
-        {/* Cinema aesthetic header */}
-        <div className="relative h-28 bg-gradient-to-br from-[#c9a24b]/20 via-[#140a0d] to-[#0a0608] flex flex-col items-center justify-center border-b border-[#c9a24b]/20">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(245,197,66,0.25),transparent_70%)]" />
+      <DialogContent className="sm:max-w-[420px] bg-black/95 backdrop-blur-2xl border border-white/15 text-white shadow-2xl p-0 overflow-hidden rounded-2xl">
+        {/* Monochrome aesthetic header */}
+        <div className="relative h-28 bg-gradient-to-b from-white/10 via-black to-black flex flex-col items-center justify-center border-b border-white/10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent_70%)]" />
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-11 h-11 rounded-xl bg-black/70 border border-[#c9a24b]/40 flex items-center justify-center shadow-lg backdrop-blur-md">
-              <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-7 h-auto object-contain" />
+            <div className="w-11 h-11 rounded-xl bg-black/80 border border-white/20 flex items-center justify-center shadow-lg backdrop-blur-md">
+              <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-7 h-auto object-contain brightness-200" />
             </div>
             <img
               src="/assets/branding/movieguy-hero-tight.png"
               alt="MovieGuy"
-              className="h-6 w-auto object-contain drop-shadow-[0_0_12px_rgba(245,197,66,0.4)]"
+              className="h-6 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.3)] brightness-150"
             />
           </div>
-          <span className="text-[10px] uppercase tracking-[0.25em] text-[#c9a24b] font-mono mt-2 relative z-10 flex items-center gap-1.5 font-semibold">
-            <Sparkles className="w-3 h-3 text-[#f5c542]" />
-            Official Cinema Pass &amp; CineClub
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-mono mt-2 relative z-10 flex items-center gap-1.5 font-semibold">
+            <Sparkles className="w-3 h-3 text-white" />
+            Cinema Pass &amp; CineClub
           </span>
         </div>
 
@@ -132,7 +132,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={isSubmitting}
-            className="w-full bg-white/5 hover:bg-white/10 border-white/15 text-white flex items-center justify-center gap-2.5 py-5 rounded-xl transition-all"
+            className="w-full bg-white/[0.04] hover:bg-white/[0.08] border-white/15 text-white flex items-center justify-center gap-2.5 py-5 rounded-xl transition-all"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -160,7 +160,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <span className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0c0d14] px-3 text-white/40 font-mono tracking-wider">
+              <span className="bg-black px-3 text-white/40 font-mono tracking-wider">
                 Or with email
               </span>
             </div>
@@ -181,7 +181,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="cinephile99"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="bg-black/40 border-[#c9a24b]/20 text-white placeholder:text-white/30 text-sm focus:border-[#f5c542] rounded-lg"
+                  className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/30 text-sm focus:border-white rounded-lg"
                 />
               </div>
             )}
@@ -194,7 +194,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 placeholder="you@cinema.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-black/40 border-[#c9a24b]/20 text-white placeholder:text-white/30 text-sm focus:border-[#f5c542] rounded-lg"
+                className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/30 text-sm focus:border-white rounded-lg"
               />
             </div>
 
@@ -207,7 +207,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/40 border-[#c9a24b]/20 text-white placeholder:text-white/30 text-sm focus:border-[#f5c542] rounded-lg pr-10"
+                  className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/30 text-sm focus:border-white rounded-lg pr-10"
                 />
                 <button
                   type="button"
@@ -222,10 +222,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#f5c542] hover:bg-[#c9a24b] text-[#1c120c] font-black py-5 rounded-xl transition-all shadow-lg shadow-[#f5c542]/25 mt-2"
+              className="w-full bg-white hover:bg-neutral-200 text-black font-extrabold py-5 rounded-xl transition-all shadow-lg shadow-white/10 mt-2"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#1c120c]" />
+                <Loader2 className="w-4 h-4 animate-spin text-black" />
               ) : mode === 'signin' ? (
                 <span className="flex items-center gap-2">
                   <LogIn className="w-4 h-4" /> Sign In
@@ -249,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setMode('signup');
                     setErrorMessage(null);
                   }}
-                  className="text-[#f5c542] hover:text-white font-semibold underline ml-1"
+                  className="text-white hover:underline font-semibold ml-1"
                 >
                   Create one now
                 </button>
@@ -263,7 +263,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setMode('signin');
                     setErrorMessage(null);
                   }}
-                  className="text-[#f5c542] hover:text-white font-semibold underline ml-1"
+                  className="text-white hover:underline font-semibold ml-1"
                 >
                   Sign in
                 </button>

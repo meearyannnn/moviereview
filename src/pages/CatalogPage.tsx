@@ -203,15 +203,15 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
   const hasActiveFilters = selectedNetwork !== null || selectedGenre !== 'all' || activeSort !== 'trending';
 
   return (
-    <div className="relative min-h-screen bg-[#0a0608] text-[#f3e9d2] overflow-x-hidden selection:bg-[#c9a24b] selection:text-[#1c120c]">
-      {/* Projector light ambient radial glow */}
+    <div className="relative min-h-screen bg-[#07080b] text-white overflow-x-hidden selection:bg-white selection:text-black">
+      {/* Subtle monochrome ambient light */}
       <div 
         className="pointer-events-none fixed inset-0 z-0"
         style={{
-          background: 'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(245, 197, 66, 0.08) 0%, rgba(20, 10, 13, 0.4) 55%, transparent 80%)'
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 255, 255, 0.05) 0%, rgba(7, 8, 11, 0) 70%)'
         }}
       />
-      {/* Curtain folds */}
+      {/* Curtain subtle vignette */}
       <div className="pointer-events-none fixed inset-y-0 left-0 w-24 bg-gradient-to-r from-black/80 to-transparent z-10" />
       <div className="pointer-events-none fixed inset-y-0 right-0 w-24 bg-gradient-to-l from-black/80 to-transparent z-10" />
 
@@ -219,9 +219,9 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-32">
         {/* ── 1. Minimalist Header & Media Switcher (Movies vs TV) ── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#c9a24b]/20">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#f5c542] font-mono mb-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 font-mono mb-2">
               Curated Catalog
             </p>
             <div className="flex items-center gap-8 sm:gap-10">
@@ -234,7 +234,7 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
               >
                 Movies
                 {mediaType === 'movie' && (
-                  <span className="absolute left-0 right-0 -bottom-[25px] h-[3px] bg-[#f5c542] rounded-full shadow-[0_0_16px_rgba(245,197,66,0.9)] animate-in fade-in zoom-in-95 duration-200" />
+                  <span className="absolute left-0 right-0 -bottom-[25px] h-[3px] bg-white rounded-full shadow-[0_0_16px_rgba(255,255,255,0.7)] animate-in fade-in zoom-in-95 duration-200" />
                 )}
               </button>
 
@@ -247,14 +247,14 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
               >
                 TV Shows
                 {mediaType === 'tv' && (
-                  <span className="absolute left-0 right-0 -bottom-[25px] h-[3px] bg-[#f5c542] rounded-full shadow-[0_0_16px_rgba(245,197,66,0.9)] animate-in fade-in zoom-in-95 duration-200" />
+                  <span className="absolute left-0 right-0 -bottom-[25px] h-[3px] bg-white rounded-full shadow-[0_0_16px_rgba(255,255,255,0.7)] animate-in fade-in zoom-in-95 duration-200" />
                 )}
               </button>
             </div>
           </div>
 
           {/* Sort / Vibes Tiers */}
-          <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#140a0d] border border-[#c9a24b]/25 backdrop-blur-md self-start md:self-end overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl self-start md:self-end overflow-x-auto max-w-full">
             {SORT_OPTIONS.map((opt) => {
               const active = activeSort === opt.key;
               return (
@@ -263,8 +263,8 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
                   onClick={() => setActiveSort(opt.key)}
                   className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-all whitespace-nowrap ${
                     active
-                      ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-[0_2px_12px_rgba(245,197,66,0.35)]'
-                      : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-white text-black font-black shadow-[0_2px_12px_rgba(255,255,255,0.25)]'
+                      : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                   }`}
                 >
                   <opt.Icon className="w-3.5 h-3.5" />
@@ -346,7 +346,7 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
             {selectedNetwork && (
               <>
                 <span>•</span>
-                <span className="text-[#f5c542] font-semibold capitalize">
+                <span className="text-white font-semibold capitalize">
                   {WEB_CHANNELS.find((c) => c.id === selectedNetwork)?.name || selectedNetwork}
                 </span>
               </>
@@ -363,7 +363,7 @@ export default function CatalogPage({ defaultMediaType }: CatalogPageProps) {
             {hasActiveFilters && (
               <button
                 onClick={handleResetFilters}
-                className="ml-2 inline-flex items-center gap-1 text-[11px] text-white/50 hover:text-[#f5c542] transition-colors"
+                className="ml-2 inline-flex items-center gap-1 text-[11px] text-white/50 hover:text-white transition-colors"
               >
                 <X className="w-3 h-3" />
                 <span>Reset</span>

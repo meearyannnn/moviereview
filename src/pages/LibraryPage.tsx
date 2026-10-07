@@ -437,10 +437,10 @@ export const LibraryPage: React.FC = () => {
                     </p>
                     <Link
                       to="/explore"
-                      className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#f5c542] hover:bg-[#e6b738] text-black font-bold text-xs font-mono transition-transform active:scale-95 shadow-lg shadow-[#f5c542]/20"
+                      className="mt-6 inline-flex items-center gap-2 px-7 py-3 rounded-full bg-white hover:bg-white/90 text-black font-bold text-sm font-display transition-all active:scale-95 shadow-[0_0_25px_rgba(255,255,255,0.2)]"
                     >
                       <span>Explore Titles</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-4 h-4 text-black" />
                     </Link>
                   </div>
                 ) : (

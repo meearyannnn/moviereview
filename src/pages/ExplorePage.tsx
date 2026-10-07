@@ -268,7 +268,7 @@ export const ExplorePage: React.FC = () => {
 
   return (
     // overflow-x-clip, not -hidden: hidden would break the sticky filter rail
-    <div className="relative min-h-screen overflow-x-clip bg-[#0a0608] font-sans text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c]">
+    <div className="relative min-h-screen overflow-x-clip bg-[#07080b] font-sans text-white selection:bg-white selection:text-black">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 pb-32 pt-24 sm:px-6 sm:pt-28 lg:px-8">
@@ -286,7 +286,7 @@ export const ExplorePage: React.FC = () => {
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Search movies and shows"
               aria-label="Search movies and shows"
-              className="w-full rounded-full bg-white/[0.06] py-2.5 pl-10 pr-10 text-sm text-white placeholder-white/40 transition-colors focus:bg-white/[0.09] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+              className="w-full rounded-full bg-white/[0.06] py-2.5 pl-10 pr-10 text-sm text-white placeholder-white/40 transition-colors focus:bg-white/[0.09] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 border border-white/10"
             />
             {draft && (
               <button
@@ -331,7 +331,7 @@ export const ExplorePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleClearAll}
-                    className="inline-flex shrink-0 items-center gap-1.5 text-sm text-white/55 transition-colors hover:text-[#f5c542]"
+                    className="inline-flex shrink-0 items-center gap-1.5 text-sm text-white/55 transition-colors hover:text-white"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     Clear all
@@ -382,7 +382,7 @@ export const ExplorePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={error ? () => fetchPage(1, false) : handleClearAll}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#f5c542] px-5 py-2.5 text-sm font-bold text-[#1c120c] transition-colors hover:bg-white"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-colors hover:bg-neutral-200"
                 >
                   <RotateCcw className="h-4 w-4" />
                   {error ? 'Try again' : 'Reset filters'}
@@ -409,7 +409,7 @@ export const ExplorePage: React.FC = () => {
                       type="button"
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-60 border border-white/10"
                     >
                       {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
                       {loadingMore ? 'Loading' : 'Load more'}
@@ -425,7 +425,7 @@ export const ExplorePage: React.FC = () => {
       <footer className="relative z-10 border-t border-white/[0.06] pb-28 md:pb-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Link to="/" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]">
+            <Link to="/" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
               <img
                 src="/assets/branding/movieguy-hero-tight.png"
                 alt="MovieGuy"
@@ -444,7 +444,7 @@ export const ExplorePage: React.FC = () => {
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Back to top"
-          className="fixed bottom-24 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition hover:bg-white hover:text-black active:scale-95 animate-in fade-in duration-200"
+          className="fixed bottom-24 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition hover:bg-white hover:text-black active:scale-95 animate-in fade-in duration-200 border border-white/15"
         >
           <ArrowUp className="h-5 w-5" />
         </button>
@@ -455,12 +455,12 @@ export const ExplorePage: React.FC = () => {
         type="button"
         onClick={() => setDrawerOpen(true)}
         aria-label="Open filters"
-        className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#f5c542] px-5 py-2.5 text-sm font-bold text-[#1c120c] shadow-xl shadow-black/60 transition active:scale-95 lg:hidden"
+        className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black shadow-xl shadow-black/60 transition active:scale-95 border border-white/20 lg:hidden"
       >
         <SlidersHorizontal className="h-4 w-4" />
         Filters
         {activeCount > 0 && (
-          <span className="rounded-full bg-[#1c120c] px-1.5 text-[11px] font-bold tabular-nums text-[#f5c542]">
+          <span className="rounded-full bg-black px-1.5 text-[11px] font-bold tabular-nums text-white">
             {activeCount}
           </span>
         )}
@@ -470,7 +470,7 @@ export const ExplorePage: React.FC = () => {
       {drawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
-          <div className="fixed inset-y-0 right-0 z-10 flex w-full max-w-[340px] flex-col bg-[#0c090e] p-5 shadow-2xl animate-in slide-in-from-right duration-200 sm:max-w-sm">
+          <div className="fixed inset-y-0 right-0 z-10 flex w-full max-w-[340px] flex-col bg-[#07080b]/95 backdrop-blur-2xl border-l border-white/10 p-5 shadow-2xl animate-in slide-in-from-right duration-200 sm:max-w-sm">
             <div className="mb-4 flex shrink-0 items-center justify-between border-b border-white/[0.08] pb-4">
               <h2 className="font-display text-base font-bold text-white">
                 Filters
@@ -478,7 +478,7 @@ export const ExplorePage: React.FC = () => {
               </h2>
               <div className="flex items-center gap-2">
                 {hasActiveFilters && (
-                  <button type="button" onClick={handleClearAll} className="text-sm text-white/55 transition-colors hover:text-[#f5c542]">
+                  <button type="button" onClick={handleClearAll} className="text-sm text-white/55 transition-colors hover:text-white">
                     Reset
                   </button>
                 )}

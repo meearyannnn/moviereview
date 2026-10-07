@@ -33,9 +33,6 @@ export interface Season {
   name: string;
   episode_count: number;
   poster_path: string;
-  air_date?: string;
-  vote_average?: number;
-  overview?: string;
 }
 
 export interface Episode {
@@ -61,86 +58,11 @@ export interface CastMember {
   order: number;
 }
 
-export interface CrewMember {
-  id: number;
-  name: string;
-  job: string;
-  department: string;
-  profile_path: string | null;
-}
-
-// High-performance multi-tier cache (in-memory + sessionStorage)
-const tmdbMemoryCache = new Map<string, { data: any; timestamp: number }>();
-const tmdbInFlightRequests = new Map<string, Promise<any>>();
-const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
-
-const tmdbFetch = async (endpoint: string): Promise<any> => {
-  const now = Date.now();
-
-  // 1. Fast in-memory cache check (0ms)
-  const memCached = tmdbMemoryCache.get(endpoint);
-  if (memCached && now - memCached.timestamp < CACHE_TTL_MS) {
-    return memCached.data;
-  }
-
-  // 2. SessionStorage cache check (survives tab navigation, 0 network requests)
-  if (typeof window !== 'undefined' && window.sessionStorage) {
-    try {
-      const stored = sessionStorage.getItem(`tmdb_${endpoint}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && now - parsed.timestamp < CACHE_TTL_MS) {
-          tmdbMemoryCache.set(endpoint, parsed);
-          return parsed.data;
-        }
-      }
-    } catch {
-      // Storage quota or privacy mode, continue to fetch
-    }
-  }
-
-  // 3. Deduplicate concurrent identical in-flight requests
-  if (tmdbInFlightRequests.has(endpoint)) {
-    return tmdbInFlightRequests.get(endpoint)!;
-  }
-
-  // 4. Network fetch with abort timeout
-  const fetchPromise = (async () => {
-    try {
-      const sep = endpoint.includes('?') ? '&' : '?';
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
-
-      const response = await fetch(
-        `${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`TMDB API request failed with status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const cacheEntry = { data, timestamp: Date.now() };
-
-      tmdbMemoryCache.set(endpoint, cacheEntry);
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        try {
-          sessionStorage.setItem(`tmdb_${endpoint}`, JSON.stringify(cacheEntry));
-        } catch {
-          // Quota exceeded
-        }
-      }
-
-      return data;
-    } finally {
-      tmdbInFlightRequests.delete(endpoint);
-    }
-  })();
-
-  tmdbInFlightRequests.set(endpoint, fetchPromise);
-  return fetchPromise;
+const tmdbFetch = async (endpoint: string) => {
+  const sep = endpoint.includes("?") ? "&" : "?";
+  const response = await fetch(`${TMDB_BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
+  if (!response.ok) throw new Error('TMDB API request failed');
+  return response.json();
 };
 
 export const tmdb = {
@@ -150,20 +72,59 @@ export const tmdb = {
   getPopular: (type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/popular`),
 
-  getNowPlaying: () =>
-    tmdbFetch('/movie/now_playing'),
+  getTopRated: (type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/top_rated`),
 
-  getUpcoming: () =>
-    tmdbFetch('/movie/upcoming'),
+  getUpcoming: async (page: number = 1) => {
+    const today = new Date().toISOString().split('T')[0];
+    const data = await tmdbFetch(`/movie/upcoming?page=${page}`);
+    const strictlyUpcoming = (data.results || []).filter(
+      (m: Movie) => m.release_date && m.release_date > today
+    );
+    if (strictlyUpcoming.length < 5) {
+      const discoverData = await tmdbFetch(
+        `/discover/movie?sort_by=popularity.desc&primary_release_date.gt=${today}&page=${page}`
+      );
+      return discoverData;
+    }
+    return { ...data, results: strictlyUpcoming };
+  },
+
+  getNowPlaying: (page: number = 1) =>
+    tmdbFetch(`/movie/now_playing?page=${page}`),
+
+  getLatestReleases: async (page: number = 1) => {
+    const today = new Date().toISOString().split('T')[0];
+    const data = await tmdbFetch(`/movie/now_playing?page=${page}`);
+    const results = (data.results || []).filter(
+      (m: Movie) => m.backdrop_path && m.release_date && m.release_date <= today
+    );
+    if (results.length < 6) {
+      const past90 = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
+      const discoverData = await tmdbFetch(
+        `/discover/movie?sort_by=popularity.desc&primary_release_date.lte=${today}&primary_release_date.gte=${past90}&vote_count.gte=10&page=${page}`
+      );
+      return {
+        ...data,
+        results: (discoverData.results || []).filter(
+          (m: Movie) => m.backdrop_path && m.release_date && m.release_date <= today
+        ),
+      };
+    }
+    return { ...data, results };
+  },
 
   getOnTheAir: () =>
     tmdbFetch('/tv/on_the_air'),
 
-  getTopRated: (type: 'movie' | 'tv' = 'movie') =>
-    tmdbFetch(`/${type}/top_rated`),
+  getAiringToday: () =>
+    tmdbFetch('/tv/airing_today'),
 
   getByGenre: (genreId: number, type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/discover/${type}?with_genres=${genreId}`),
+
+  getByProvider: (providerId: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/discover/${type}?with_watch_providers=${providerId}&watch_region=US&sort_by=popularity.desc`),
 
   getGenres: (type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/genre/${type}/list`),
@@ -176,12 +137,6 @@ export const tmdb = {
 
   getPersonDetails: (personId: number) =>
     tmdbFetch(`/person/${personId}`),
-
-  getPerson: (personId: number, appendToResponse: string = 'movie_credits,external_ids') =>
-    tmdbFetch(`/person/${personId}?append_to_response=${appendToResponse}`),
-
-  searchPerson: (query: string) =>
-    tmdbFetch(`/search/person?query=${encodeURIComponent(query)}`),
 
   getPersonCombinedCredits: (personId: number) =>
     tmdbFetch(`/person/${personId}/combined_credits`),
@@ -207,51 +162,33 @@ export const tmdb = {
   discoverTV: (queryString: string = '') =>
     tmdbFetch(`/discover/tv?${queryString}`),
 
-  getRecommendations: (id: number, type: 'movie' | 'tv' = 'movie') =>
-    tmdbFetch(`/${type}/${id}/recommendations`),
-
-  getImages: (id: number, type: 'movie' | 'tv' = 'movie') =>
-    tmdbFetch(`/${type}/${id}/images?include_image_language=en,null`),
-
   getWatchProviders: (id: number, type: 'movie' | 'tv' = 'movie') =>
     tmdbFetch(`/${type}/${id}/watch/providers`),
 
-  getMovieReleaseDates: (id: number): Promise<TMDBMovieReleaseDatesResponse> =>
+  getMovieReleaseDates: (id: number) =>
     tmdbFetch(`/movie/${id}/release_dates`),
-
-  getReviews: (id: number, type: 'movie' | 'tv' = 'movie') =>
-    tmdbFetch(`/${type}/${id}/reviews`),
 
   getCollection: (id: number) =>
     tmdbFetch(`/collection/${id}`),
 
-  getImageUrl: (
-    path: string | null | undefined,
-    size: 'w92' | 'w154' | 'w185' | 'w342' | 'w300' | 'w500' | 'w780' | 'w1280' | 'original' = 'w500'
-  ): string => {
-    if (!path) return '/placeholder.svg';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const normalizedSize = size === 'w300' ? 'w342' : size;
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${TMDB_IMAGE_BASE}/${normalizedSize}${cleanPath}`;
-  },
+  getImages: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/images`),
+
+  getPerson: (personId: number, append?: string) =>
+    tmdbFetch(`/person/${personId}${append ? `?append_to_response=${append}` : ''}`),
+
+  getReviews: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/reviews`),
+
+  searchPerson: (query: string) =>
+    tmdbFetch(`/search/person?query=${encodeURIComponent(query)}`),
+
+  getUpcomingMovies: (page: number = 1) =>
+    tmdb.getUpcoming(page),
+
+  getRecommendations: (id: number, type: 'movie' | 'tv' = 'movie') =>
+    tmdbFetch(`/${type}/${id}/recommendations`),
+
+  getImageUrl: (path: string, size: 'w500' | 'w300' | 'w185' | 'original' = 'w500') =>
+    path ? `${TMDB_IMAGE_BASE}/${size}${path}` : '/placeholder.svg',
 };
-
-export interface TMDBReleaseDateItem {
-  certification: string;
-  descriptors?: string[];
-  iso_639_1?: string;
-  note?: string;
-  release_date: string; // ISO string e.g. "2026-10-02T00:00:00.000Z"
-  type: number; // 1=Premiere, 2=Theatrical (limited), 3=Theatrical, 4=Digital, 5=Physical, 6=TV
-}
-
-export interface TMDBCountryReleaseDates {
-  iso_3166_1: string;
-  release_dates: TMDBReleaseDateItem[];
-}
-
-export interface TMDBMovieReleaseDatesResponse {
-  id: number;
-  results: TMDBCountryReleaseDates[];
-}

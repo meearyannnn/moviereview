@@ -11,7 +11,7 @@ import type { WatchLaterTag } from '@/services/userLibrary';
 // ── Small atoms ────────────────────────────────────────────────────────
 export const SectionTitle = ({ children }: { children: ReactNode }) => (
   <h2 className="mb-4 flex items-center gap-2.5 font-display text-xl font-extrabold text-white">
-    <span aria-hidden="true" className="h-4 w-1.5 rounded-full bg-[#c9a24b] shadow-[0_0_8px_rgba(201,162,75,0.8)]" />
+    <span aria-hidden="true" className="h-4 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
     {children}
   </h2>
 );
@@ -19,8 +19,8 @@ export const SectionTitle = ({ children }: { children: ReactNode }) => (
 export const Pill = ({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'sky' }) => (
   <span
     className={`rounded-full border px-3 py-0.5 text-xs font-mono font-medium ${tone === 'sky'
-        ? 'border-sky-400/30 bg-sky-500/10 text-sky-300'
-        : 'border-[#c9a24b]/30 bg-[#c9a24b]/10 text-[#f5c542]'
+        ? 'border-white/25 bg-white/10 text-white'
+        : 'border-white/15 bg-white/[0.06] text-white/90'
       }`}
   >
     {children}
@@ -29,15 +29,15 @@ export const Pill = ({ children, tone = 'neutral' }: { children: ReactNode; tone
 
 export const Fact = ({ icon: Icon, children }: { icon: ElementType; children: ReactNode }) => (
   <span className="flex items-center gap-1.5 text-xs font-mono text-white/70">
-    <Icon className="h-3.5 w-3.5 text-[#c9a24b]" aria-hidden="true" />
+    <Icon className="h-3.5 w-3.5 text-white/60" aria-hidden="true" />
     {children}
   </span>
 );
 
 export const Rating = ({ value }: { value: string }) => (
   <span className="flex items-center gap-1.5 text-xl font-bold text-white md:text-sm md:font-semibold">
-    <Star className="h-4 w-4 fill-[#f5c542] text-[#f5c542]" aria-hidden="true" />
-    <span className="font-mono text-[#f5c542]">{value}</span>
+    <Star className="h-4 w-4 fill-white text-white" aria-hidden="true" />
+    <span className="font-mono text-white">{value}</span>
   </span>
 );
 
@@ -78,7 +78,7 @@ export const DetailLayout = ({
   return (
     <>
       {/* Backdrop with Cinema Vignettes */}
-      <div className="relative h-[320px] w-full overflow-hidden sm:h-[480px] lg:h-[560px] bg-[#0c080a]">
+      <div className="relative h-[320px] w-full overflow-hidden sm:h-[480px] lg:h-[560px] bg-[#07080b]">
         <img
           src={effectiveBackdrop}
           alt=""
@@ -86,8 +86,8 @@ export const DetailLayout = ({
             }`}
           onError={() => setBackdropFailed(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0608] via-[#0a0608]/75 to-[#0a0608]/30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0608]/80 via-transparent to-[#0a0608]/70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07080b] via-[#07080b]/75 to-[#07080b]/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#07080b]/80 via-transparent to-[#07080b]/70" />
       </div>
 
       <main className="relative z-10 mx-auto -mt-28 w-full max-w-6xl px-4 pb-36 sm:-mt-44 sm:px-6 md:pb-20 lg:-mt-56 lg:px-8">
@@ -99,7 +99,7 @@ export const DetailLayout = ({
         >
           {/* Poster column: Admission Ticket Style */}
           <div className="min-w-0 md:row-span-2">
-            <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-[#c9a24b]/30 bg-[#140c10] shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
+            <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
               <img
                 src={posterFailed ? '/placeholder.svg' : posterSrc}
                 alt={posterAlt}
@@ -126,9 +126,9 @@ export const DetailLayout = ({
 
 // ── Actions ────────────────────────────────────────────────────────────
 const secondaryBtn =
-  'flex h-11 min-w-0 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-mono font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a24b] sm:px-5';
-const idleBtn = 'border-[#c9a24b]/30 bg-[#140c10]/90 text-white hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10';
-const savedBtn = 'border-[#f5c542] bg-[#f5c542]/20 text-[#f5c542] hover:bg-[#f5c542]/30 shadow-md shadow-[#f5c542]/25';
+  'flex h-11 min-w-0 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl px-3 text-xs font-mono font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:px-5';
+const idleBtn = 'border-white/10 bg-white/[0.04] backdrop-blur-xl text-white hover:border-white/20 hover:bg-white/[0.08]';
+const savedBtn = 'border-white bg-white/20 text-white hover:bg-white/30 shadow-md shadow-white/10';
 
 // ── Watch Later Popover Options (Unique Gen-Z Tiers & Elegant Icons) ────────
 const WATCH_LATER_OPTIONS: Array<{
@@ -218,34 +218,34 @@ export const ActionBar = ({
 
   return (
     <div className="mb-8 flex flex-col gap-3 max-w-sm sm:max-w-md w-full">
-      {/* ── 1. Top Button: Mark as Watched (Cinema Box Office styling) ── */}
+      {/* ── 1. Top Button: Mark as Watched ── */}
       {onToggleWatched && (
         <button
           onClick={onToggleWatched}
           aria-pressed={isWatched}
           className={`w-full flex h-11 items-center justify-center gap-2.5 rounded-full px-6 text-sm font-display font-extrabold tracking-wide transition-all active:scale-[0.98] ${isWatched
-              ? 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/50'
-              : 'bg-gradient-to-r from-[#f5c542] via-[#e6b738] to-[#c9a24b] text-[#1c120c] shadow-lg shadow-[#f5c542]/25 ring-1 ring-[#f5c542]/50 hover:brightness-105'
+              ? 'bg-white/15 text-white border border-white/30 backdrop-blur-xl ring-1 ring-white/20 shadow-md hover:bg-white/20'
+              : 'bg-white text-black shadow-lg shadow-white/25 ring-1 ring-white/50 hover:bg-neutral-100'
             }`}
         >
           {isWatched ? (
-            <Check className="h-4 w-4 stroke-[3]" aria-hidden="true" />
+            <Check className="h-4 w-4 stroke-[3] text-white" aria-hidden="true" />
           ) : (
-            <Eye className="h-4 w-4 stroke-[2.2]" aria-hidden="true" />
+            <Eye className="h-4 w-4 stroke-[2.2] text-black" aria-hidden="true" />
           )}
           <span>{isWatched ? 'Watched' : 'Mark as Watched'}</span>
         </button>
       )}
 
-      {/* ── 2. Row: Collections & Watch Later (Cinema Dark with Gold Accents) ── */}
+      {/* ── 2. Row: Collections & Watch Later ── */}
       <div className="grid grid-cols-2 gap-3 relative">
         {/* Collections Button */}
         {onAddToCollections && (
           <button
             onClick={onAddToCollections}
-            className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/95 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 px-4 text-xs font-display font-bold uppercase tracking-wider text-white/90 hover:text-[#f5c542] transition-all active:scale-[0.98] shadow-sm"
+            className="flex h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-white/25 hover:bg-white/[0.08] px-4 text-xs font-display font-bold uppercase tracking-wider text-white transition-all active:scale-[0.98] shadow-sm"
           >
-            <Bookmark className="h-3.5 w-3.5 text-[#c9a24b]" aria-hidden="true" />
+            <Bookmark className="h-3.5 w-3.5 text-white/70" aria-hidden="true" />
             <span>Collections</span>
           </button>
         )}
@@ -256,22 +256,36 @@ export const ActionBar = ({
             onClick={() => setShowWatchLaterMenu((prev) => !prev)}
             aria-expanded={showWatchLaterMenu}
             className={`w-full flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-display font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm ${isInLater
-                ? 'border-[#f5c542] bg-[#f5c542]/15 text-[#f5c542] ring-1 ring-[#f5c542]/40 shadow-sm shadow-[#f5c542]/20'
-                : 'border-[#c9a24b]/30 bg-[#140c10]/95 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/10 text-white/90 hover:text-[#f5c542]'
+                ? 'border-white bg-white text-black font-extrabold shadow-md shadow-white/20'
+                : 'border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-white/25 hover:bg-white/[0.08] text-white'
               }`}
           >
-            <div className="relative inline-flex items-center justify-center">
-              <Clock className={`h-3.5 w-3.5 ${isInLater ? 'text-[#f5c542]' : 'text-[#c9a24b]'}`} aria-hidden="true" />
-              <span className="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold leading-none text-[#f5c542]">+</span>
-            </div>
-            <span>Watch Later</span>
+            {isInLater ? (
+              <Check className="h-3.5 w-3.5 stroke-[3] text-black" aria-hidden="true" />
+            ) : (
+              <div className="relative inline-flex items-center justify-center">
+                <Clock className="h-3.5 w-3.5 text-white/70" aria-hidden="true" />
+                <span className="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold leading-none text-white/70">+</span>
+              </div>
+            )}
+            <span>
+              {isInLater
+                ? watchLaterTag === 'asap'
+                  ? 'Zero Chill'
+                  : watchLaterTag === 'weekend'
+                    ? 'Weekend'
+                    : watchLaterTag === 'someday'
+                      ? 'Low-Key'
+                      : 'Saved'
+                : 'Watch Later'}
+            </span>
           </button>
 
           {/* Watch Later Dropdown Popover */}
           {showWatchLaterMenu && (
             <div
               ref={menuRef}
-              className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-[#c9a24b]/35 bg-[#120a0e]/98 p-2.5 shadow-2xl shadow-black/90 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl ring-1 ring-white/5"
+              className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-white/15 bg-black/95 p-2.5 shadow-2xl shadow-black z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl ring-1 ring-white/10"
             >
               <div className="space-y-1">
                 {WATCH_LATER_OPTIONS.map((opt) => {
@@ -289,27 +303,27 @@ export const ActionBar = ({
                         setShowWatchLaterMenu(false);
                       }}
                       className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all text-left group ${isSelected
-                          ? 'bg-[#c9a24b]/15 border border-[#c9a24b]/40'
-                          : 'hover:bg-[#c9a24b]/10 border border-transparent'
+                          ? 'bg-white/15 border border-white/30 text-white'
+                          : 'hover:bg-white/[0.06] border border-transparent text-white/80'
                         }`}
                     >
                       {/* Radio Circle */}
                       <div className="mt-0.5 shrink-0 flex items-center justify-center">
                         <div
                           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected
-                              ? 'border-[#f5c542] bg-[#f5c542]/20'
-                              : 'border-[#c9a24b]/40 group-hover:border-[#c9a24b]/80'
+                              ? 'border-white bg-white/20'
+                              : 'border-white/30 group-hover:border-white/60'
                             }`}
                         >
-                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#f5c542]" />}
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                         </div>
                       </div>
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <opt.icon className={`h-4 w-4 shrink-0 ${opt.iconColor}`} />
-                          <span className={`text-sm font-display font-bold ${opt.textColor}`}>
+                          <opt.icon className="h-4 w-4 shrink-0 text-white" />
+                          <span className="text-sm font-display font-bold text-white">
                             {opt.label}
                           </span>
                         </div>
@@ -320,6 +334,19 @@ export const ActionBar = ({
                     </button>
                   );
                 })}
+
+                {isInLater && toggleLater && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toggleLater();
+                      setShowWatchLaterMenu(false);
+                    }}
+                    className="w-full mt-2 pt-2 border-t border-white/10 px-3 py-2 text-xs font-mono font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors text-center"
+                  >
+                    Remove from Watch Later
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -330,18 +357,18 @@ export const ActionBar = ({
       <div className="flex items-center gap-2.5 pt-1">
         <button
           onClick={onReview}
-          className="flex-1 flex h-10 items-center justify-center gap-2 rounded-full border border-[#c9a24b]/40 bg-[#140c10]/90 hover:border-[#f5c542] hover:bg-[#c9a24b]/15 text-[#f5c542] text-xs font-display font-extrabold transition-all shadow-sm active:scale-95"
+          className="flex-1 flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-white/25 hover:bg-white/[0.08] text-white text-xs font-display font-bold transition-all shadow-sm active:scale-95"
         >
-          <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
+          <PenLine className="h-3.5 w-3.5 text-white/70" aria-hidden="true" />
           <span>Review</span>
         </button>
 
         {hasTrailer && (
           <button
             onClick={onTrailer}
-            className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/15 px-4 text-xs font-mono font-medium text-white/90 hover:text-white transition-all active:scale-95"
+            className="flex h-10 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-white/25 hover:bg-white/[0.08] px-4 text-xs font-mono font-medium text-white transition-all active:scale-95"
           >
-            <Play className="h-3.5 w-3.5 fill-[#c9a24b] text-[#c9a24b]" aria-hidden="true" />
+            <Play className="h-3.5 w-3.5 fill-white text-white" aria-hidden="true" />
             <span>Trailer</span>
           </button>
         )}
@@ -350,9 +377,9 @@ export const ActionBar = ({
           <button
             onClick={onShare}
             aria-label="Share"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#c9a24b]/30 bg-[#140c10]/90 hover:border-[#c9a24b]/60 hover:bg-[#c9a24b]/15 text-white/80 hover:text-[#f5c542] transition-all active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-white/25 hover:bg-white/[0.08] text-white transition-all active:scale-95"
           >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
+            <Share2 className="h-4 w-4 text-white/70" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -379,7 +406,7 @@ export const Storyline = ({ text, fallback }: { text?: string; fallback: string 
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="mt-2 text-xs font-mono font-bold text-[#c9a24b] hover:text-[#f5c542] focus-visible:outline md:hidden"
+          className="mt-2 text-xs font-mono font-bold text-white/60 hover:text-white focus-visible:outline md:hidden"
         >
           {open ? 'Show less' : 'Read more'}
         </button>
@@ -398,15 +425,15 @@ export const UpcomingCard = ({
   verb: string;
   date?: string;
 }) => (
-  <section className="mb-10 flex items-center gap-4 rounded-2xl border border-[#c9a24b]/20 bg-[#140c10] p-4 sm:p-5 shadow-lg">
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#c9a24b]/30 bg-[#c9a24b]/10">
-      <Calendar className="h-5 w-5 text-[#f5c542]" aria-hidden="true" />
+  <section className="mb-10 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 sm:p-5 shadow-lg">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10">
+      <Calendar className="h-5 w-5 text-white" aria-hidden="true" />
     </div>
     <div className="min-w-0">
       <h3 className="font-display text-base font-extrabold text-white">{heading}</h3>
       <p className="mt-0.5 text-xs font-mono text-white/60">
         {verb}{' '}
-        <span className="font-bold text-[#f5c542]">
+        <span className="font-bold text-white">
           {date
             ? new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
             : 'soon'}
@@ -423,7 +450,7 @@ const CastAvatar = ({ m }: { m: CastMember }) => {
   const photoUrl = m.profile_path ? tmdb.getImageUrl(m.profile_path, 'w185') : null;
 
   return (
-    <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-[#c9a24b]/20 bg-[#140c10] transition-all group-hover:border-[#c9a24b]/60 group-hover:scale-105 group-focus-visible:border-[#c9a24b] group-focus-visible:ring-2 group-focus-visible:ring-[#c9a24b]/50 shadow-md">
+    <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-md transition-all group-hover:border-white/40 group-hover:scale-105 group-focus-visible:border-white group-focus-visible:ring-2 group-focus-visible:ring-white/40 shadow-md">
       {photoUrl && !failed ? (
         <img
           src={photoUrl}
@@ -434,7 +461,7 @@ const CastAvatar = ({ m }: { m: CastMember }) => {
           onError={() => setFailed(true)}
         />
       ) : (
-        <span className="text-xs font-mono font-bold text-[#c9a24b]">{initials(m.name)}</span>
+        <span className="text-xs font-mono font-bold text-white/70">{initials(m.name)}</span>
       )}
     </div>
   );
@@ -460,7 +487,7 @@ export const CastRow = ({
             className="group w-[88px] flex-none snap-start text-center focus-visible:outline-none"
           >
             <CastAvatar m={m} />
-            <span className="mt-2 block truncate text-xs font-semibold text-white/90 group-hover:text-[#f5c542] transition-colors">{m.name}</span>
+            <span className="mt-2 block truncate text-xs font-semibold text-white/90 group-hover:text-white transition-colors">{m.name}</span>
             <span className="block truncate text-[10px] font-mono text-white/40">{m.character}</span>
           </button>
         ))}
@@ -477,9 +504,9 @@ const CrewAvatar = ({ m }: { m: CrewMember }) => {
 
   return (
     <div
-      className={`mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border bg-[#140c10] transition-all group-hover:scale-105 group-focus-visible:ring-2 shadow-md ${isDirector
-          ? 'border-[#f5c542]/60 ring-2 ring-[#f5c542]/20 group-hover:border-[#f5c542] group-hover:shadow-[0_0_16px_rgba(245,197,66,0.35)]'
-          : 'border-[#c9a24b]/20 group-hover:border-[#c9a24b]/60'
+      className={`mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border bg-white/[0.04] backdrop-blur-md transition-all group-hover:scale-105 group-focus-visible:ring-2 shadow-md ${isDirector
+          ? 'border-white/50 ring-2 ring-white/20 group-hover:border-white group-hover:shadow-[0_0_16px_rgba(255,255,255,0.25)]'
+          : 'border-white/15 group-hover:border-white/30'
         }`}
     >
       {photoUrl && !failed ? (
@@ -492,7 +519,7 @@ const CrewAvatar = ({ m }: { m: CrewMember }) => {
           onError={() => setFailed(true)}
         />
       ) : (
-        <span className="text-xs font-mono font-bold text-[#c9a24b]">{initials(m.name)}</span>
+        <span className="text-xs font-mono font-bold text-white/70">{initials(m.name)}</span>
       )}
     </div>
   );
@@ -537,11 +564,11 @@ export const CrewRow = ({
               className="group w-[88px] flex-none snap-start text-center focus-visible:outline-none"
             >
               <CrewAvatar m={m} />
-              <span className="mt-2 block truncate text-xs font-semibold text-white/90 group-hover:text-[#f5c542] transition-colors">
+              <span className="mt-2 block truncate text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
                 {m.name}
               </span>
               <span
-                className={`block truncate text-[10px] font-mono ${isDirector ? 'text-[#f5c542] font-bold' : 'text-white/40'
+                className={`block truncate text-[10px] font-mono ${isDirector ? 'text-white font-bold' : 'text-white/40'
                   }`}
               >
                 {m.job}
@@ -577,13 +604,13 @@ export const TrailerModal = ({ trailerKey, onClose }: { trailerKey: string; onCl
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-[#c9a24b]/30 bg-black shadow-2xl"
+        className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-white/20 bg-black shadow-2xl"
       >
         <button
           onClick={onClose}
           autoFocus
           aria-label="Close trailer"
-          className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-[#c9a24b]/40 bg-black/80 text-white transition-all hover:bg-black hover:border-[#c9a24b]"
+          className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/80 text-white transition-all hover:bg-black hover:border-white"
         >
           <X className="h-5 w-5" />
         </button>

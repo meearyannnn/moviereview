@@ -158,64 +158,165 @@ const setLocal = (key: string, data: any) => {
   } catch {}
 };
 
+export const EVENT_LIBRARY_CHANGE = 'movieguy_library_change';
+
+// ── Initial Legacy Watchlist Migration (Seamless 0ms preservation) ──────────
+const migrateLegacyWatchlist = (existing: WatchLaterItem[]): WatchLaterItem[] => {
+  try {
+    const legacyRaw = localStorage.getItem('movieguy_watchlist_v1');
+    if (legacyRaw) {
+      const legacyItems = JSON.parse(legacyRaw);
+      if (Array.isArray(legacyItems) && legacyItems.length > 0) {
+        const existingKeys = new Set(existing.map((l) => `${l.media_type}_${l.media_id}`));
+        let hasNew = false;
+        const copy = [...existing];
+        legacyItems.forEach((it: any) => {
+          const mType = (it.media_type as 'movie' | 'tv') || 'movie';
+          const k = `${mType}_${it.id}`;
+          if (!existingKeys.has(k)) {
+            copy.push({
+              id: `legacy-${it.id}`,
+              media_id: it.id,
+              media_type: mType,
+              title: it.title || 'Untitled',
+              poster_path: it.poster_path || '',
+              backdrop_path: it.backdrop_path || '',
+              release_date: it.release_date || '',
+              vote_average: it.vote_average || 0,
+              tag: 'asap',
+              created_at: new Date().toISOString(),
+            });
+            existingKeys.add(k);
+            hasNew = true;
+          }
+        });
+        if (hasNew) {
+          setLocal(STORAGE_KEYS.WATCH_LATER, copy);
+          return copy;
+        }
+      }
+    }
+  } catch {}
+  return existing;
+};
+
+// ── In-Memory Singleton Reactive Store (0ms instant reactivity across all components) ──
+let inMemoryHistory: WatchHistoryItem[] = getLocal<WatchHistoryItem[]>(STORAGE_KEYS.HISTORY, []);
+let inMemoryWatchLater: WatchLaterItem[] = migrateLegacyWatchlist(
+  getLocal<WatchLaterItem[]>(STORAGE_KEYS.WATCH_LATER, [])
+);
+let inMemoryCollections: UserCollection[] = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
+let inMemorySavedCollections: UserCollection[] = getLocal<UserCollection[]>(STORAGE_KEYS.SAVED_COLLECTIONS, []);
+
+type LibrarySubscriber = () => void;
+const subscribers = new Set<LibrarySubscriber>();
+
+export const subscribeToLibrary = (fn: LibrarySubscriber) => {
+  subscribers.add(fn);
+  return () => {
+    subscribers.delete(fn);
+  };
+};
+
+const notifySubscribers = () => {
+  subscribers.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.error('Error notifying library subscriber:', e);
+    }
+  });
+  window.dispatchEvent(new Event(EVENT_LIBRARY_CHANGE));
+};
+
+// In-flight query deduplication locks
+let inFlightHistoryPromise: Promise<WatchHistoryItem[]> | null = null;
+let inFlightLaterPromise: Promise<WatchLaterItem[]> | null = null;
+let inFlightCollectionsPromise: Promise<UserCollection[]> | null = null;
+
 export const userLibraryService = {
+  // ── Synchronous Instant Getters (0ms read time for React state) ────────────
+  getWatchHistorySync(): WatchHistoryItem[] {
+    return inMemoryHistory;
+  },
+
+  getWatchLaterSync(): WatchLaterItem[] {
+    return inMemoryWatchLater;
+  },
+
+  getUserCollectionsSync(): UserCollection[] {
+    return inMemoryCollections;
+  },
+
+  getSavedCollectionsSync(): UserCollection[] {
+    return inMemorySavedCollections;
+  },
+
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. WATCH HISTORY (Logs movies/shows as "Watched")
   // ═══════════════════════════════════════════════════════════════════════════
   async getWatchHistory(userId?: string): Promise<WatchHistoryItem[]> {
-    const local = getLocal<WatchHistoryItem[]>(STORAGE_KEYS.HISTORY, []);
+    if (!userId) return inMemoryHistory;
 
-    if (!userId) return local;
+    if (inFlightHistoryPromise) return inFlightHistoryPromise;
 
-    try {
-      const { data, error } = await supabase
-        .from('watch_history')
-        .select('*')
-        .eq('user_id', userId)
-        .order('watched_at', { ascending: false });
+    inFlightHistoryPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('watch_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('watched_at', { ascending: false });
 
-      if (error || !data) {
-        return local;
-      }
-
-      // Merge cloud with local
-      const mergedMap = new Map<string, WatchHistoryItem>();
-      data.forEach((row: any) => {
-        mergedMap.set(`${row.media_type}_${row.media_id}`, {
-          id: row.id,
-          media_id: row.media_id,
-          media_type: row.media_type,
-          title: row.title,
-          poster_path: row.poster_path,
-          backdrop_path: row.backdrop_path,
-          release_year: row.release_year,
-          vote_average: row.vote_average,
-          watched_at: row.watched_at,
-          reviewed: row.reviewed || false,
-        });
-      });
-
-      local.forEach((item) => {
-        const key = `${item.media_type}_${item.media_id}`;
-        if (!mergedMap.has(key)) {
-          mergedMap.set(key, item);
+        if (error || !data) {
+          return inMemoryHistory;
         }
-      });
 
-      const result = Array.from(mergedMap.values()).sort(
-        (a, b) => new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime()
-      );
-      setLocal(STORAGE_KEYS.HISTORY, result);
-      return result;
-    } catch {
-      return local;
-    }
+        // Merge cloud with inMemoryHistory preserving local additions
+        const mergedMap = new Map<string, WatchHistoryItem>();
+        data.forEach((row: any) => {
+          mergedMap.set(`${row.media_type}_${row.media_id}`, {
+            id: row.id,
+            media_id: row.media_id,
+            media_type: row.media_type,
+            title: row.title,
+            poster_path: row.poster_path,
+            backdrop_path: row.backdrop_path,
+            release_year: row.release_year,
+            vote_average: row.vote_average,
+            watched_at: row.watched_at,
+            reviewed: row.reviewed || false,
+          });
+        });
+
+        inMemoryHistory.forEach((item) => {
+          const key = `${item.media_type}_${item.media_id}`;
+          if (!mergedMap.has(key)) {
+            mergedMap.set(key, item);
+          }
+        });
+
+        const result = Array.from(mergedMap.values()).sort(
+          (a, b) => new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime()
+        );
+        inMemoryHistory = result;
+        setLocal(STORAGE_KEYS.HISTORY, result);
+        notifySubscribers();
+        return result;
+      } catch {
+        return inMemoryHistory;
+      } finally {
+        inFlightHistoryPromise = null;
+      }
+    })();
+
+    return inFlightHistoryPromise;
   },
 
-  async markAsWatched(
+  markAsWatched(
     item: Omit<WatchHistoryItem, 'id' | 'watched_at'> & { watched_at?: string },
     userId?: string
-  ): Promise<WatchHistoryItem> {
+  ): WatchHistoryItem {
     const watchedAt = item.watched_at || new Date().toISOString();
     const historyItem: WatchHistoryItem = {
       ...item,
@@ -224,18 +325,26 @@ export const userLibraryService = {
       reviewed: item.reviewed || false,
     };
 
-    // Save to local immediately for instant 0ms UI update
-    const local = getLocal<WatchHistoryItem[]>(STORAGE_KEYS.HISTORY, []);
-    const filtered = local.filter(
-      (h) => !(h.media_id === item.media_id && h.media_type === item.media_type)
+    // 1. Instant 0ms in-memory update
+    const filteredHistory = inMemoryHistory.filter(
+      (h) => !(Number(h.media_id) === Number(item.media_id) && h.media_type === item.media_type)
     );
-    const updated = [historyItem, ...filtered];
-    setLocal(STORAGE_KEYS.HISTORY, updated);
+    inMemoryHistory = [historyItem, ...filteredHistory];
+    setLocal(STORAGE_KEYS.HISTORY, inMemoryHistory);
 
-    // Sync to Supabase in background
+    // 2. Also automatically remove from watch later in 0ms
+    inMemoryWatchLater = inMemoryWatchLater.filter(
+      (l) => !(Number(l.media_id) === Number(item.media_id) && l.media_type === item.media_type)
+    );
+    setLocal(STORAGE_KEYS.WATCH_LATER, inMemoryWatchLater);
+
+    // 3. Notify all subscribed React components instantly
+    notifySubscribers();
+
+    // 4. Background non-blocking Supabase sync
     if (userId) {
-      try {
-        await supabase.from('watch_history').upsert(
+      Promise.all([
+        supabase.from('watch_history').upsert(
           {
             user_id: userId,
             media_id: item.media_id,
@@ -248,29 +357,32 @@ export const userLibraryService = {
             watched_at: watchedAt,
           },
           { onConflict: 'user_id,media_id,media_type' }
-        );
-      } catch (err) {
-        console.warn('Supabase watch_history sync failed (using local):', err);
-      }
+        ),
+        supabase
+          .from('watch_later')
+          .delete()
+          .match({ user_id: userId, media_id: item.media_id, media_type: item.media_type }),
+      ]).catch((err) => {
+        console.warn('Background Supabase watch_history sync failed:', err);
+      });
     }
 
     return historyItem;
   },
 
-  async unmarkWatched(mediaId: number, mediaType: 'movie' | 'tv', userId?: string): Promise<boolean> {
-    const local = getLocal<WatchHistoryItem[]>(STORAGE_KEYS.HISTORY, []);
-    const updated = local.filter(
-      (h) => !(h.media_id === mediaId && h.media_type === mediaType)
+  unmarkWatched(mediaId: number, mediaType: 'movie' | 'tv', userId?: string): boolean {
+    inMemoryHistory = inMemoryHistory.filter(
+      (h) => !(Number(h.media_id) === Number(mediaId) && h.media_type === mediaType)
     );
-    setLocal(STORAGE_KEYS.HISTORY, updated);
+    setLocal(STORAGE_KEYS.HISTORY, inMemoryHistory);
+    notifySubscribers();
 
     if (userId) {
-      try {
-        await supabase
-          .from('watch_history')
-          .delete()
-          .match({ user_id: userId, media_id: mediaId, media_type: mediaType });
-      } catch {}
+      supabase
+        .from('watch_history')
+        .delete()
+        .match({ user_id: userId, media_id: mediaId, media_type: mediaType })
+        .catch(() => {});
     }
     return true;
   },
@@ -279,87 +391,60 @@ export const userLibraryService = {
   // 2. WATCH LATER (With ASAP / Weekend / Someday priority tags)
   // ═══════════════════════════════════════════════════════════════════════════
   async getWatchLater(userId?: string): Promise<WatchLaterItem[]> {
-    let local = getLocal<WatchLaterItem[]>(STORAGE_KEYS.WATCH_LATER, []);
+    if (!userId) return inMemoryWatchLater;
 
-    // Seamlessly migrate any legacy watchlist items into watch later so data is fully preserved
-    try {
-      const legacyRaw = localStorage.getItem('movieguy_watchlist_v1');
-      if (legacyRaw) {
-        const legacyItems = JSON.parse(legacyRaw);
-        if (Array.isArray(legacyItems) && legacyItems.length > 0) {
-          const existingKeys = new Set(local.map((l) => `${l.media_type}_${l.media_id}`));
-          let hasNew = false;
-          legacyItems.forEach((it: any) => {
-            const mType = (it.media_type as 'movie' | 'tv') || 'movie';
-            const k = `${mType}_${it.id}`;
-            if (!existingKeys.has(k)) {
-              local.push({
-                id: `legacy-${it.id}`,
-                media_id: it.id,
-                media_type: mType,
-                title: it.title || 'Untitled',
-                poster_path: it.poster_path || '',
-                backdrop_path: it.backdrop_path || '',
-                release_date: it.release_date || '',
-                vote_average: it.vote_average || 0,
-                tag: 'asap',
-                created_at: new Date().toISOString(),
-              });
-              existingKeys.add(k);
-              hasNew = true;
-            }
+    if (inFlightLaterPromise) return inFlightLaterPromise;
+
+    inFlightLaterPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('watch_later')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (error || !data) return inMemoryWatchLater;
+
+        const mergedMap = new Map<string, WatchLaterItem>();
+        data.forEach((row: any) => {
+          mergedMap.set(`${row.media_type}_${row.media_id}`, {
+            id: row.id,
+            media_id: row.media_id,
+            media_type: row.media_type,
+            title: row.title,
+            poster_path: row.poster_path,
+            backdrop_path: row.backdrop_path,
+            release_date: row.release_date,
+            vote_average: row.vote_average,
+            tag: row.tag || 'asap',
+            created_at: row.created_at,
           });
-          if (hasNew) {
-            setLocal(STORAGE_KEYS.WATCH_LATER, local);
-          }
-        }
-      }
-    } catch {}
-
-    if (!userId) return local;
-
-    try {
-      const { data, error } = await supabase
-        .from('watch_later')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error || !data) return local;
-
-      const mergedMap = new Map<string, WatchLaterItem>();
-      data.forEach((row: any) => {
-        mergedMap.set(`${row.media_type}_${row.media_id}`, {
-          id: row.id,
-          media_id: row.media_id,
-          media_type: row.media_type,
-          title: row.title,
-          poster_path: row.poster_path,
-          backdrop_path: row.backdrop_path,
-          release_date: row.release_date,
-          vote_average: row.vote_average,
-          tag: row.tag || 'asap',
-          created_at: row.created_at,
         });
-      });
 
-      local.forEach((item) => {
-        const key = `${item.media_type}_${item.media_id}`;
-        if (!mergedMap.has(key)) mergedMap.set(key, item);
-      });
+        inMemoryWatchLater.forEach((item) => {
+          const key = `${item.media_type}_${item.media_id}`;
+          if (!mergedMap.has(key)) mergedMap.set(key, item);
+        });
 
-      const result = Array.from(mergedMap.values());
-      setLocal(STORAGE_KEYS.WATCH_LATER, result);
-      return result;
-    } catch {
-      return local;
-    }
+        const result = Array.from(mergedMap.values());
+        inMemoryWatchLater = result;
+        setLocal(STORAGE_KEYS.WATCH_LATER, result);
+        notifySubscribers();
+        return result;
+      } catch {
+        return inMemoryWatchLater;
+      } finally {
+        inFlightLaterPromise = null;
+      }
+    })();
+
+    return inFlightLaterPromise;
   },
 
-  async addToWatchLater(
+  addToWatchLater(
     item: Omit<WatchLaterItem, 'id' | 'created_at'> & { tag?: WatchLaterTag },
     userId?: string
-  ): Promise<WatchLaterItem> {
+  ): WatchLaterItem {
     const newItem: WatchLaterItem = {
       ...item,
       id: `local-later-${Date.now()}-${item.media_id}`,
@@ -367,75 +452,71 @@ export const userLibraryService = {
       created_at: new Date().toISOString(),
     };
 
-    const local = getLocal<WatchLaterItem[]>(STORAGE_KEYS.WATCH_LATER, []);
-    const filtered = local.filter(
-      (l) => !(l.media_id === item.media_id && l.media_type === item.media_type)
+    const filtered = inMemoryWatchLater.filter(
+      (l) => !(Number(l.media_id) === Number(item.media_id) && l.media_type === item.media_type)
     );
-    const updated = [newItem, ...filtered];
-    setLocal(STORAGE_KEYS.WATCH_LATER, updated);
+    inMemoryWatchLater = [newItem, ...filtered];
+    setLocal(STORAGE_KEYS.WATCH_LATER, inMemoryWatchLater);
+    notifySubscribers();
 
     if (userId) {
-      try {
-        await supabase.from('watch_later').upsert(
-          {
-            user_id: userId,
-            media_id: item.media_id,
-            media_type: item.media_type,
-            title: item.title,
-            poster_path: item.poster_path,
-            backdrop_path: item.backdrop_path || '',
-            release_date: item.release_date || '',
-            vote_average: item.vote_average || 0,
-            tag: item.tag || 'asap',
-          },
-          { onConflict: 'user_id,media_id,media_type' }
-        );
-      } catch {}
+      supabase.from('watch_later').upsert(
+        {
+          user_id: userId,
+          media_id: item.media_id,
+          media_type: item.media_type,
+          title: item.title,
+          poster_path: item.poster_path,
+          backdrop_path: item.backdrop_path || '',
+          release_date: item.release_date || '',
+          vote_average: item.vote_average || 0,
+          tag: item.tag || 'asap',
+        },
+        { onConflict: 'user_id,media_id,media_type' }
+      ).catch(() => {});
     }
 
     return newItem;
   },
 
-  async removeFromWatchLater(mediaId: number, mediaType: 'movie' | 'tv', userId?: string): Promise<boolean> {
-    const local = getLocal<WatchLaterItem[]>(STORAGE_KEYS.WATCH_LATER, []);
-    const updated = local.filter(
-      (l) => !(l.media_id === mediaId && l.media_type === mediaType)
+  removeFromWatchLater(mediaId: number, mediaType: 'movie' | 'tv', userId?: string): boolean {
+    inMemoryWatchLater = inMemoryWatchLater.filter(
+      (l) => !(Number(l.media_id) === Number(mediaId) && l.media_type === mediaType)
     );
-    setLocal(STORAGE_KEYS.WATCH_LATER, updated);
+    setLocal(STORAGE_KEYS.WATCH_LATER, inMemoryWatchLater);
+    notifySubscribers();
 
     if (userId) {
-      try {
-        await supabase
-          .from('watch_later')
-          .delete()
-          .match({ user_id: userId, media_id: mediaId, media_type: mediaType });
-      } catch {}
+      supabase
+        .from('watch_later')
+        .delete()
+        .match({ user_id: userId, media_id: mediaId, media_type: mediaType })
+        .catch(() => {});
     }
     return true;
   },
 
-  async updateWatchLaterTag(
+  updateWatchLaterTag(
     mediaId: number,
     mediaType: 'movie' | 'tv',
     newTag: WatchLaterTag,
     userId?: string
-  ): Promise<boolean> {
-    const local = getLocal<WatchLaterItem[]>(STORAGE_KEYS.WATCH_LATER, []);
-    const updated = local.map((it) => {
-      if (it.media_id === mediaId && it.media_type === mediaType) {
+  ): boolean {
+    inMemoryWatchLater = inMemoryWatchLater.map((it) => {
+      if (Number(it.media_id) === Number(mediaId) && it.media_type === mediaType) {
         return { ...it, tag: newTag };
       }
       return it;
     });
-    setLocal(STORAGE_KEYS.WATCH_LATER, updated);
+    setLocal(STORAGE_KEYS.WATCH_LATER, inMemoryWatchLater);
+    notifySubscribers();
 
     if (userId) {
-      try {
-        await supabase
-          .from('watch_later')
-          .update({ tag: newTag })
-          .match({ user_id: userId, media_id: mediaId, media_type: mediaType });
-      } catch {}
+      supabase
+        .from('watch_later')
+        .update({ tag: newTag })
+        .match({ user_id: userId, media_id: mediaId, media_type: mediaType })
+        .catch(() => {});
     }
     return true;
   },
@@ -444,108 +525,78 @@ export const userLibraryService = {
   // 3. COLLECTIONS (User Custom Lists & Public Curated Lists)
   // ═══════════════════════════════════════════════════════════════════════════
   async getUserCollections(userId?: string): Promise<UserCollection[]> {
-    const defaultLocal: UserCollection[] = [
-      {
-        id: 'default-watch-later-col',
-        user_id: userId || 'guest',
-        title: "Aryan's Watch Later",
-        description: 'Priority watchlist and weekend cinema lineup.',
-        cover_image: '',
-        is_public: false,
-        items_count: 0,
-        likes_count: 0,
-        created_at: new Date().toISOString(),
-        username: 'Aryan',
-      },
-    ];
-
-    const local = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, defaultLocal);
     if (!userId) {
-      return local.map((col) => {
-        const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
-        return {
-          ...col,
-          items_count: Math.max(col.items_count || 0, localItems.length),
-          preview_posters: posters.slice(0, 4),
-        };
-      });
+      return inMemoryCollections;
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('collections')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+    if (inFlightCollectionsPromise) return inFlightCollectionsPromise;
 
-      if (error || !data) {
-        return local.map((col) => {
+    inFlightCollectionsPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('collections')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (error || !data) {
+          return inMemoryCollections;
+        }
+
+        // Merge Supabase collections with any locally created ones
+        const cloudIds = new Set(data.map((c: any) => c.id));
+        const unsyncedLocal = inMemoryCollections.filter((l) => !cloudIds.has(l.id));
+
+        const merged = [...(data as UserCollection[]), ...unsyncedLocal].map((col) => {
           const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
+          const trueCount = Math.max(col.items_count || 0, localItems.length);
           const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
-          return {
-            ...col,
-            items_count: Math.max(col.items_count || 0, localItems.length),
-            preview_posters: posters.slice(0, 4),
-          };
+          return { ...col, items_count: trueCount, preview_posters: posters.slice(0, 4) };
         });
+
+        // Try fetching posters from Supabase for collections with empty local posters
+        if (cloudIds.size > 0) {
+          try {
+            const { data: itemRows } = await supabase
+              .from('collection_items')
+              .select('collection_id, media_poster, added_at')
+              .in('collection_id', Array.from(cloudIds))
+              .order('added_at', { ascending: false });
+
+            if (itemRows && itemRows.length > 0) {
+              const postersMap = new Map<string, string[]>();
+              itemRows.forEach((r: any) => {
+                if (!r.media_poster) return;
+                if (!postersMap.has(r.collection_id)) postersMap.set(r.collection_id, []);
+                const list = postersMap.get(r.collection_id)!;
+                if (list.length < 4 && !list.includes(r.media_poster)) {
+                  list.push(r.media_poster);
+                }
+              });
+
+              merged.forEach((col) => {
+                const cloudPosters = postersMap.get(col.id);
+                if (cloudPosters && cloudPosters.length > 0) {
+                  const combined = Array.from(new Set([...(col.preview_posters || []), ...cloudPosters]));
+                  col.preview_posters = combined.slice(0, 4);
+                }
+              });
+            }
+          } catch {}
+        }
+
+        inMemoryCollections = merged;
+        setLocal(STORAGE_KEYS.COLLECTIONS, merged);
+        notifySubscribers();
+        return merged;
+      } catch {
+        return inMemoryCollections;
+      } finally {
+        inFlightCollectionsPromise = null;
       }
+    })();
 
-      // Merge Supabase collections with any locally created ones
-      const cloudIds = new Set(data.map((c: any) => c.id));
-      const unsyncedLocal = local.filter((l) => !cloudIds.has(l.id));
-
-      const merged = [...(data as UserCollection[]), ...unsyncedLocal].map((col) => {
-        const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-        const trueCount = Math.max(col.items_count || 0, localItems.length);
-        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
-        return { ...col, items_count: trueCount, preview_posters: posters.slice(0, 4) };
-      });
-
-      // Try fetching posters from Supabase for collections with empty local posters
-      if (cloudIds.size > 0) {
-        try {
-          const { data: itemRows } = await supabase
-            .from('collection_items')
-            .select('collection_id, media_poster, added_at')
-            .in('collection_id', Array.from(cloudIds))
-            .order('added_at', { ascending: false });
-
-          if (itemRows && itemRows.length > 0) {
-            const postersMap = new Map<string, string[]>();
-            itemRows.forEach((r: any) => {
-              if (!r.media_poster) return;
-              if (!postersMap.has(r.collection_id)) postersMap.set(r.collection_id, []);
-              const list = postersMap.get(r.collection_id)!;
-              if (list.length < 4 && !list.includes(r.media_poster)) {
-                list.push(r.media_poster);
-              }
-            });
-
-            merged.forEach((col) => {
-              const cloudPosters = postersMap.get(col.id);
-              if (cloudPosters && cloudPosters.length > 0) {
-                const combined = Array.from(new Set([...(col.preview_posters || []), ...cloudPosters]));
-                col.preview_posters = combined.slice(0, 4);
-              }
-            });
-          }
-        } catch {}
-      }
-
-      setLocal(STORAGE_KEYS.COLLECTIONS, merged);
-      return merged;
-    } catch {
-      return local.map((col) => {
-        const localItems = getLocal<UserCollectionItem[]>(`movieguy_col_items_${col.id}`, []);
-        const posters = localItems.map((i) => i.media_poster).filter(Boolean) as string[];
-        return {
-          ...col,
-          items_count: Math.max(col.items_count || 0, localItems.length),
-          preview_posters: posters.slice(0, 4),
-        };
-      });
-    }
+    return inFlightCollectionsPromise;
   },
 
   async createCollection(
@@ -566,48 +617,49 @@ export const userLibraryService = {
       username: 'You',
     };
 
+    inMemoryCollections = [finalCol, ...inMemoryCollections.filter((c) => c.id !== finalCol.id)];
+    setLocal(STORAGE_KEYS.COLLECTIONS, inMemoryCollections);
+    notifySubscribers();
+
     if (userId) {
-      try {
-        const { data, error } = await supabase
-          .from('collections')
-          .insert({
-            user_id: userId,
-            title,
-            description,
-            is_public: isPublic,
-            items_count: 0,
-            likes_count: 0,
-          })
-          .select('*')
-          .single();
-
-        if (data && !error) {
-          finalCol = data as UserCollection;
-        }
-      } catch (err) {
-        console.warn('Supabase collection creation fallback:', err);
-      }
+      supabase
+        .from('collections')
+        .insert({
+          user_id: userId,
+          title,
+          description,
+          is_public: isPublic,
+          items_count: 0,
+          likes_count: 0,
+        })
+        .select('*')
+        .single()
+        .then(({ data, error }) => {
+          if (data && !error) {
+            inMemoryCollections = inMemoryCollections.map((c) => (c.id === finalCol.id ? (data as UserCollection) : c));
+            setLocal(STORAGE_KEYS.COLLECTIONS, inMemoryCollections);
+            notifySubscribers();
+          }
+        })
+        .catch((err) => {
+          console.warn('Background Supabase collection creation fallback:', err);
+        });
     }
-
-    const local = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
-    const updated = [finalCol, ...local.filter((c) => c.id !== finalCol.id)];
-    setLocal(STORAGE_KEYS.COLLECTIONS, updated);
 
     return finalCol;
   },
 
-  async deleteCollection(collectionId: string, userId?: string): Promise<boolean> {
-    const local = getLocal<UserCollection[]>(STORAGE_KEYS.COLLECTIONS, []);
-    const updated = local.filter((c) => c.id !== collectionId);
-    setLocal(STORAGE_KEYS.COLLECTIONS, updated);
+  deleteCollection(collectionId: string, userId?: string): boolean {
+    inMemoryCollections = inMemoryCollections.filter((c) => c.id !== collectionId);
+    setLocal(STORAGE_KEYS.COLLECTIONS, inMemoryCollections);
+    notifySubscribers();
+
     try {
       localStorage.removeItem(`movieguy_col_items_${collectionId}`);
     } catch {}
 
     if (userId && !collectionId.startsWith('col-')) {
-      try {
-        await supabase.from('collections').delete().match({ id: collectionId, user_id: userId });
-      } catch {}
+      supabase.from('collections').delete().match({ id: collectionId, user_id: userId }).catch(() => {});
     }
     return true;
   },

@@ -73,9 +73,9 @@ export const MovieCard = memo(
           to={`/${mediaType}/${movie.id}`}
           aria-label={`${title}${year ? ` (${year})` : ''}`}
           draggable={false}
-          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]"
+          className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
-          <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#1a1116] ring-1 ring-white/[0.08] transition duration-300 group-hover:ring-[#f5c542]/60 motion-safe:group-hover:-translate-y-1">
+          <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-white/[0.04] backdrop-blur-md ring-1 ring-white/10 transition duration-300 group-hover:ring-white/40 motion-safe:group-hover:-translate-y-1 shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
             <img
               src={posterUrl}
               srcSet={srcSet}
@@ -92,7 +92,7 @@ export const MovieCard = memo(
             />
 
             {isTV && (
-              <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-md">
+              <span className="absolute bottom-2 left-2 rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-medium text-white border border-white/10 backdrop-blur-md">
                 TV
               </span>
             )}
@@ -100,16 +100,16 @@ export const MovieCard = memo(
 
           <div className="mt-3 px-0.5">
             <h3
-              className="truncate text-sm font-semibold text-white transition-colors group-hover:text-[#f5c542] sm:text-base"
+              className="truncate text-sm font-semibold text-white transition-colors group-hover:text-white/90 sm:text-base"
               title={title}
             >
               {title}
             </h3>
-            <p className="mt-0.5 flex items-center justify-between gap-2 text-xs text-white/45">
+            <p className="mt-0.5 flex items-center justify-between gap-2 text-xs text-white/50">
               <span className="truncate">{meta || 'Release date TBA'}</span>
               {rating && (
-                <span className="inline-flex shrink-0 items-center gap-1 text-white/70">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <span className="inline-flex shrink-0 items-center gap-1 text-white/90 font-medium">
+                  <Star className="h-3 w-3 fill-white text-white" />
                   {rating}
                 </span>
               )}
@@ -123,9 +123,9 @@ export const MovieCard = memo(
           onClick={handleSave}
           aria-label={saved ? 'Remove from Watch Later' : 'Save to Watch Later'}
           aria-pressed={saved}
-          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition focus-visible:opacity-100 ${saved
-            ? 'bg-[#f5c542] text-[#1c120c]'
-            : 'bg-black/65 text-white opacity-0 hover:bg-white hover:text-black group-hover:opacity-100 [@media(hover:none)]:opacity-100'
+          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-xl transition focus-visible:opacity-100 ${saved
+            ? 'bg-white text-black shadow-lg shadow-white/30'
+            : 'bg-black/60 border border-white/15 text-white opacity-0 hover:bg-white hover:text-black group-hover:opacity-100 [@media(hover:none)]:opacity-100'
             }`}
         >
           <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />

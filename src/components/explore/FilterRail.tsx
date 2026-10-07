@@ -109,29 +109,29 @@ export const FilterRail: React.FC<FilterRailProps> = ({
 
   return (
     <div
-      aria-label="The Ticket Booth"
+      aria-label="The Filter Rail"
       className={
         isDrawer
-          ? `flex-1 flex flex-col min-h-0 text-sm text-[#f8fafc] ${className}`
-          : `rounded-2xl bg-[#0c090e]/95 backdrop-blur-2xl border border-[#c9a24b]/20 p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col text-sm text-[#f8fafc] relative overflow-hidden ${className}`
+          ? `flex-1 flex flex-col min-h-0 text-sm text-white ${className}`
+          : `rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col text-sm text-white relative overflow-hidden ${className}`
       }
     >
-      {/* Booth Brass Top Accent Strip (Desktop only) */}
+      {/* Top Accent Strip (Desktop only) */}
       {!isDrawer && (
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#c9a24b]/60 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
       )}
 
       {/* ── Booth Header & Stubs Badge ── */}
       {!isDrawer && (
-        <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-dashed border-[#c9a24b]/20 shrink-0">
+        <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c9a24b] shadow-[0_0_6px_rgba(201,162,75,0.8)]" />
-            <span className="font-display font-bold text-xs uppercase tracking-wider text-[#c9a24b]">
-              Ticket Booth
+            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+            <span className="font-display font-bold text-xs uppercase tracking-wider text-white">
+              Filter Rail
             </span>
             {activeFiltersCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#c9a24b]/15 text-[#e5b95a] border border-[#c9a24b]/30">
-                {activeFiltersCount} {activeFiltersCount === 1 ? 'STUB' : 'STUBS'}
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-white/10 text-white border border-white/20">
+                {activeFiltersCount} ACTIVE
               </span>
             )}
           </div>
@@ -140,7 +140,7 @@ export const FilterRail: React.FC<FilterRailProps> = ({
             <button
               type="button"
               onClick={onClearAll}
-              className="text-[11px] font-mono uppercase tracking-wider text-white/40 hover:text-[#f5c542] transition-colors flex items-center gap-1"
+              className="text-[11px] font-mono uppercase tracking-wider text-white/40 hover:text-white transition-colors flex items-center gap-1"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Reset</span>
@@ -149,26 +149,26 @@ export const FilterRail: React.FC<FilterRailProps> = ({
         </div>
       )}
 
-      <div className="space-y-4 flex-1 overflow-y-auto min-h-0 pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(201,162,75,0.25)_transparent]">
+      <div className="space-y-4 flex-1 overflow-y-auto min-h-0 pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent]">
         {/* ── 1. SCREEN Section (Type selector) ── */}
-        <div className="border-b border-dashed border-[#c9a24b]/15 pb-4">
+        <div className="border-b border-white/10 pb-4">
           <button
             type="button"
             onClick={() => toggleSection('screen')}
-            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#c9a24b]/90 hover:text-[#c9a24b] transition-colors py-1 focus:outline-none"
+            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors py-1 focus:outline-none"
           >
             <span className="flex items-center gap-1.5">
               <span>1. SCREEN</span>
             </span>
             <ChevronDown
               className={`h-3.5 w-3.5 stroke-[1.5] transition-transform duration-200 ${
-                openSections.screen ? 'rotate-180 text-[#c9a24b]' : 'text-white/30'
+                openSections.screen ? 'rotate-180 text-white' : 'text-white/30'
               }`}
             />
           </button>
 
           {openSections.screen && (
-            <div className="mt-2.5 grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-black/40 border border-white/[0.06]">
+            <div className="mt-2.5 grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-white/[0.02] border border-white/10">
               {SCREEN_ITEMS.map((item) => {
                 const active = type === item.id;
                 const Icon = item.icon;
@@ -179,8 +179,8 @@ export const FilterRail: React.FC<FilterRailProps> = ({
                     onClick={() => onTypeChange(item.id)}
                     className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-center transition-all duration-200 ${
                       active
-                        ? 'bg-[#c9a24b] text-[#1c120c] font-bold shadow-[0_0_12px_rgba(201,162,75,0.35)]'
-                        : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.25)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -193,16 +193,16 @@ export const FilterRail: React.FC<FilterRailProps> = ({
         </div>
 
         {/* ── 2. SHOWTIME Section (Sort selector) ── */}
-        <div className="border-b border-dashed border-[#c9a24b]/15 pb-4">
+        <div className="border-b border-white/10 pb-4">
           <button
             type="button"
             onClick={() => toggleSection('showtime')}
-            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#c9a24b]/90 hover:text-[#c9a24b] transition-colors py-1 focus:outline-none"
+            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors py-1 focus:outline-none"
           >
             <span>2. SHOWTIME</span>
             <ChevronDown
               className={`h-3.5 w-3.5 stroke-[1.5] transition-transform duration-200 ${
-                openSections.showtime ? 'rotate-180 text-[#c9a24b]' : 'text-white/30'
+                openSections.showtime ? 'rotate-180 text-white' : 'text-white/30'
               }`}
             />
           </button>
@@ -218,19 +218,19 @@ export const FilterRail: React.FC<FilterRailProps> = ({
                       onClick={() => onSortChange(item.id)}
                       className={`relative w-full flex items-center justify-between py-2 px-3 rounded-lg text-xs transition-all duration-200 ${
                         active
-                          ? 'text-[#f5c542] font-semibold bg-[#c9a24b]/10 border-l-2 border-[#c9a24b] shadow-[0_0_12px_rgba(201,162,75,0.12)]'
-                          : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
+                          ? 'text-white font-semibold bg-white/10 border-l-2 border-white shadow-[0_0_12px_rgba(255,255,255,0.1)]'
+                          : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         {active ? (
-                          <Clapperboard className="w-3.5 h-3.5 text-[#c9a24b] shrink-0" />
+                          <Clapperboard className="w-3.5 h-3.5 text-white shrink-0" />
                         ) : (
                           <span className="w-1.5 h-1.5 rounded-full bg-white/20 ml-1" />
                         )}
                         <span>{item.label}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-white/35 uppercase">
+                      <span className="text-[10px] font-mono text-white/40 uppercase">
                         {item.sublabel}
                       </span>
                     </button>
@@ -242,23 +242,23 @@ export const FilterRail: React.FC<FilterRailProps> = ({
         </div>
 
         {/* ── 3. THEATRE Section (Networks) ── */}
-        <div className="border-b border-dashed border-[#c9a24b]/15 pb-4">
+        <div className="border-b border-white/10 pb-4">
           <button
             type="button"
             onClick={() => toggleSection('theatre')}
-            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#c9a24b]/90 hover:text-[#c9a24b] transition-colors py-1 focus:outline-none"
+            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors py-1 focus:outline-none"
           >
             <span className="flex items-center gap-1.5">
               <span>3. THEATRE</span>
               {selectedNetworks.length > 0 && (
-                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-[#c9a24b]/20 text-[#f5c542] font-bold border border-[#c9a24b]/30">
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold border border-white/30">
                   {selectedNetworks.length}
                 </span>
               )}
             </span>
             <ChevronDown
               className={`h-3.5 w-3.5 stroke-[1.5] transition-transform duration-200 ${
-                openSections.theatre ? 'rotate-180 text-[#c9a24b]' : 'text-white/30'
+                openSections.theatre ? 'rotate-180 text-white' : 'text-white/30'
               }`}
             />
           </button>
@@ -274,8 +274,8 @@ export const FilterRail: React.FC<FilterRailProps> = ({
                     onClick={() => onToggleNetwork(channel.id)}
                     className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 ${
                       isSelected
-                        ? 'text-white font-medium bg-[#c9a24b]/10 border-l-2 border-[#c9a24b]'
-                        : 'text-white/60 hover:text-white hover:bg-white/[0.03]'
+                        ? 'text-white font-medium bg-white/10 border-l-2 border-white'
+                        : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -296,7 +296,7 @@ export const FilterRail: React.FC<FilterRailProps> = ({
                     <div
                       className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
                         isSelected
-                          ? 'bg-[#c9a24b] border-[#c9a24b] text-[#1c120c] shadow-[0_0_8px_rgba(201,162,75,0.4)]'
+                          ? 'bg-white border-white text-black shadow-[0_0_8px_rgba(255,255,255,0.4)]'
                           : 'border-white/20 bg-transparent text-transparent'
                       }`}
                     >
@@ -309,24 +309,24 @@ export const FilterRail: React.FC<FilterRailProps> = ({
           )}
         </div>
 
-        {/* ── 4. GENRE Section (Ticket-shaped chips) ── */}
+        {/* ── 4. GENRE Section ── */}
         <div className="pb-2">
           <button
             type="button"
             onClick={() => toggleSection('genres')}
-            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-[#c9a24b]/90 hover:text-[#c9a24b] transition-colors py-1 focus:outline-none"
+            className="w-full flex items-center justify-between text-xs font-mono font-bold uppercase tracking-widest text-white/70 hover:text-white transition-colors py-1 focus:outline-none"
           >
             <span className="flex items-center gap-1.5">
               <span>4. GENRE</span>
               {selectedGenres.length > 0 && (
-                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-[#c9a24b]/20 text-[#f5c542] font-bold border border-[#c9a24b]/30">
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold border border-white/30">
                   {selectedGenres.length}
                 </span>
               )}
             </span>
             <ChevronDown
               className={`h-3.5 w-3.5 stroke-[1.5] transition-transform duration-200 ${
-                openSections.genres ? 'rotate-180 text-[#c9a24b]' : 'text-white/30'
+                openSections.genres ? 'rotate-180 text-white' : 'text-white/30'
               }`}
             />
           </button>
@@ -343,11 +343,11 @@ export const FilterRail: React.FC<FilterRailProps> = ({
                     onClick={() => onToggleGenre(g.id)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-all duration-200 border relative ${
                       checked
-                        ? 'bg-[#f5c542] border-[#f5c542] text-[#1c120c] font-bold shadow-[0_0_12px_rgba(245,197,66,0.35)]'
-                        : 'border-[#c9a24b]/20 bg-white/[0.02] text-white/60 hover:text-white hover:border-[#c9a24b]/50 hover:bg-white/[0.05]'
+                        ? 'bg-white border-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.25)]'
+                        : 'border-white/10 bg-white/[0.02] text-white/60 hover:text-white hover:border-white/25 hover:bg-white/[0.06]'
                     }`}
                   >
-                    <Icon className={`w-3 h-3 ${checked ? 'text-[#1c120c]' : 'text-[#c9a24b]'}`} />
+                    <Icon className={`w-3 h-3 ${checked ? 'text-black' : 'text-white/60'}`} />
                     <span>{g.label}</span>
                   </button>
                 );
@@ -359,27 +359,27 @@ export const FilterRail: React.FC<FilterRailProps> = ({
 
       {/* ── 5. Tear up & reset button (Bottom action) ── */}
       {hasActiveFilters && (
-        <div className="pt-3 mt-auto border-t border-dashed border-[#c9a24b]/20 shrink-0">
+        <div className="pt-3 mt-auto border-t border-white/10 shrink-0">
           <button
             type="button"
             onClick={onClearAll}
-            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-mono uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-white transition-colors"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Tear up & reset</span>
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset filters</span>
           </button>
         </div>
       )}
 
       {/* ── Mobile Close Action ── */}
       {onCloseMobileDrawer && (
-        <div className="pt-3 mt-auto border-t border-[#c9a24b]/20 shrink-0">
+        <div className="pt-3 mt-auto border-t border-white/10 shrink-0">
           <button
             type="button"
             onClick={onCloseMobileDrawer}
-            className="w-full rounded-xl bg-gradient-to-r from-[#c9a24b] to-[#e5b95a] text-[#1c120c] font-display font-extrabold text-xs py-3 hover:brightness-110 transition-all shadow-lg shadow-[#c9a24b]/20"
+            className="w-full rounded-xl bg-white text-black font-display font-extrabold text-xs py-3 hover:bg-neutral-200 transition-all shadow-lg shadow-white/10"
           >
-            Show Shows Tonight
+            Show Titles
           </button>
         </div>
       )}

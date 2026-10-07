@@ -159,7 +159,7 @@ const MovieDetailPage = () => {
   }
 
   const inWatchLater = isInWatchLater(movie.id, 'movie');
-  const currentWatchLaterItem = watchLater.find((l) => l.media_id === movie.id && l.media_type === 'movie');
+  const currentWatchLaterItem = watchLater.find((l) => Number(l.media_id) === Number(movie.id) && l.media_type === 'movie');
   const watchLaterTag = currentWatchLaterItem?.tag;
   const year = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;

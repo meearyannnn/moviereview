@@ -108,33 +108,33 @@ export const CineAiCopilot = () => {
             soundEffects.playSwoosh();
             setIsOpen(true);
           }}
-          className="fixed bottom-[76px] right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#140a0d]/90 hover:bg-[#1a0f14] border border-[#c9a24b]/30 backdrop-blur-xl shadow-xl shadow-black/80 flex items-center justify-center text-[#f5c542] hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 group touch-feedback"
+          className="fixed bottom-[76px] right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/80 hover:bg-neutral-900 border border-white/20 backdrop-blur-xl shadow-xl shadow-black/80 flex items-center justify-center text-white transition-all duration-300 hover:scale-105 active:scale-95 group touch-feedback"
           aria-label="Open CineAI Copilot"
           title="Ask CineAI Copilot (Press C)"
         >
-          <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain group-hover:scale-110 transition-transform" />
+          <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain group-hover:scale-110 transition-transform brightness-200" />
         </button>
       )}
 
       {/* -- Chat Drawer Window -- */}
       {isOpen && (
-        <div className="fixed inset-x-2 bottom-16 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] max-h-[80vh] h-[80vh] rounded-3xl overflow-hidden bg-[#140a0d] border border-[#c9a24b]/25 shadow-2xl shadow-black flex flex-col animate-in slide-in-from-bottom-6 zoom-in-95 duration-200 z-50">
+        <div className="fixed inset-x-2 bottom-16 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] max-h-[80vh] h-[80vh] rounded-3xl overflow-hidden bg-black/95 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black flex flex-col animate-in slide-in-from-bottom-6 zoom-in-95 duration-200 z-50">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#c9a24b]/20 bg-gradient-to-r from-[#c9a24b]/20 via-black/40 to-transparent backdrop-blur-xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.02] backdrop-blur-xl">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c9a24b] to-[#f5c542] p-0.5 flex items-center justify-center shadow-md shadow-[#c9a24b]/20">
-                <div className="w-full h-full bg-[#140a0d] rounded-[10px] flex items-center justify-center">
-                  <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain" />
+              <div className="w-9 h-9 rounded-xl bg-white/20 p-0.5 flex items-center justify-center shadow-md">
+                <div className="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
+                  <img src="/assets/branding/movieguy-logo-tight.png" alt="" className="w-5 h-auto object-contain brightness-200" />
                 </div>
               </div>
               <div>
                 <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
                   CineAI Co-Pilot
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold">
                     Online
                   </span>
                 </h3>
-                <p className="text-[10px] text-[#c9a24b]/70 font-mono">MovieGuy Cinema Intelligence</p>
+                <p className="text-[10px] text-white/40 font-mono">MovieGuy Cinema Intelligence</p>
               </div>
             </div>
 
@@ -159,7 +159,7 @@ export const CineAiCopilot = () => {
                 <div
                   className={`max-w-[88%] p-3.5 rounded-2xl ${
                     msg.sender === 'user'
-                      ? 'bg-[#f5c542] text-[#1c120c] font-black shadow-md shadow-[#f5c542]/25 rounded-br-sm'
+                      ? 'bg-white text-black font-semibold shadow-md shadow-white/10 rounded-br-sm'
                       : 'bg-white/[0.05] border border-white/10 text-white/90 rounded-bl-sm leading-relaxed'
                   }`}
                 >
@@ -176,7 +176,7 @@ export const CineAiCopilot = () => {
                           soundEffects.playHoverTick();
                           navigate(`/movie/${movie.id}`);
                         }}
-                        className="group flex gap-3 p-2.5 rounded-xl bg-black/40 hover:bg-[#1a0f14] border border-[#c9a24b]/20 hover:border-[#f5c542]/50 transition-all cursor-pointer"
+                        className="group flex gap-3 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/30 transition-all cursor-pointer"
                       >
                         <img
                           src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : ''}
@@ -186,12 +186,12 @@ export const CineAiCopilot = () => {
                         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
-                              <h4 className="font-display font-bold text-xs text-white truncate group-hover:text-[#f5c542] transition-colors">
+                              <h4 className="font-display font-bold text-xs text-white truncate group-hover:text-white transition-colors">
                                 {movie.title}
                               </h4>
                               {movie.vote_average > 0 && (
-                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#f5c542]">
-                                  <Star className="w-2.5 h-2.5 fill-[#f5c542]" />
+                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-white">
+                                  <Star className="w-2.5 h-2.5 fill-white" />
                                   {movie.vote_average.toFixed(1)}
                                 </span>
                               )}
@@ -203,11 +203,11 @@ export const CineAiCopilot = () => {
                           </div>
 
                           <div className="flex items-center justify-between pt-1 text-[10px]">
-                            <span className="text-[#f3e9d2] font-semibold truncate max-w-[140px]">
+                            <span className="text-white/80 font-semibold truncate max-w-[140px]">
                               {movie.matchReason}
                             </span>
-                            <span className="flex items-center gap-1 text-[#f5c542] font-bold group-hover:translate-x-0.5 transition-transform">
-                              <Play className="w-2.5 h-2.5 fill-[#f5c542]" />
+                            <span className="flex items-center gap-1 text-white font-bold group-hover:translate-x-0.5 transition-transform">
+                              <Play className="w-2.5 h-2.5 fill-white" />
                               Stream
                             </span>
                           </div>
@@ -224,7 +224,7 @@ export const CineAiCopilot = () => {
                       <button
                         key={sug}
                         onClick={() => handleSend(sug)}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-purple-400/40 text-white/70 hover:text-white transition-all text-left"
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-white/30 text-white/70 hover:text-white transition-all text-left"
                       >
                         {sug}
                       </button>
@@ -236,7 +236,7 @@ export const CineAiCopilot = () => {
 
             {loading && (
               <div className="flex items-center gap-2 text-white/40 text-xs py-2">
-                <div className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                <div className="w-2 h-2 rounded-full bg-white animate-ping" />
                 <span>CineAI is thinking & scanning cinematic archives...</span>
               </div>
             )}
@@ -256,12 +256,12 @@ export const CineAiCopilot = () => {
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Ask for mood, runtime, plot memory..."
-              className="flex-1 h-11 px-3.5 rounded-xl bg-white/[0.05] border border-white/10 focus:border-purple-400 text-white text-base sm:text-xs placeholder-white/40 focus:outline-none transition-colors"
+              className="flex-1 h-11 px-3.5 rounded-xl bg-white/[0.05] border border-white/10 focus:border-white text-white text-base sm:text-xs placeholder-white/40 focus:outline-none transition-colors"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-amber-500 text-black flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-transform"
+              className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center disabled:opacity-40 hover:bg-neutral-200 transition-colors"
             >
               <Send className="w-4 h-4 fill-black" />
             </button>

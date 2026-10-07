@@ -1,4 +1,4 @@
-﻿// pages/SchedulePage.tsx (simplified)
+// pages/SchedulePage.tsx (simplified)
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
@@ -35,7 +35,7 @@ const TYPES: { id: MediaTypeFilter; label: string }[] = [
 ];
 
 const ring =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0608]';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07080b]';
 
 const SchedulePage: React.FC = () => {
   const navigate = useNavigate();
@@ -102,12 +102,12 @@ const SchedulePage: React.FC = () => {
           : `Coming in ${selectedYear}`;
 
   const pill = (active: boolean) =>
-    `rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${ring} ${active ? 'bg-white text-black' : 'text-white/60 hover:text-white'
+    `rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${ring} ${active ? 'bg-white text-black shadow-sm' : 'text-white/60 hover:text-white'
     }`;
 
   const chip = (active: boolean) =>
     `rounded-full px-3.5 py-1.5 text-sm whitespace-nowrap transition-colors ${ring} ${active
-      ? 'bg-[#f5c542] text-[#1c120c] font-semibold'
+      ? 'bg-white text-black font-semibold shadow-sm'
       : 'bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/10'
     }`;
 
@@ -123,7 +123,7 @@ const SchedulePage: React.FC = () => {
         aria-label={`${item.title}, ${item.releaseTag}`}
         className={`group flex-none w-36 sm:w-44 text-left rounded-2xl snap-start ${ring}`}
       >
-        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 group-hover:ring-[#f5c542]/60 group-hover:-translate-y-1 group-hover:shadow-[0_12px_30px_rgba(245,197,66,0.2)]">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-neutral-900 ring-1 ring-white/10 transition duration-300 group-hover:ring-white/40 group-hover:-translate-y-1 group-hover:shadow-[0_12px_30px_rgba(255,255,255,0.15)]">
           <img
             src={poster}
             alt=""
@@ -139,13 +139,13 @@ const SchedulePage: React.FC = () => {
             title="Hype score"
             className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-md"
           >
-            <Flame className="h-3 w-3 fill-[#f5c542] text-[#f5c542]" />
+            <Flame className="h-3 w-3 fill-white text-white" />
             {item.hypeScore}
           </span>
         </div>
 
         <div className="mt-3 px-0.5">
-          <h4 className="truncate font-display text-sm font-semibold text-white/95 group-hover:text-[#f5c542] transition-colors">
+          <h4 className="truncate font-display text-sm font-semibold text-white/95 group-hover:text-white transition-colors">
             {item.title}
           </h4>
           <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-white/45">
@@ -157,7 +157,7 @@ const SchedulePage: React.FC = () => {
               ))}
             <span className="truncate">{item.releaseTag}</span>
             {isEstimate && (
-              <span title="Date may differ in your region" className="shrink-0 text-[#f5c542]/80">
+              <span title="Date may differ in your region" className="shrink-0 text-white/60 font-mono">
                 est.
               </span>
             )}
@@ -174,7 +174,7 @@ const SchedulePage: React.FC = () => {
       {mode === 'upcoming' && selectedMonth !== null && (
         <button
           onClick={() => setSelectedMonth(null)}
-          className={`mt-1 text-sm font-semibold text-[#f5c542] hover:text-white transition-colors ${ring} rounded`}
+          className={`mt-1 text-sm font-semibold text-white hover:underline transition-colors ${ring} rounded`}
         >
           Show the whole year
         </button>
@@ -183,11 +183,11 @@ const SchedulePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0608] text-[#f8fafc] selection:bg-[#c9a24b] selection:text-[#1c120c] relative">
+    <div className="min-h-screen overflow-x-hidden bg-[#07080b] text-white selection:bg-white selection:text-black relative">
       <Navbar />
 
-      {/* One soft projector glow */}
-      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[500px] bg-[radial-gradient(ellipse_at_top,_rgba(245,197,66,0.07)_0%,_transparent_70%)] z-0" />
+      {/* One soft monochrome projector glow */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[500px] bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.05)_0%,_transparent_70%)] z-0" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Heading */}
@@ -199,7 +199,7 @@ const SchedulePage: React.FC = () => {
         </header>
 
         {/* Sticky filters */}
-        <div className="sticky top-16 z-20 -mx-4 mb-8 border-y border-white/[0.08] bg-[#0a0608]/90 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:px-4">
+        <div className="sticky top-16 z-20 -mx-4 mb-8 border-y border-white/[0.08] bg-[#07080b]/90 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:px-4">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div role="tablist" aria-label="Schedule view" className="flex gap-1 rounded-full bg-white/[0.05] p-1">
@@ -287,7 +287,7 @@ const SchedulePage: React.FC = () => {
               className={`cursor-pointer rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-white/90 ${ring}`}
             >
               {REGIONS.map((r) => (
-                <option key={r.code} value={r.code} className="bg-[#140a0d]">
+                <option key={r.code} value={r.code} className="bg-black text-white">
                   {r.flag} {r.label}
                 </option>
               ))}
@@ -329,18 +329,18 @@ const SchedulePage: React.FC = () => {
               <section key={group.dateKey} className="grid gap-4 pb-10 sm:grid-cols-[88px_1fr] sm:gap-6">
                 {/* Date marker */}
                 <div className="flex items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0 sm:pt-1">
-                  <span className={`text-sm ${group.isToday ? 'text-[#f5c542] font-semibold' : 'text-white/40'}`}>
+                  <span className={`text-sm ${group.isToday ? 'text-white font-semibold' : 'text-white/40'}`}>
                     {group.dayName}
                   </span>
                   <span
-                    className={`font-display text-4xl font-extrabold leading-none sm:mt-1 sm:text-5xl ${group.isToday ? 'text-[#f5c542]' : 'text-white'
+                    className={`font-display text-4xl font-extrabold leading-none sm:mt-1 sm:text-5xl ${group.isToday ? 'text-white' : 'text-white'
                       }`}
                   >
                     {group.dayNumber}
                   </span>
                   <span className="text-sm text-white/50 sm:mt-1">{group.monthName}</span>
                   {group.isToday && (
-                    <span className="rounded-full bg-[#f5c542] px-2 py-0.5 text-[11px] font-bold text-[#1c120c] sm:mt-2">
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-black sm:mt-2 shadow-sm">
                       Today
                     </span>
                   )}
@@ -350,7 +350,7 @@ const SchedulePage: React.FC = () => {
                 <div className="relative min-w-0 sm:border-l sm:border-white/10 sm:pl-6">
                   <span
                     aria-hidden
-                    className={`absolute -left-[5px] top-3 hidden h-2.5 w-2.5 rounded-full sm:block ${group.isToday ? 'bg-[#f5c542] shadow-[0_0_0_4px_rgba(245,197,66,0.3)]' : 'bg-white/30'
+                    className={`absolute -left-[5px] top-3 hidden h-2.5 w-2.5 rounded-full sm:block ${group.isToday ? 'bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]' : 'bg-white/30'
                       }`}
                   />
                   <div className="-mx-1 flex snap-x gap-3 overflow-x-auto scrollbar-hide px-1 pb-3 pt-1 touch-pan-x sm:gap-4 [mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)]">
@@ -363,7 +363,7 @@ const SchedulePage: React.FC = () => {
         )}
       </div>
 
-      <footer className="safe-bottom-content border-t border-white/[0.08] bg-[#0a0608] pb-28 md:pb-10">
+      <footer className="safe-bottom-content border-t border-white/[0.08] bg-[#07080b] pb-28 md:pb-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <Link to="/" className={`inline-block group rounded ${ring}`}>
             <img

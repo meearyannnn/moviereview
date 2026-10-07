@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   userLibraryService,
+  subscribeToLibrary,
   type WatchHistoryItem,
   type WatchLaterItem,
   type WatchLaterTag,
@@ -15,11 +16,19 @@ const EVENT_LIBRARY_CHANGE = 'movieguy_library_change';
 
 export function useUserLibrary() {
   const { user } = useAuth();
-  const [history, setHistory] = useState<WatchHistoryItem[]>([]);
-  const [watchLater, setWatchLater] = useState<WatchLaterItem[]>([]);
-  const [collections, setCollections] = useState<UserCollection[]>([]);
-  const [savedCollections, setSavedCollections] = useState<UserCollection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<WatchHistoryItem[]>(() =>
+    userLibraryService.getWatchHistorySync()
+  );
+  const [watchLater, setWatchLater] = useState<WatchLaterItem[]>(() =>
+    userLibraryService.getWatchLaterSync()
+  );
+  const [collections, setCollections] = useState<UserCollection[]>(() =>
+    userLibraryService.getUserCollectionsSync()
+  );
+  const [savedCollections, setSavedCollections] = useState<UserCollection[]>(() =>
+    userLibraryService.getSavedCollectionsSync()
+  );
+  const [loading, setLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -33,30 +42,43 @@ export function useUserLibrary() {
       setWatchLater(later);
       setCollections(cols);
       setSavedCollections(saved);
+    } catch {
+      // In-memory/localStorage cache is already active and healthy
     } finally {
       setLoading(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
-    loadData();
+    // 0ms instant sync with in-memory singleton
+    setHistory(userLibraryService.getWatchHistorySync());
+    setWatchLater(userLibraryService.getWatchLaterSync());
+    setCollections(userLibraryService.getUserCollectionsSync());
+    setSavedCollections(userLibraryService.getSavedCollectionsSync());
 
-    const onLibraryChange = () => {
+    // Subscribe to immediate reactive updates across all components
+    const unsubscribe = subscribeToLibrary(() => {
+      setHistory([...userLibraryService.getWatchHistorySync()]);
+      setWatchLater([...userLibraryService.getWatchLaterSync()]);
+      setCollections([...userLibraryService.getUserCollectionsSync()]);
+      setSavedCollections([...userLibraryService.getSavedCollectionsSync()]);
+    });
+
+    // Background sync with cloud if logged in
+    if (user?.id) {
       loadData();
+    }
+
+    return () => {
+      unsubscribe();
     };
-
-    window.addEventListener(EVENT_LIBRARY_CHANGE, onLibraryChange);
-    return () => window.removeEventListener(EVENT_LIBRARY_CHANGE, onLibraryChange);
-  }, [loadData]);
-
-  const dispatchUpdate = () => {
-    window.dispatchEvent(new Event(EVENT_LIBRARY_CHANGE));
-  };
+  }, [user?.id, loadData]);
 
   // ── Watch History Helpers ──
   const isWatched = useCallback(
-    (mediaId: number, mediaType: 'movie' | 'tv') => {
-      return history.some((h) => h.media_id === mediaId && h.media_type === mediaType);
+    (mediaId: number | string, mediaType: 'movie' | 'tv') => {
+      const targetId = Number(mediaId);
+      return history.some((h) => Number(h.media_id) === targetId && h.media_type === mediaType);
     },
     [history]
   );
@@ -73,10 +95,10 @@ export function useUserLibrary() {
     }) => {
       const already = isWatched(item.media_id, item.media_type);
       if (already) {
-        await userLibraryService.unmarkWatched(item.media_id, item.media_type, user?.id);
+        userLibraryService.unmarkWatched(item.media_id, item.media_type, user?.id);
         toast.info(`Removed "${item.title}" from Watch History`);
       } else {
-        await userLibraryService.markAsWatched(
+        userLibraryService.markAsWatched(
           {
             media_id: item.media_id,
             media_type: item.media_type,
@@ -89,11 +111,10 @@ export function useUserLibrary() {
           user?.id
         );
 
-        // Once watched, automatically remove from Watch Later
-        await userLibraryService.removeFromWatchLater(item.media_id, item.media_type, user?.id);
-        toast.success(`Marked "${item.title}" as Watched! (Added to Watch History)`);
+        // Once watched, automatically remove from Watch Later in 0ms
+        userLibraryService.removeFromWatchLater(item.media_id, item.media_type, user?.id);
+        toast.success(`Marked "${item.title}" as Watched!`);
       }
-      dispatchUpdate();
       return !already;
     },
     [isWatched, user?.id]
@@ -101,9 +122,10 @@ export function useUserLibrary() {
 
   // ── Watch Later Helpers ──
   const isInWatchLater = useCallback(
-    (mediaId: number, mediaType?: 'movie' | 'tv') => {
+    (mediaId: number | string, mediaType?: 'movie' | 'tv') => {
+      const targetId = Number(mediaId);
       return watchLater.some(
-        (l) => l.media_id === mediaId && (!mediaType || l.media_type === mediaType)
+        (l) => Number(l.media_id) === targetId && (!mediaType || l.media_type === mediaType)
       );
     },
     [watchLater]
@@ -124,10 +146,10 @@ export function useUserLibrary() {
     ) => {
       const already = isInWatchLater(item.media_id, item.media_type);
       if (already) {
-        await userLibraryService.removeFromWatchLater(item.media_id, item.media_type, user?.id);
+        userLibraryService.removeFromWatchLater(item.media_id, item.media_type, user?.id);
         toast.info(`Removed "${item.title}" from Watch Later`);
       } else {
-        await userLibraryService.addToWatchLater(
+        userLibraryService.addToWatchLater(
           {
             media_id: item.media_id,
             media_type: item.media_type,
@@ -142,7 +164,6 @@ export function useUserLibrary() {
         );
         toast.success(`Saved "${item.title}" to Watch Later!`);
       }
-      dispatchUpdate();
       return !already;
     },
     [isInWatchLater, user?.id]
@@ -151,7 +172,6 @@ export function useUserLibrary() {
   const setWatchLaterTag = useCallback(
     async (mediaId: number, mediaType: 'movie' | 'tv', newTag: WatchLaterTag) => {
       await userLibraryService.updateWatchLaterTag(mediaId, mediaType, newTag, user?.id);
-      dispatchUpdate();
     },
     [user?.id]
   );
@@ -161,7 +181,6 @@ export function useUserLibrary() {
     async (title: string, desc = '', isPublic = true) => {
       const col = await userLibraryService.createCollection(title, desc, isPublic, user?.id);
       toast.success(`Created collection "${title}"`);
-      dispatchUpdate();
       return col;
     },
     [user?.id]
@@ -171,7 +190,6 @@ export function useUserLibrary() {
     async (collectionId: string) => {
       await userLibraryService.deleteCollection(collectionId, user?.id);
       toast.info('Collection deleted');
-      dispatchUpdate();
     },
     [user?.id]
   );
@@ -188,7 +206,6 @@ export function useUserLibrary() {
     ) => {
       const col = await userLibraryService.updateCollection(collectionId, updates, user?.id);
       toast.success('Collection updated');
-      dispatchUpdate();
       return col;
     },
     [user?.id]
@@ -208,7 +225,6 @@ export function useUserLibrary() {
     ) => {
       await userLibraryService.addItemToCollection(collectionId, item, user?.id);
       toast.success(`Added to collection`);
-      dispatchUpdate();
     },
     [user?.id]
   );
@@ -217,7 +233,6 @@ export function useUserLibrary() {
     async (collectionId: string, mediaId: number, mediaType: 'movie' | 'tv') => {
       await userLibraryService.removeItemFromCollection(collectionId, mediaId, mediaType, user?.id);
       toast.info(`Removed from collection`);
-      dispatchUpdate();
     },
     [user?.id]
   );
@@ -230,7 +245,6 @@ export function useUserLibrary() {
       } else {
         toast.info(`Removed "${collection.title}" from saved`);
       }
-      dispatchUpdate();
     },
     [user?.id]
   );

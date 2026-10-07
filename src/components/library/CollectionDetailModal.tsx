@@ -14,7 +14,6 @@ import {
   ImagePlus,
   FileEdit,
   ListOrdered,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import {
@@ -31,6 +30,7 @@ import {
 } from '@/services/userLibrary';
 import { useUserLibrary } from '@/hooks/useUserLibrary';
 import { AddContentModal } from './AddContentModal';
+import { ModalShell } from '@/components/ui/ModalShell';
 import { toast } from 'sonner';
 
 interface CollectionDetailModalProps {
@@ -38,6 +38,45 @@ interface CollectionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   isOwner?: boolean;
+  initialItems?: UserCollectionItem[];
+  onUpdate?: () => void;
+}
+
+// ─── Glass tokens ──────────────────────────────────────────────────────────────
+
+const GLASS =
+  'border border-white/[0.1] bg-white/[0.045] backdrop-blur-2xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.08)]';
+const FOCUS =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5c542]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent';
+const ICON_BTN = `flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white/80 backdrop-blur-md transition hover:bg-black/60 hover:text-white ${FOCUS}`;
+const PRIMARY = `inline-flex items-center gap-1.5 rounded-full bg-[#f5c542] px-5 py-2.5 text-sm font-semibold text-[#1c120c] shadow-[0_8px_24px_-8px_rgba(245,197,66,0.6)] transition hover:bg-[#ffd25e] active:scale-95 ${FOCUS}`;
+const GHOST = `rounded-full px-4 py-2.5 text-sm font-medium text-white/65 transition hover:bg-white/[0.07] hover:text-white ${FOCUS}`;
+const INPUT =
+  'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder-white/30 transition focus:border-[#f5c542]/60 focus:bg-white/[0.07] focus:outline-none';
+const MENU_ITEM =
+  'cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 focus:bg-white/[0.08] focus:text-white';
+
+// Small glass dialog used for the edit forms
+function GlassDialog({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <ModalShell label={title} onClose={onClose} zIndex={60} panelClassName="max-w-md overflow-y-auto p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="font-display text-lg font-bold">{title}</h3>
+        <button type="button" onClick={onClose} aria-label="Close" className={`rounded-full p-2 text-white/50 transition hover:bg-white/[0.08] hover:text-white ${FOCUS}`}>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      {children}
+    </ModalShell>
+  );
 }
 
 export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
@@ -45,6 +84,8 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
   isOpen,
   onClose,
   isOwner,
+  initialItems,
+  onUpdate,
 }) => {
   const [currentCollection, setCurrentCollection] = useState<UserCollection | null>(collection);
   const [items, setItems] = useState<UserCollectionItem[]>([]);
@@ -84,6 +125,13 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
   useEffect(() => {
     if (!isOpen || !collection) return;
     let isMounted = true;
+
+    if (initialItems && initialItems.length > 0) {
+      setItems(initialItems);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     userLibraryService.getCollectionItems(collection.id).then((data) => {
@@ -96,7 +144,7 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, collection]);
+  }, [isOpen, collection, initialItems]);
 
   const existingItemIds = useMemo(() => {
     return new Set(items.map((it) => `${it.media_type}_${it.media_id}`));
@@ -109,6 +157,7 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
     setItems((prev) =>
       prev.filter((it) => !(it.media_id === mediaId && it.media_type === mediaType))
     );
+    onUpdate?.();
   };
 
   const handleItemAdded = (newItem: {
@@ -133,6 +182,7 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
       },
       ...prev,
     ]);
+    onUpdate?.();
   };
 
   const handleItemRemoved = (mediaId: number, mediaType: 'movie' | 'tv') => {
@@ -157,15 +207,16 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
       setCurrentCollection((prev) =>
         prev
           ? {
-              ...prev,
-              title: editTitle.trim(),
-              description: editDesc.trim(),
-              is_public: editIsPublic,
-            }
+            ...prev,
+            title: editTitle.trim(),
+            description: editDesc.trim(),
+            is_public: editIsPublic,
+          }
           : null
       );
     }
     setIsEditDetailsOpen(false);
+    onUpdate?.();
   };
 
   const handleSaveBanner = async (e: React.FormEvent) => {
@@ -182,6 +233,7 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
       );
     }
     setIsAddBannerOpen(false);
+    onUpdate?.();
   };
 
   const handleDeleteCollection = async () => {
@@ -191,272 +243,253 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
       )
     ) {
       await deleteCollection(currentCollection.id);
+      onUpdate?.();
       onClose();
     }
   };
 
-  const canEdit = isOwner !== false && currentCollection.user_id !== 'system';
+  const canEdit = isOwner !== false && currentCollection.user_id !== 'system' && !currentCollection.id.startsWith('shelf-');
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200"
-        onClick={onClose}
+      <ModalShell
+        label={currentCollection.title}
+        onClose={onClose}
+        panelClassName="flex max-w-4xl flex-col overflow-hidden sm:max-h-[90vh]"
       >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={currentCollection.title}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl border border-white/[0.1] bg-[#120a0e] shadow-2xl overflow-hidden relative"
-        >
-          {/* ── Top Banner Area (Matches Screenshot 2) ── */}
-          <div className="relative w-full h-44 sm:h-52 bg-gradient-to-b from-[#261520] via-[#1a0f16] to-[#120a0e] overflow-hidden border-b border-white/[0.08]">
-            {/* Background Cover Image if available */}
-            {currentCollection.cover_image && (
-              <img
-                src={currentCollection.cover_image}
-                alt={currentCollection.title}
-                className="absolute inset-0 w-full h-full object-cover opacity-40 brightness-75"
-              />
-            )}
+        {/* ── Banner ── */}
+        <div className="relative h-48 w-full shrink-0 overflow-hidden bg-gradient-to-b from-[#2a1422] via-[#1a0f16] to-[#140a0e] sm:h-56">
+          {currentCollection.cover_image && (
+            <img
+              src={currentCollection.cover_image}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-50"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#140a0e] via-[#140a0e]/50 to-transparent" />
 
-            {/* Gradient Overlay for dark cinema feel */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#120a0e] via-[#120a0e]/60 to-transparent" />
-
-            {/* Center Logo / Empty Icon (from Screenshot 2) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Brand mark when there is no cover */}
+          {!currentCollection.cover_image && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <img
                 src="/assets/branding/movieguy-logo-tight.png"
                 alt=""
-                className="w-16 sm:w-20 h-auto object-contain opacity-25 drop-shadow-[0_0_15px_rgba(245,197,66,0.3)]"
+                className="h-auto w-16 object-contain opacity-25 drop-shadow-[0_0_15px_rgba(245,197,66,0.3)] sm:w-20"
               />
             </div>
+          )}
 
-            {/* Top Bar Actions: + Add Content, Edit Dropdown, Save, Close */}
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-              {canEdit && (
-                <>
-                  {/* + Add Content Pill Button (Screenshot 2) */}
-                  <button
-                    type="button"
-                    onClick={() => setIsAddContentOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-full font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 shadow-[0_0_18px_rgba(192,38,211,0.45)] transition-all duration-200 active:scale-95"
+          {/* Top actions */}
+          <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+            {canEdit && (
+              <>
+                <button type="button" onClick={() => setIsAddContentOpen(true)} className={PRIMARY}>
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
+                  <span>Add content</span>
+                </button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" aria-label="Collection options" className={ICON_BTN}>
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="z-[80] w-48 rounded-2xl border border-white/[0.12] bg-[#140a0e]/85 p-1.5 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-2xl"
                   >
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
-                    <span>Add Content</span>
-                  </button>
-
-                  {/* Actions Dropdown Menu (Pencil Button from Screenshot 2) */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Collection options"
-                        className="w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white/80 hover:text-white border border-white/20 flex items-center justify-center backdrop-blur-md transition-all shadow-md"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-44 rounded-2xl border border-white/[0.12] bg-[#1a0f16]/95 backdrop-blur-xl p-1.5 shadow-2xl text-white z-50 animate-in fade-in zoom-in-95 duration-150"
+                    <DropdownMenuItem onClick={() => setIsAddBannerOpen(true)} className={MENU_ITEM}>
+                      <ImagePlus className="h-4 w-4 text-[#f5c542]" />
+                      <span>Change banner</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsEditDetailsOpen(true)} className={MENU_ITEM}>
+                      <FileEdit className="h-4 w-4 text-[#f5c542]" />
+                      <span>Edit details</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsEditListMode((v) => !v)} className={MENU_ITEM}>
+                      <ListOrdered className="h-4 w-4 text-[#f5c542]" />
+                      <span>{isEditListMode ? 'Done editing list' : 'Edit list'}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 bg-white/[0.08]" />
+                    <DropdownMenuItem
+                      onClick={handleDeleteCollection}
+                      className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-red-400 focus:bg-red-500/10 focus:text-red-300"
                     >
-                      <DropdownMenuItem
-                        onClick={() => setIsAddBannerOpen(true)}
-                        className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/[0.08]"
-                      >
-                        <ImagePlus className="w-4 h-4 text-[#c9a24b]" />
-                        <span>Add Banner</span>
-                      </DropdownMenuItem>
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete collection</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
 
-                      <DropdownMenuItem
-                        onClick={() => setIsEditDetailsOpen(true)}
-                        className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/[0.08]"
-                      >
-                        <FileEdit className="w-4 h-4 text-sky-400" />
-                        <span>Edit Details</span>
-                      </DropdownMenuItem>
+            <button
+              type="button"
+              onClick={() => toggleSaveCollection(currentCollection)}
+              className={`${ICON_BTN} hover:text-[#f5c542]`}
+              aria-label="Save collection"
+              title="Save collection"
+            >
+              <Heart className="h-4 w-4" />
+            </button>
 
-                      <DropdownMenuItem
-                        onClick={() => setIsEditListMode((v) => !v)}
-                        className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/[0.08]"
-                      >
-                        <ListOrdered className="w-4 h-4 text-emerald-400" />
-                        <span>{isEditListMode ? 'Done Editing List' : 'Edit List'}</span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
-
-                      <DropdownMenuItem
-                        onClick={handleDeleteCollection}
-                        className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:text-red-300 focus:bg-red-500/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              )}
-
-              {/* Save / Like Collection Button */}
-              <button
-                type="button"
-                onClick={() => toggleSaveCollection(currentCollection)}
-                className="w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white/70 hover:text-[#f5c542] border border-white/20 flex items-center justify-center backdrop-blur-md transition-all shadow-md"
-                title="Save collection"
-              >
-                <Heart className="w-4 h-4" />
-              </button>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white/70 hover:text-white border border-white/20 flex items-center justify-center backdrop-blur-md transition-all shadow-md"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Bottom-left Collection Info inside Banner */}
-            <div className="absolute bottom-4 left-6 right-6 z-10">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono text-[#f5c542] bg-[#c9a24b]/15 border border-[#c9a24b]/30 backdrop-blur-md">
-                  {currentCollection.is_public ? (
-                    <>
-                      <Globe className="w-2.5 h-2.5" /> Public
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-2.5 h-2.5" /> Private
-                    </>
-                  )}
-                </span>
-                <span className="text-xs font-mono text-white/50 backdrop-blur-md">
-                  {items.length} {items.length === 1 ? 'title' : 'titles'}
-                </span>
-              </div>
-
-              <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white truncate drop-shadow-md">
-                {currentCollection.title}
-              </h2>
-              {currentCollection.description && (
-                <p className="text-xs font-mono text-white/70 mt-1 line-clamp-1 drop-shadow-sm max-w-xl">
-                  {currentCollection.description}
-                </p>
-              )}
-            </div>
+            <button type="button" onClick={onClose} className={ICON_BTN} aria-label="Close">
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* ── Content Items Grid ── */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-            {loading ? (
-              <div className="py-20 text-center text-xs font-mono text-white/40 animate-pulse">
-                Loading collection titles…
-              </div>
-            ) : items.length === 0 ? (
-              <div className="py-20 text-center flex flex-col items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-4">
-                  <Film className="w-8 h-8 text-white/20" />
-                </div>
-                <p className="text-base font-bold text-white/80">No titles in this collection yet</p>
-                <p className="text-xs font-mono text-white/40 mt-1 max-w-sm">
-                  Click "+ Add Content" to search and add movies and shows to your collection.
-                </p>
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddContentOpen(true)}
-                    className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-display font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 shadow-[0_0_15px_rgba(192,38,211,0.4)] transition-all"
-                  >
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
-                    <span>Add First Title</span>
-                  </button>
+          {/* Title block */}
+          <div className="absolute bottom-5 left-6 right-6 z-10">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/35 px-2.5 py-1 text-[11px] font-medium text-[#f5c542] backdrop-blur-md">
+                {currentCollection.is_public ? (
+                  <>
+                    <Globe className="h-3 w-3" /> Public
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3 w-3" /> Private
+                  </>
                 )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                {items.map((item) => {
-                  const posterUrl = item.media_poster
-                    ? `https://image.tmdb.org/t/p/w342${item.media_poster}`
-                    : null;
-                  const linkTo = `/${item.media_type}/${item.media_id}`;
+              </span>
+              <span className="rounded-full border border-white/15 bg-black/35 px-2.5 py-1 text-[11px] font-medium text-white/75 backdrop-blur-md">
+                {items.length} {items.length === 1 ? 'title' : 'titles'}
+              </span>
+            </div>
 
-                  return (
-                    <div
-                      key={`${item.media_type}-${item.media_id}`}
-                      className="group relative flex flex-col select-none"
-                    >
-                      {/* Poster Card */}
-                      <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-white/[0.04] border border-white/[0.08] group-hover:border-white/25 transition-all shadow-md">
-                        <Link to={linkTo} onClick={onClose} className="block w-full h-full">
-                          {posterUrl ? (
-                            <img
-                              src={posterUrl}
-                              alt={item.media_title}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-white/30 p-2 text-center">
-                              <Film className="w-8 h-8 mb-1" />
-                              <span className="text-[10px] font-mono">{item.media_title}</span>
-                            </div>
-                          )}
-                        </Link>
-
-                        {/* Top-Right Remove Button (when in owner/edit mode) */}
-                        {canEdit && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(item.media_id, item.media_type)}
-                            className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
-                              isEditListMode
-                                ? 'bg-red-500 hover:bg-red-600 text-white scale-105'
-                                : 'bg-black/60 hover:bg-red-600 text-white/80 hover:text-white opacity-0 group-hover:opacity-100'
-                            }`}
-                            title="Remove from collection"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Title & Metadata */}
-                      <div className="pt-2 px-0.5 min-w-0">
-                        <Link
-                          to={linkTo}
-                          onClick={onClose}
-                          className="font-display font-bold text-xs text-white truncate hover:text-[#f5c542] transition-colors block"
-                        >
-                          {item.media_title}
-                        </Link>
-                        <div className="flex items-center justify-between text-[11px] font-mono text-white/40 mt-0.5">
-                          <span>
-                            {item.release_year ? `${item.release_year} · ` : ''}
-                            {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
-                          </span>
-                          {item.vote_average && item.vote_average > 0 && (
-                            <span className="flex items-center gap-0.5 text-[#f5c542]">
-                              <Star className="w-2.5 h-2.5 fill-current" />
-                              <span>{item.vote_average.toFixed(1)}</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            <h2 className="truncate font-display text-2xl font-bold text-white drop-shadow-md sm:text-3xl">
+              {currentCollection.title}
+            </h2>
+            {currentCollection.description && (
+              <p className="mt-1 line-clamp-2 max-w-xl text-sm text-white/70 drop-shadow-sm">
+                {currentCollection.description}
+              </p>
             )}
           </div>
         </div>
-      </div>
 
-      {/* ── Add Content Modal (Screenshots 1, 3, 4, 5) ── */}
+        {/* ── Titles ── */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          {isEditListMode && canEdit && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-[#f5c542]/25 bg-[#f5c542]/[0.07] px-4 py-2.5 backdrop-blur-md">
+              <p className="text-sm text-white/80">Tap the bin on a title to remove it.</p>
+              <button type="button" onClick={() => setIsEditListMode(false)} className={`text-sm font-semibold text-[#f5c542] ${FOCUS} rounded-full px-2`}>
+                Done
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div
+              className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              aria-busy="true"
+              aria-label="Loading titles"
+            >
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="aspect-[2/3] animate-pulse rounded-2xl bg-white/[0.05]" />
+                  <div className="h-3 w-2/3 animate-pulse rounded-full bg-white/[0.06]" />
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${GLASS}`}>
+                <Film className="h-7 w-7 text-[#f5c542]/80" strokeWidth={1.5} />
+              </div>
+              <p className="text-base font-semibold text-white/90">No titles yet</p>
+              <p className="mt-1 max-w-sm text-sm text-white/50">
+                {canEdit
+                  ? 'Search for movies and shows to start building this collection.'
+                  : 'Nothing has been added to this collection yet.'}
+              </p>
+              {canEdit && (
+                <button type="button" onClick={() => setIsAddContentOpen(true)} className={`mt-6 ${PRIMARY}`}>
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
+                  <span>Add your first title</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {items.map((item) => {
+                const posterUrl = item.media_poster
+                  ? item.media_poster.startsWith('http')
+                    ? item.media_poster
+                    : `https://image.tmdb.org/t/p/w342${item.media_poster.startsWith('/') ? '' : '/'}${item.media_poster}`
+                  : null;
+                const linkTo = `/${item.media_type}/${item.media_id}`;
+
+                return (
+                  <div key={`${item.media_type}-${item.media_id}`} className="group relative flex select-none flex-col">
+                    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/[0.1] bg-white/[0.04] shadow-lg transition group-hover:border-white/25">
+                      <Link
+                        to={linkTo}
+                        onClick={onClose}
+                        aria-label={item.media_title}
+                        className={`block h-full w-full ${FOCUS}`}
+                      >
+                        {posterUrl ? (
+                          <img
+                            src={posterUrl}
+                            alt=""
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full flex-col items-center justify-center p-2 text-center text-white/40">
+                            <Film className="mb-1 h-8 w-8" strokeWidth={1.5} />
+                            <span className="text-[11px]">{item.media_title}</span>
+                          </div>
+                        )}
+                      </Link>
+
+                      {item.vote_average && item.vote_average > 0 ? (
+                        <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-md">
+                          <Star className="h-3 w-3 fill-[#f5c542] text-[#f5c542]" />
+                          {item.vote_average.toFixed(1)}
+                        </span>
+                      ) : null}
+
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(item.media_id, item.media_type)}
+                          aria-label={`Remove ${item.media_title} from collection`}
+                          title="Remove from collection"
+                          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white shadow-lg backdrop-blur-md transition ${FOCUS} ${isEditListMode
+                              ? 'scale-105 bg-red-500/90 hover:bg-red-500'
+                              : 'bg-black/50 opacity-0 hover:bg-red-500/90 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100'
+                            }`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 px-0.5 pt-2.5">
+                      <Link
+                        to={linkTo}
+                        onClick={onClose}
+                        className={`block truncate rounded text-sm font-semibold text-white transition-colors hover:text-[#f5c542] ${FOCUS}`}
+                      >
+                        {item.media_title}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-white/45">
+                        {item.release_year ? `${item.release_year} • ` : ''}
+                        {item.media_type === 'tv' ? 'TV show' : 'Movie'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </ModalShell>
+
+      {/* ── Add Content Modal ── */}
       <AddContentModal
         collectionId={currentCollection.id}
         isOpen={isAddContentOpen}
@@ -466,244 +499,183 @@ export const CollectionDetailModal: React.FC<CollectionDetailModalProps> = ({
         onItemRemoved={handleItemRemoved}
       />
 
-      {/* ── Edit Details Dialog ── */}
+      {/* ── Edit Details ── */}
       {isEditDetailsOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-150"
-          onClick={() => setIsEditDetailsOpen(false)}
-        >
-          <div
-            role="dialog"
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl border border-white/[0.12] bg-[#140a0e] p-6 shadow-2xl relative text-white"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg">Edit Collection Details</h3>
-              <button
-                type="button"
-                onClick={() => setIsEditDetailsOpen(false)}
-                className="p-1 rounded-full text-white/40 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        <GlassDialog title="Edit collection details" onClose={() => setIsEditDetailsOpen(false)}>
+          <form onSubmit={handleSaveDetails} className="space-y-5">
+            <div>
+              <label htmlFor="collection-title" className="mb-1.5 block text-sm font-medium text-white/75">
+                Title
+              </label>
+              <input
+                id="collection-title"
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className={INPUT}
+                required
+              />
             </div>
 
-            <form onSubmit={handleSaveDetails} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-white/60 mb-1">
-                  Collection Title *
-                </label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white focus:border-[#f5c542] focus:outline-none"
-                  required
-                />
-              </div>
+            <div>
+              <label htmlFor="collection-desc" className="mb-1.5 block text-sm font-medium text-white/75">
+                Description
+              </label>
+              <textarea
+                id="collection-desc"
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                rows={3}
+                className={`${INPUT} resize-none`}
+                placeholder="What is this collection about?"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-mono text-white/60 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={editDesc}
-                  onChange={(e) => setEditDesc(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white focus:border-[#f5c542] focus:outline-none resize-none"
-                  placeholder="What is this collection about?"
-                />
-              </div>
+            <label
+              htmlFor="editIsPublic"
+              className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3"
+            >
+              <span>
+                <span className="block text-sm font-medium text-white/90">Public collection</span>
+                <span className="block text-xs text-white/50">Show this collection in Community.</span>
+              </span>
+              <input
+                type="checkbox"
+                id="editIsPublic"
+                role="switch"
+                checked={editIsPublic}
+                onChange={(e) => setEditIsPublic(e.target.checked)}
+                className="h-5 w-5 shrink-0 rounded border-white/20 bg-white/[0.06] text-[#f5c542] focus:ring-[#f5c542]/60 focus:ring-offset-0"
+              />
+            </label>
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="editIsPublic"
-                  checked={editIsPublic}
-                  onChange={(e) => setEditIsPublic(e.target.checked)}
-                  className="w-4 h-4 rounded border-white/[0.2] bg-white/[0.04] text-[#f5c542] focus:ring-0"
-                />
-                <label htmlFor="editIsPublic" className="text-xs font-mono text-white/80 cursor-pointer">
-                  Make collection public in Community
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditDetailsOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-mono text-white/60 hover:text-white hover:bg-white/[0.06]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold text-[#1c120c] bg-[#f5c542] hover:bg-[#f5c542]/90 shadow-md"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setIsEditDetailsOpen(false)} className={GHOST}>
+                Cancel
+              </button>
+              <button type="submit" className={PRIMARY}>
+                Save changes
+              </button>
+            </div>
+          </form>
+        </GlassDialog>
       )}
 
-      {/* ── Add Banner Dialog ── */}
+      {/* ── Banner ── */}
       {isAddBannerOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-150"
-          onClick={() => setIsAddBannerOpen(false)}
-        >
-          <div
-            role="dialog"
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl border border-white/[0.12] bg-[#140a0e] p-6 shadow-2xl relative text-white"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg">Add Collection Banner</h3>
-              <button
-                type="button"
-                onClick={() => setIsAddBannerOpen(false)}
-                className="p-1 rounded-full text-white/40 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        <GlassDialog title="Change banner" onClose={() => setIsAddBannerOpen(false)}>
+          <form onSubmit={handleSaveBanner} className="space-y-5">
+            {bannerUrl && (
+              <div className="group relative h-32 w-full overflow-hidden rounded-2xl border border-[#f5c542]/40 bg-black/60">
+                <img src={bannerUrl} alt="Banner preview" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => setBannerUrl('')}
+                    className={`rounded-full bg-red-500/90 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-red-500 ${FOCUS}`}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <span className="mb-1.5 block text-sm font-medium text-white/75">Upload from your device</span>
+              <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.03] text-center transition hover:border-[#f5c542]/60 hover:bg-white/[0.06] focus-within:border-[#f5c542]/60">
+                <ImagePlus className="mb-1.5 h-6 w-6 text-[#f5c542]" strokeWidth={1.75} />
+                <p className="text-sm text-white/80">
+                  <span className="font-semibold text-[#f5c542]">Choose an image</span> or drop it here
+                </p>
+                <p className="mt-0.5 text-xs text-white/40">PNG, JPG, WEBP or GIF, up to 10MB</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) {
+                      toast.error('Please select an image file');
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      toast.error('Image size must be under 10MB');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      if (typeof reader.result === 'string') {
+                        setBannerUrl(reader.result);
+                        toast.success('Image loaded successfully');
+                      }
+                    };
+                    reader.onerror = () => toast.error('Failed to read image file');
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
             </div>
 
-            <form onSubmit={handleSaveBanner} className="space-y-4">
-              {/* Image Preview if chosen */}
-              {bannerUrl ? (
-                <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-[#f5c542]/40 bg-black/60 shadow-inner group">
-                  <img
-                    src={bannerUrl}
-                    alt="Banner preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBannerUrl('')}
-                      className="px-3 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-xs font-mono font-medium shadow"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+            <div>
+              <label htmlFor="banner-url" className="mb-1.5 block text-sm font-medium text-white/75">
+                Or paste an image link
+              </label>
+              <input
+                id="banner-url"
+                type="url"
+                value={bannerUrl}
+                onChange={(e) => setBannerUrl(e.target.value)}
+                placeholder="https://image.tmdb.org/t/p/w1280/…"
+                className={INPUT}
+              />
+            </div>
 
-              {/* Upload from Device */}
+            {items.length > 0 && (
               <div>
-                <label className="block text-xs font-mono text-white/70 mb-1.5">
-                  Upload Image from Device
-                </label>
-                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/[0.15] hover:border-[#f5c542]/60 rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] transition-all">
-                  <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                    <ImagePlus className="w-6 h-6 text-[#f5c542] mb-1.5" />
-                    <p className="text-xs text-white/80 font-mono">
-                      <span className="font-bold text-[#f5c542]">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-[10px] text-white/40 font-mono mt-0.5">PNG, JPG, WEBP, GIF (Max 10MB)</p>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      if (!file.type.startsWith('image/')) {
-                        toast.error('Please select an image file');
-                        return;
-                      }
-                      if (file.size > 10 * 1024 * 1024) {
-                        toast.error('Image size must be under 10MB');
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        if (typeof reader.result === 'string') {
-                          setBannerUrl(reader.result);
-                          toast.success('Image loaded successfully');
-                        }
-                      };
-                      reader.onerror = () => toast.error('Failed to read image file');
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                </label>
-              </div>
-
-              {/* Or enter URL */}
-              <div>
-                <label className="block text-xs font-mono text-white/60 mb-1">
-                  Or enter Banner Image URL
-                </label>
-                <input
-                  type="url"
-                  value={bannerUrl}
-                  onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="https://image.tmdb.org/t/p/w1280/... or direct link"
-                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white focus:border-[#f5c542] focus:outline-none placeholder:text-white/20"
-                />
-              </div>
-
-              {/* Quick Pick from Collection Posters */}
-              {items.length > 0 && (
-                <div>
-                  <p className="text-[11px] font-mono text-white/50 mb-2">
-                    Or select from collection titles:
-                  </p>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {items.slice(0, 6).map((it) => {
-                      if (!it.media_poster) return null;
-                      const fullUrl = `https://image.tmdb.org/t/p/w780${it.media_poster}`;
-                      const isSelected = bannerUrl === fullUrl;
-                      return (
-                        <button
-                          key={it.id}
-                          type="button"
-                          onClick={() => setBannerUrl(fullUrl)}
-                          className={`relative w-12 h-16 rounded-lg overflow-hidden border shrink-0 transition-all ${
-                            isSelected
-                              ? 'border-[#f5c542] ring-2 ring-[#f5c542]/50 scale-105'
-                              : 'border-white/[0.1] opacity-70 hover:opacity-100'
+                <p className="mb-2 text-sm font-medium text-white/75">Or use a poster from this collection</p>
+                <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {items.slice(0, 6).map((it) => {
+                    if (!it.media_poster) return null;
+                    const fullUrl = it.media_poster.startsWith('http')
+                      ? it.media_poster
+                      : `https://image.tmdb.org/t/p/w780${it.media_poster}`;
+                    const isSelected = bannerUrl === fullUrl;
+                    return (
+                      <button
+                        key={it.id}
+                        type="button"
+                        onClick={() => setBannerUrl(fullUrl)}
+                        aria-label={`Use poster of ${it.media_title}`}
+                        aria-pressed={isSelected}
+                        className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-xl border transition ${FOCUS} ${isSelected
+                            ? 'scale-105 border-[#f5c542] ring-2 ring-[#f5c542]/50'
+                            : 'border-white/10 opacity-70 hover:opacity-100'
                           }`}
-                        >
-                          <img
-                            src={fullUrl}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                          {isSelected && (
-                            <div className="absolute inset-0 bg-[#f5c542]/30 flex items-center justify-center">
-                              <Check className="w-4 h-4 text-[#1c120c] stroke-[3]" />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                      >
+                        <img src={fullUrl} alt="" className="h-full w-full object-cover" />
+                        {isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-[#f5c542]/30">
+                            <Check className="h-4 w-4 text-[#1c120c]" strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-
-              <div className="flex justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddBannerOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-mono text-white/60 hover:text-white hover:bg-white/[0.06]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold text-[#1c120c] bg-[#f5c542] hover:bg-[#f5c542]/90 shadow-md"
-                >
-                  Save Banner
-                </button>
               </div>
-            </form>
-          </div>
-        </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setIsAddBannerOpen(false)} className={GHOST}>
+                Cancel
+              </button>
+              <button type="submit" className={PRIMARY}>
+                Save banner
+              </button>
+            </div>
+          </form>
+        </GlassDialog>
       )}
     </>
   );

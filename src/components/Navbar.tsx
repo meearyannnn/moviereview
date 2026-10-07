@@ -118,8 +118,8 @@ export const Navbar = () => {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${scrolled
-            ? 'border-b border-[#c9a24b]/20 bg-[#0a0608]/90 backdrop-blur-2xl shadow-lg shadow-black/80'
-            : 'bg-gradient-to-b from-[#0a0608]/95 via-[#0a0608]/60 to-transparent'
+            ? 'border-b border-white/10 bg-black/70 backdrop-blur-2xl shadow-lg shadow-black/80'
+            : 'bg-gradient-to-b from-black/90 via-black/50 to-transparent'
           }`}
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -128,7 +128,7 @@ export const Navbar = () => {
             <img
               src="/assets/branding/movieguy-hero-tight.png"
               alt="MovieGuy"
-              className="h-[18px] sm:h-[21px] w-auto object-contain transition-all duration-300 group-hover:brightness-110 group-hover:drop-shadow-[0_0_12px_rgba(245,197,66,0.5)]"
+              className="h-[18px] sm:h-[21px] w-auto object-contain transition-all duration-300 group-hover:brightness-125 group-hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
             />
           </Link>
 
@@ -145,19 +145,19 @@ export const Navbar = () => {
                   aria-current={active ? 'page' : undefined}
                   className={`group relative grid h-9 w-9 place-items-center rounded-xl transition-all duration-200 ${
                     active
-                      ? 'bg-[#f5c542]/15 text-[#f5c542] border border-[#f5c542]/30 shadow-[0_0_12px_rgba(245,197,66,0.2)]'
-                      : 'text-white/60 hover:bg-white/[0.08] hover:text-[#f5c542] hover:border-[#c9a24b]/20 border border-transparent'
+                      ? 'bg-white text-black border border-white shadow-[0_0_16px_rgba(255,255,255,0.3)] font-bold'
+                      : 'text-white/60 hover:bg-white/[0.08] hover:text-white border border-transparent'
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
                   {active && (
-                    <span className="absolute -bottom-[9px] h-[2px] w-3.5 rounded-full bg-gradient-to-r from-[#c9a24b] to-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
+                    <span className="absolute -bottom-[9px] h-[2px] w-3.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.9)]" />
                   )}
 
                   {/* Floating tooltip on hover */}
-                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[#c9a24b]/35 bg-[#120a0e]/98 px-2.5 py-1 text-[11px] font-display font-semibold tracking-wide text-white shadow-2xl shadow-black/90 backdrop-blur-xl opacity-0 scale-95 transition-all duration-150 group-hover:opacity-100 group-hover:scale-100 group-hover:-translate-y-0.5 z-50 ring-1 ring-white/10">
+                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/20 bg-black/95 px-2.5 py-1 text-[11px] font-display font-semibold tracking-wide text-white shadow-2xl shadow-black/90 backdrop-blur-xl opacity-0 scale-95 transition-all duration-150 group-hover:opacity-100 group-hover:scale-100 group-hover:-translate-y-0.5 z-50 ring-1 ring-white/10">
                     {label}
-                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-b-4 border-x-transparent border-b-[#c9a24b]/40" />
+                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-b-4 border-x-transparent border-b-white/20" />
                   </span>
                 </Link>
               );
@@ -174,7 +174,7 @@ export const Navbar = () => {
               <IconBtn label="Watch Later" onClick={() => { tick(); navigate('/library?tab=watch-later'); }}>
                 <Clock className="h-[18px] w-[18px]" />
                 {watchlist.length > 0 && (
-                  <span className="absolute right-0.5 top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[#f5c542] px-1 text-[10px] font-black leading-4 text-[#1c120c] shadow-sm">
+                  <span className="absolute right-0.5 top-0.5 grid min-w-[16px] place-items-center rounded-full bg-white px-1 text-[10px] font-black leading-4 text-black shadow-sm">
                     {watchlist.length}
                   </span>
                 )}
@@ -185,15 +185,15 @@ export const Navbar = () => {
             <div className="relative">
               <IconBtn label="Notifications" active={showBell} onClick={() => { tick(); setShowBell((v) => !v); }}>
                 <Bell className="h-[18px] w-[18px]" />
-                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#f5c542] shadow-[0_0_6px_rgba(245,197,66,0.8)]" />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.9)]" />
               </IconBtn>
               {showBell && (
-                <div className="absolute right-0 top-11 z-50 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-3 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 text-white">
+                <div className="absolute right-0 top-11 z-50 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-white/15 bg-black/95 p-3 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 text-white">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.08]">
                     <div className="flex items-center gap-2">
                       <div className="relative">
-                        <Newspaper className="w-4 h-4 text-[#f5c542]" />
-                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <Newspaper className="w-4 h-4 text-white" />
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       </div>
                       <span className="text-sm font-bold font-display text-white">Cinema Scoop</span>
                     </div>
@@ -205,7 +205,7 @@ export const Navbar = () => {
                           onClick={() => handleCategoryChange(cat)}
                           className={`text-[10px] font-mono px-2 py-0.5 rounded-md capitalize transition-all ${
                             newsCategory === cat
-                              ? 'bg-[#f5c542] text-[#1c120c] font-bold'
+                              ? 'bg-white text-black font-bold'
                               : 'text-white/40 hover:text-white/80 hover:bg-white/[0.05]'
                           }`}
                         >
@@ -217,7 +217,7 @@ export const Navbar = () => {
                         title="Refresh feeds"
                         className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.05] transition-colors"
                       >
-                        <RefreshCw className={`w-3 h-3 ${newsLoading ? 'animate-spin text-[#f5c542]' : ''}`} />
+                        <RefreshCw className={`w-3 h-3 ${newsLoading ? 'animate-spin text-white' : ''}`} />
                       </button>
                     </div>
                   </div>
@@ -225,7 +225,7 @@ export const Navbar = () => {
                   <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                     {newsLoading && cinemaNews.length === 0 ? (
                       <div className="py-8 text-center text-xs font-mono text-white/40">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[#f5c542]" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-white" />
                         Fetching live cinema feeds...
                       </div>
                     ) : cinemaNews.length === 0 ? (
@@ -298,13 +298,13 @@ export const Navbar = () => {
                   {user ? initials : <User className="h-[18px] w-[18px]" />}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50 w-60 rounded-xl border border-[#c9a24b]/20 bg-[#140a0d]/95 p-1.5 text-white backdrop-blur-xl">
+              <DropdownMenuContent align="end" className="z-50 w-60 rounded-2xl border border-white/15 bg-black/95 p-1.5 text-white backdrop-blur-2xl shadow-2xl">
                 {user && (
                   <>
                     {/* Profile info header */}
                     <DropdownMenuLabel className="px-3 py-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5c542] text-xs font-black text-[#1c120c]">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-black">
                           {profile?.username?.slice(0, 1).toUpperCase() ?? 'C'}
                         </div>
                         <div className="min-w-0">
@@ -315,52 +315,52 @@ export const Navbar = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/[0.07]" />
                     {/* My Profile */}
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                       <Link to={`/community/user/${user.id}`}>
-                        <User className="h-4 w-4 text-white/50" /> My Profile
+                        <User className="h-4 w-4 text-white/70" /> My Profile
                       </Link>
                     </DropdownMenuItem>
                     {/* My Collections & Library */}
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                       <Link to="/library?tab=collections">
-                        <Bookmark className="h-4 w-4 text-[#c9a24b]" /> My Collections
+                        <Bookmark className="h-4 w-4 text-white" /> My Collections
                       </Link>
                     </DropdownMenuItem>
                     {/* Watch Later */}
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                       <Link to="/library?tab=watch-later">
-                        <Clock className="h-4 w-4 text-[#f5c542]" /> Watch Later
+                        <Clock className="h-4 w-4 text-white" /> Watch Later
                       </Link>
                     </DropdownMenuItem>
                     {/* Watch History */}
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                       <Link to="/library?tab=history">
-                        <History className="h-4 w-4 text-emerald-400" /> Watch History
+                        <History className="h-4 w-4 text-white/70" /> Watch History
                       </Link>
                     </DropdownMenuItem>
                     {/* My Reviews */}
-                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                    <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                       <Link to="/community/reviews">
-                        <PenSquare className="h-4 w-4 text-white/50" /> My Reviews
+                        <PenSquare className="h-4 w-4 text-white/70" /> My Reviews
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-white/[0.07]" />
                   </>
                 )}
                 {/* Mobile-only nav items */}
-                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                <DropdownMenuItem asChild className="cursor-pointer rounded-xl px-3 py-2 text-sm md:hidden hover:bg-white/10">
                   <Link to="/directors">Directors</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-sm md:hidden">
+                <DropdownMenuItem asChild className="cursor-pointer rounded-xl px-3 py-2 text-sm md:hidden hover:bg-white/10">
                   <Link to="/schedule">Schedule</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowWatchlist(true)} className="cursor-pointer rounded-lg px-3 py-2 text-sm">
-                  <Bookmark className="h-4 w-4 text-white/50" /> Watchlist ({watchlist.length})
+                <DropdownMenuItem onClick={() => setShowWatchlist(true)} className="cursor-pointer rounded-xl px-3 py-2 text-sm hover:bg-white/10">
+                  <Bookmark className="h-4 w-4 text-white/70" /> Watchlist ({watchlist.length})
                 </DropdownMenuItem>
                 {user && (
-                  <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                  <DropdownMenuItem asChild className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                     <Link to="/settings">
-                      <Settings className="h-4 w-4 text-white/50" /> Settings
+                      <Settings className="h-4 w-4 text-white/70" /> Settings
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -368,12 +368,12 @@ export const Navbar = () => {
                 {user ? (
                   <DropdownMenuItem
                     onClick={async () => { await signOut(); toast.info('Signed out of MovieGuy'); }}
-                    className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm text-[#f5c542] focus:text-white"
+                    className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     <LogOut className="h-4 w-4" /> Logout
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem onClick={() => setShowAuth(true)} className="cursor-pointer gap-2.5 rounded-lg px-3 py-2 text-sm">
+                  <DropdownMenuItem onClick={() => setShowAuth(true)} className="cursor-pointer gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-white/10">
                     <LogIn className="h-4 w-4" /> Sign in
                   </DropdownMenuItem>
                 )}
@@ -386,7 +386,7 @@ export const Navbar = () => {
       {/* Phone bottom bar */}
       <nav
         aria-label="Mobile"
-        className="safe-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#c9a24b]/20 bg-[#0a0608]/95 backdrop-blur-2xl md:hidden"
+        className="safe-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/90 backdrop-blur-2xl md:hidden"
       >
         <div className="grid h-14 grid-cols-5">
           {[
@@ -399,7 +399,7 @@ export const Navbar = () => {
               key={to}
               to={to}
               onClick={tick}
-              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive(to) ? 'text-[#f5c542]' : 'text-white/50'}`}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive(to) ? 'text-white font-bold' : 'text-white/50'}`}
             >
               <Icon className="h-5 w-5" strokeWidth={isActive(to) ? 2.4 : 1.75} />
               {label}
@@ -407,12 +407,12 @@ export const Navbar = () => {
           ))}
           <button
             onClick={() => { tick(); navigate('/library?tab=watch-later'); }}
-            className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive('/library') ? 'text-[#f5c542]' : 'text-white/50'}`}
+            className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive('/library') ? 'text-white font-bold' : 'text-white/50'}`}
           >
             <span className="relative">
               <Clock className="h-5 w-5" strokeWidth={1.75} />
               {watchlist.length > 0 && (
-                <span className="absolute -right-2 -top-1 grid min-w-[15px] place-items-center rounded-full bg-[#f5c542] px-1 text-[9px] font-bold text-black">
+                <span className="absolute -right-2 -top-1 grid min-w-[15px] place-items-center rounded-full bg-white px-1 text-[9px] font-bold text-black">
                   {watchlist.length}
                 </span>
               )}
